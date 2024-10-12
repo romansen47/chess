@@ -1,0 +1,11 @@
+/home/ro/git/chess/src/test/java/demo/chess/definitions/moves/test/impl/MateNotRecognizedTest.java
+/home/ro/git/chess/src/test/java/demo/chess/definitions/moves/TestClass.java
+/home/ro/git/chess/src/test/java/demo/chess/definitions/moves/test/impl/PromotionTest.java
+/home/ro/git/chess/src/test/java/demo/chess/init/Initializer.java
+/home/ro/git/chess/src/test/java/demo/chess/definitions/moves/test/impl/EnPassantTest.java
+/home/ro/git/chess/src/test/java/demo/chess/definitions/moves/test/impl/StaleMateTest.java
+/home/ro/git/chess/src/test/java/demo/chess/definitions/moves/test/impl/CastlingNotPossibleTest.java
+/home/ro/git/chess/src/test/java/demo/chess/definitions/moves/test/impl/CastlingTest.java
+/home/ro/git/chess/src/test/java/demo/chess/definitions/moves/test/impl/MateTest.java
+/home/ro/git/chess/src/test/java/demo/chess/definitions/moves/test/TestClassAbstract.java
+/home/ro/git/chess/src/test/java/demo/chess/definitions/moves/test/impl/ErrorTest.java

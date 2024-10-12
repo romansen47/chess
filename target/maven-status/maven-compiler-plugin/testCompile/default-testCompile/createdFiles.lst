@@ -1,0 +1,11 @@
+demo/chess/definitions/moves/test/impl/PromotionTest.class
+demo/chess/definitions/moves/test/impl/ErrorTest.class
+demo/chess/init/Initializer.class
+demo/chess/definitions/moves/test/impl/CastlingNotPossibleTest.class
+demo/chess/definitions/moves/test/impl/StaleMateTest.class
+demo/chess/definitions/moves/test/TestClassAbstract.class
+demo/chess/definitions/moves/test/impl/MateTest.class
+demo/chess/definitions/moves/test/impl/EnPassantTest.class
+demo/chess/definitions/moves/TestClass.class
+demo/chess/definitions/moves/test/impl/MateNotRecognizedTest.class
+demo/chess/definitions/moves/test/impl/CastlingTest.class
