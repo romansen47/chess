@@ -164,6 +164,13 @@ public class EvaluationStockfishEngine extends ConsoleStockfish implements Evalu
         });
         evaluationThread.start();
     }
+    
+    @Override
+    public void stopInfiniteEvaluation() {
+    	if (evaluationThread.isAlive()) {
+    		evaluationThread.interrupt();
+    	}
+    }
 
     // Sortiert die Zuglinien basierend auf der Spielerfarbe
     protected List<Pair<Double, String>> sortLinesByColor(Color color, List<Pair<Double, String>> lines) {
