@@ -12,4 +12,6 @@ public interface EvaluationEngine extends ChessEngine {
 
 	List<Pair<Double, String>> getBestLines(Game chessgame) throws IOException, InterruptedException, ExecutionException;
 
+	void stopInfiniteEvaluation();
+
 }
