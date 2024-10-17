@@ -6,6 +6,7 @@ import org.springframework.context.annotation.Scope;
 
 import demo.chess.admin.Admin;
 import demo.chess.definitions.board.impl.ChessBoard;
+import demo.chess.definitions.engines.Engine;
 import demo.chess.definitions.engines.EvaluationEngine;
 import demo.chess.definitions.engines.impl.EvaluationUciEngine;
 import demo.chess.definitions.moves.MoveList;
@@ -38,34 +39,26 @@ public class ChessAdmin implements Admin {
 	@Scope("prototype")
 	public Game chessGame(int time) throws Exception {
 		MoveList moveList = new MoveListImpl();
-		return new ChessGame(new ChessBoard(), new WhitePlayerImpl(moveList, "ChessGame"), new BlackPlayerImpl(moveList, "ChessGame"), moveList, this, time);
+		return new ChessGame(new ChessBoard(), new WhitePlayerImpl(moveList, "ChessGame"),
+				new BlackPlayerImpl(moveList, "ChessGame"), moveList, this, time);
 	}
 
-    @Override
+	@Override
 	@Bean
 	@Scope("prototype")
 	public Game simulation() {
-    	MoveList moveList = new MoveListImpl();
-		return new Simulation(new ChessBoard(), new WhitePlayerImpl(moveList, "Simulation"), new BlackPlayerImpl(moveList, "Simulation"), moveList);
+		MoveList moveList = new MoveListImpl();
+		return new Simulation(new ChessBoard(), new WhitePlayerImpl(moveList, "Simulation"),
+				new BlackPlayerImpl(moveList, "Simulation"), moveList);
 	}
 
 	@Override
 	@Bean
 	public EvaluationEngine evaluationEngine() throws Exception {
-		EvaluationEngine engine;
-		try {
-			engine = new EvaluationUciEngine("C:\\Temp\\stockfish-windows-x86-64-avx2.exe"){
-				@Override
-				public String toString() {
-					return "windows evaluationEngine";
-				};
-			};
-		} catch(Exception e) {
-			engine = new EvaluationUciEngine("/usr/games/stockfish"){
-				@Override
-				public String toString() {
-					return "linux evaluationEngine";
-				};
+		EvaluationEngine engine = new EvaluationUciEngine("/usr/games/stockfish", Engine.STOCKFISH.label()) {
+			@Override
+			public String toString() {
+				return "linux evaluation engine stockfish 16";
 			};
 		};
 		return engine;

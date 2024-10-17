@@ -12,23 +12,25 @@ import demo.chess.game.Game;
 
 public class PlayerUciEngine extends ConsoleUciEngine implements PlayerEngine {
 
-	Color color;
+	private final String name;
 
-	public PlayerUciEngine(String path, Color color) throws Exception {
+	public PlayerUciEngine(String path, String name) throws Exception {
 		super(path);
-		this.color = color;
+		this.name = name;
 	}
 
 	@Override
     public Move getBestMove(Game chessGame) throws NoMoveFoundException, IOException, InterruptedException {
-        // Erstelle das Kommando, um Stockfish die aktuelle Position mitzuteilen
+        // Erstelle das Kommando, um UciEngine die aktuelle Position mitzuteilen
         StringBuilder command = new StringBuilder(" ");
         MoveList moveList = chessGame.getMoveList();
         for (Move move : moveList) {
             command.append(move.toString()).append(" ");
         }
 
-        // Sende den Befehl an Stockfish, um den besten Zug zu berechnen
+        Color color = moveList.size() % 2 == 0 ? Color.WHITE : Color.BLACK;
+        
+        // Sende den Befehl an UciEngine, um den besten Zug zu berechnen
         String postfixIncrement = "";
         long whiteTime = chessGame.getTimeForEachPlayer() * 1000l - chessGame.getWhitePlayer().getChessClock().getTime(TimeUnit.MILLISECONDS);
 		long blackTime = chessGame.getTimeForEachPlayer() * 1000l - chessGame.getBlackPlayer().getChessClock().getTime(TimeUnit.MILLISECONDS);
@@ -50,7 +52,7 @@ public class PlayerUciEngine extends ConsoleUciEngine implements PlayerEngine {
         writer.println(positionCommand.toString());
         writer.flush();
 
-        // Warte auf die Antwort von Stockfish
+        // Warte auf die Antwort von UciEngine
         String line;
         while ((line = reader.readLine()) != null) {
             if (line.startsWith("bestmove")) {

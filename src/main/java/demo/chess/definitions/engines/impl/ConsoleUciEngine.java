@@ -14,7 +14,7 @@ public abstract class ConsoleUciEngine implements ChessEngine {
 
     protected static final Logger logger = LogManager.getLogger(ConsoleUciEngine.class);
 
-    protected Process stockfishProcess;
+    protected Process uciEngineProcess;
     protected PrintWriter writer;
     protected BufferedReader reader;
 
@@ -27,9 +27,9 @@ public abstract class ConsoleUciEngine implements ChessEngine {
     protected int uciElo;
 
     public ConsoleUciEngine(String path) throws Exception {
-        stockfishProcess = new ProcessBuilder(path).start();
-        writer = new PrintWriter(new OutputStreamWriter(stockfishProcess.getOutputStream()), true);
-        reader = new BufferedReader(new InputStreamReader(stockfishProcess.getInputStream()));
+        uciEngineProcess = new ProcessBuilder(path).start();
+        writer = new PrintWriter(new OutputStreamWriter(uciEngineProcess.getOutputStream()), true);
+        reader = new BufferedReader(new InputStreamReader(uciEngineProcess.getInputStream()));
     }
 
     @Override
@@ -42,7 +42,7 @@ public abstract class ConsoleUciEngine implements ChessEngine {
         } catch (Exception e) {
             e.printStackTrace();
         }
-        stockfishProcess.destroy();
+        uciEngineProcess.destroy();
     }
 
     protected abstract StringBuilder getCommandLineOptions(StringBuilder command);

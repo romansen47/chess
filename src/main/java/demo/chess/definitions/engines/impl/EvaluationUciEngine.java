@@ -22,14 +22,16 @@ import demo.chess.game.Game;
 public class EvaluationUciEngine extends ConsoleUciEngine implements EvaluationEngine {
 
 	String bestMove;
+	final String name;
     private Map<String, List<Pair<Double, String>>> cachedBestLines = new HashMap<>();
     private String lastPositionHash = "";
     private Thread evaluationThread;
     String path;
 
-    public EvaluationUciEngine(String path) throws Exception {
+    public EvaluationUciEngine(String path, String name) throws Exception {
         super(path);
         this.path = path;
+        this.name = name;
     }
 
     @Override
@@ -43,7 +45,6 @@ public class EvaluationUciEngine extends ConsoleUciEngine implements EvaluationE
     	cachedBestLines.put(chessGame.getMoveList().toString(), new ArrayList<>());
     	logger.info("starting new infinite calculation for move list " + movelist);
         startEvaluationEngine(new ArrayList<>(chessGame.getMoveList()), movelist);
-        // Gib die bereits vorhandenen analysierten Züge zurück
         return cachedBestLines.get(movelist);
     }
 
@@ -93,9 +94,9 @@ public class EvaluationUciEngine extends ConsoleUciEngine implements EvaluationE
 
                     // Füge die Zeile nur hinzu, wenn eine Bewertung (mate oder cp) vorhanden ist
                     if (chessLine.contains("pv")) {
-                        String stockfishLine = chessLine.split(" pv ")[1];
+                        String uciEngineLine = chessLine.split(" pv ")[1];
                         double factor = color.equals(Color.BLACK) ? -1 : 1;
-                        moves.add(Pair.of(factor * parsedValue, stockfishLine));
+                        moves.add(Pair.of(factor * parsedValue, uciEngineLine));
                     }
                 }
             }
@@ -108,16 +109,16 @@ public class EvaluationUciEngine extends ConsoleUciEngine implements EvaluationE
 
     // Methode zum Starten der Bewertungsinstanz in einem eigenen Thread
     public void startEvaluationEngine(List<Move> moveList, String moveListAsString) throws IOException {
-        if (evaluationThread != null && evaluationThread.isAlive()) {
-            evaluationThread.interrupt();
+        if (evaluationThread != null) {
+            stopInfiniteEvaluation();
         }
 
         evaluationThread = new Thread(() -> {
             try {
-                this.stockfishProcess.destroy();
-                this.stockfishProcess = new ProcessBuilder(path).start();
-                writer = new PrintWriter(new OutputStreamWriter(stockfishProcess.getOutputStream()), true);
-                reader = new BufferedReader(new InputStreamReader(stockfishProcess.getInputStream()));
+                this.uciEngineProcess.destroy();
+                this.uciEngineProcess = new ProcessBuilder(path).start();
+                writer = new PrintWriter(new OutputStreamWriter(uciEngineProcess.getOutputStream()), true);
+                reader = new BufferedReader(new InputStreamReader(uciEngineProcess.getInputStream()));
                 StringBuilder command = new StringBuilder();
                 for (Move move : moveList) {
                     command.append(move.toString()).append(" ");

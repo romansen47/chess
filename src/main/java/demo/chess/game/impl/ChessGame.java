@@ -93,7 +93,7 @@ public class ChessGame extends ChessGameTemplate {
 	}
 
 	/**
-	 * Applies the given move to the chess game and computes actual stockfish evaluation.
+	 * Applies the given move to the chess game and computes actual uciEngine evaluation.
 	 *
 	 * @param move the move to apply
 	 * @throws IOException
