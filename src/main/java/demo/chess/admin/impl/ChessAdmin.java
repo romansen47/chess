@@ -7,7 +7,7 @@ import org.springframework.context.annotation.Scope;
 import demo.chess.admin.Admin;
 import demo.chess.definitions.board.impl.ChessBoard;
 import demo.chess.definitions.engines.EvaluationEngine;
-import demo.chess.definitions.engines.impl.EvaluationStockfishEngine;
+import demo.chess.definitions.engines.impl.EvaluationUciEngine;
 import demo.chess.definitions.moves.MoveList;
 import demo.chess.definitions.moves.impl.MoveListImpl;
 import demo.chess.definitions.players.impl.BlackPlayerImpl;
@@ -54,14 +54,14 @@ public class ChessAdmin implements Admin {
 	public EvaluationEngine evaluationEngine() throws Exception {
 		EvaluationEngine engine;
 		try {
-			engine = new EvaluationStockfishEngine("C:\\Temp\\stockfish-windows-x86-64-avx2.exe"){
+			engine = new EvaluationUciEngine("C:\\Temp\\stockfish-windows-x86-64-avx2.exe"){
 				@Override
 				public String toString() {
 					return "windows evaluationEngine";
 				};
 			};
 		} catch(Exception e) {
-			engine = new EvaluationStockfishEngine("/usr/games/stockfish"){
+			engine = new EvaluationUciEngine("/usr/games/stockfish"){
 				@Override
 				public String toString() {
 					return "linux evaluationEngine";

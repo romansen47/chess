@@ -10,9 +10,9 @@ import org.apache.logging.log4j.Logger;
 
 import demo.chess.definitions.engines.ChessEngine;
 
-public abstract class ConsoleStockfish implements ChessEngine {
+public abstract class ConsoleUciEngine implements ChessEngine {
 
-    protected static final Logger logger = LogManager.getLogger(ConsoleStockfish.class);
+    protected static final Logger logger = LogManager.getLogger(ConsoleUciEngine.class);
 
     protected Process stockfishProcess;
     protected PrintWriter writer;
@@ -26,7 +26,7 @@ public abstract class ConsoleStockfish implements ChessEngine {
     protected int moveOverhead;
     protected int uciElo;
 
-    public ConsoleStockfish(String path) throws Exception {
+    public ConsoleUciEngine(String path) throws Exception {
         stockfishProcess = new ProcessBuilder(path).start();
         writer = new PrintWriter(new OutputStreamWriter(stockfishProcess.getOutputStream()), true);
         reader = new BufferedReader(new InputStreamReader(stockfishProcess.getInputStream()));

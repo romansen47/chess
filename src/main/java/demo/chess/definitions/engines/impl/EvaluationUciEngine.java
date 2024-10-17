@@ -19,7 +19,7 @@ import demo.chess.definitions.moves.Move;
 import demo.chess.definitions.moves.MoveList;
 import demo.chess.game.Game;
 
-public class EvaluationStockfishEngine extends ConsoleStockfish implements EvaluationEngine {
+public class EvaluationUciEngine extends ConsoleUciEngine implements EvaluationEngine {
 
 	String bestMove;
     private Map<String, List<Pair<Double, String>>> cachedBestLines = new HashMap<>();
@@ -27,7 +27,7 @@ public class EvaluationStockfishEngine extends ConsoleStockfish implements Evalu
     private Thread evaluationThread;
     String path;
 
-    public EvaluationStockfishEngine(String path) throws Exception {
+    public EvaluationUciEngine(String path) throws Exception {
         super(path);
         this.path = path;
     }

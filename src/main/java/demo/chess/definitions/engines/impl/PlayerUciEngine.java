@@ -10,11 +10,11 @@ import demo.chess.definitions.moves.MoveList;
 import demo.chess.definitions.players.Player;
 import demo.chess.game.Game;
 
-public class PlayerStockfish extends ConsoleStockfish implements PlayerEngine {
+public class PlayerUciEngine extends ConsoleUciEngine implements PlayerEngine {
 
 	Color color;
 
-	public PlayerStockfish(String path, Color color) throws Exception {
+	public PlayerUciEngine(String path, Color color) throws Exception {
 		super(path);
 		this.color = color;
 	}
