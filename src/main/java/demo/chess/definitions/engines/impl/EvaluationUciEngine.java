@@ -36,6 +36,9 @@ public class EvaluationUciEngine extends ConsoleUciEngine implements EvaluationE
 
     @Override
     public List<Pair<Double, String>> getBestLines(Game chessGame) throws IOException, InterruptedException, ExecutionException {
+    	if (chessGame.getState() != null) {
+    		return new ArrayList<>();
+    	}
         String movelist = chessGame.getMoveList().toString();
         List<Pair<Double, String>> cachedLines = cachedBestLines.get(movelist);
     	if (cachedLines != null) {
@@ -44,7 +47,7 @@ public class EvaluationUciEngine extends ConsoleUciEngine implements EvaluationE
 
     	cachedBestLines.put(chessGame.getMoveList().toString(), new ArrayList<>());
     	logger.info("starting new infinite calculation for move list " + movelist);
-        startEvaluationEngine(new ArrayList<>(chessGame.getMoveList()), movelist);
+        startEvaluationEngine(chessGame, movelist);
         return cachedBestLines.get(movelist);
     }
 
@@ -59,18 +62,13 @@ public class EvaluationUciEngine extends ConsoleUciEngine implements EvaluationE
 
     // Methode zum Prüfen, ob ein neuer Zug gemacht wurde
     protected boolean isPositionNew(Game chessGame) {
-        String currentPositionHash = generatePositionHash(chessGame.getMoveList());
+        String currentPositionHash = chessGame.getMoveList().toString();
         if (!currentPositionHash.equals(lastPositionHash)) {
             lastPositionHash = currentPositionHash;
             return true;
         }
         return false;
-    }
-
-    // Methode zur Generierung eines Positions-Hashs basierend auf der Zugliste
-    protected String generatePositionHash(MoveList moveList) {
-        return moveList.toString();
-    }
+    } 
 
     protected List<Pair<Double, String>> parseBestLines(Color color, List<String> bestLines) {
         List<Pair<Double, String>> moves = new ArrayList<>();
@@ -80,19 +78,15 @@ public class EvaluationUciEngine extends ConsoleUciEngine implements EvaluationE
             if (chessLine.startsWith("info depth")) {
                 int currentDepth = Integer.parseInt(chessLine.split("depth ")[1].split(" ")[0]);
 
-                // Überprüfe, ob die Tiefe mindestens requiredDepth ist
                 if (currentDepth >= requiredDepth) {
                     double parsedValue = 0;
 
                     if (chessLine.contains("mate")) {
-                        // Falls es sich um eine Mattanzeige handelt, wird eine spezielle Bewertung verwendet
                         parsedValue = Integer.signum(Integer.parseInt(chessLine.split("mate")[1].split(" ")[1])) * 99d;
                     } else if (chessLine.contains("cp")) {
-                        // Falls es sich um eine Bewertungsanzeige handelt (in Zentipawns)
                         parsedValue = Double.parseDouble(chessLine.split("cp")[1].split(" ")[1]) / 100.0;
                     }
 
-                    // Füge die Zeile nur hinzu, wenn eine Bewertung (mate oder cp) vorhanden ist
                     if (chessLine.contains("pv")) {
                         String uciEngineLine = chessLine.split(" pv ")[1];
                         double factor = color.equals(Color.BLACK) ? -1 : 1;
@@ -102,17 +96,19 @@ public class EvaluationUciEngine extends ConsoleUciEngine implements EvaluationE
             }
         }
 
-        // Sortiere die Züge basierend auf der Farbe
         return sortLinesByColor(color, moves);
     }
 
-
-    // Methode zum Starten der Bewertungsinstanz in einem eigenen Thread
-    public void startEvaluationEngine(List<Move> moveList, String moveListAsString) throws IOException {
+    public void startEvaluationEngine(Game chessGame, String moveListAsString) throws IOException {
         if (evaluationThread != null) {
             stopInfiniteEvaluation();
         }
-
+        if (chessGame.getState() != null) {
+        	return;
+        }
+        
+        List<Move> moveList = chessGame.getMoveList();
+        
         evaluationThread = new Thread(() -> {
             try {
                 this.uciEngineProcess.destroy();
@@ -132,6 +128,9 @@ public class EvaluationUciEngine extends ConsoleUciEngine implements EvaluationE
                 String line;
                 List<String> bestLines = new ArrayList<>();
                 while ((line = reader.readLine()) != null) {
+                	if (chessGame.getState() != null) {
+                    	return;
+                    }
                     if (line.startsWith("bestmove")) {
                     	bestMove = line;
                         break;
