@@ -23,17 +23,15 @@ import demo.chess.game.Game;
 public class EvaluationUciEngine extends ConsoleUciEngine implements EvaluationEngine {
 
 	String bestMove;
-//	final String name;
     private Map<String, List<Pair<Double, String>>> cachedBestLines = new HashMap<>();
     private String lastPositionHash = "";
     private Thread evaluationThread;
     String path;
 
-    public EvaluationUciEngine(String path, String name) throws Exception {
+    public EvaluationUciEngine(String path) throws Exception {
         super(path);
-    	logger.info("Creating new evaluation engine: {}", name);
+    	logger.info("Creating new evaluation engine: {}", path);
         this.path = path;
-//        this.name = name;
     }
 
     @Override

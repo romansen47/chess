@@ -68,7 +68,7 @@ public class ChessAdmin implements Admin {
 	public Map<Engine, EvaluationEngine> evaluationEngines(){
 		Map<Engine, EvaluationEngine> engines = new HashMap<>();
 		try {
-			engines.put(Engine.STOCKFISH, new EvaluationUciEngine("/usr/games/stockfish", Engine.STOCKFISH.label()) {
+			engines.put(Engine.STOCKFISH, new EvaluationUciEngine("/usr/games/stockfish") {
 				@Override
 				public String toString() {
 					return Engine.STOCKFISH.toString();
@@ -78,10 +78,30 @@ public class ChessAdmin implements Admin {
 			logger.info("Failed to create player engine stockfish 16"); 
 		}
 		try {
-			engines.put(Engine.GNUCHESS, new EvaluationUciEngine("/usr/games/gnuchessu", Engine.GNUCHESS.label()) {
+			engines.put(Engine.GNUCHESS, new EvaluationUciEngine("/usr/games/gnuchessu") {
 				@Override
 				public String toString() {
 					return Engine.GNUCHESS.toString();
+				}
+			});
+		} catch (Exception e) {
+			logger.info("Failed to create player engine gnuchess"); 
+		}
+		try {
+			engines.put(Engine.FRUIT, new EvaluationUciEngine("/usr/games/fruit") {
+				@Override
+				public String toString() {
+					return Engine.FRUIT.toString();
+				}
+			});
+		} catch (Exception e) {
+			logger.info("Failed to create player engine gnuchess"); 
+		}
+		try {
+			engines.put(Engine.FAIRY, new EvaluationUciEngine("/usr/games/fairy-stockfish") {
+				@Override
+				public String toString() {
+					return Engine.FAIRY.toString();
 				}
 			});
 		} catch (Exception e) {

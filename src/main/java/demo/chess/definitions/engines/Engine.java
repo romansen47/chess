@@ -2,7 +2,7 @@ package demo.chess.definitions.engines;
 
 public enum Engine {
 
-	STOCKFISH("stockfish"), GNUCHESS("gnuchess");
+	STOCKFISH("stockfish"), GNUCHESS("gnuchess"), FRUIT("fruit"), FAIRY("fairy-stockfish");
 
 	private final String label;
 	
