@@ -13,17 +13,17 @@ import demo.chess.game.Game;
 
 public class PlayerUciEngine extends ConsoleUciEngine implements PlayerEngine {
 
-	private final String name; 
+//	private final String name; 
 	
-	public PlayerUciEngine(String path, String name) throws Exception {
+	public PlayerUciEngine(String path) throws Exception {
 		super(path);
-    	logger.info("Creating new player engine: {}", name);
-		this.name = name;
+    	logger.info("Creating new player engine from path {}", path);
+//		this.name = name;
 	}
 
 	@Override
     public Move getBestMove(Game chessGame, EngineConfig config) throws NoMoveFoundException, IOException, InterruptedException {
-        // Erstelle das Kommando, um UciEngine die aktuelle Position mitzuteilen
+
         StringBuilder command = new StringBuilder("");
         MoveList moveList = chessGame.getMoveList();
         for (Move move : moveList) {
@@ -32,34 +32,33 @@ public class PlayerUciEngine extends ConsoleUciEngine implements PlayerEngine {
 
         Color color = moveList.size() % 2 == 0 ? Color.WHITE : Color.BLACK;
         
-        // Sende den Befehl an UciEngine, um den besten Zug zu berechnen
         String postfixIncrement = "";
         long whiteTime = chessGame.getTimeForEachPlayer() * 1000l - chessGame.getWhitePlayer().getChessClock().getTime(TimeUnit.MILLISECONDS);
 		long blackTime = chessGame.getTimeForEachPlayer() * 1000l - chessGame.getBlackPlayer().getChessClock().getTime(TimeUnit.MILLISECONDS);
 
         if (color.equals(Color.WHITE)){
-        	postfixIncrement = " wtime " + whiteTime * 1000;
+        	postfixIncrement = " wtime " + whiteTime ;
         	if (chessGame.getIncrementForWhite() > 0) {
         		postfixIncrement += " winc " + chessGame.getIncrementForWhite();
         	}
         }
         if (color.equals(Color.BLACK)){
-        	postfixIncrement = " btime " + blackTime * 1000;
+        	postfixIncrement = " btime " + blackTime ;
         	if (chessGame.getIncrementForBlack() > 0) {
         		postfixIncrement += " binc " + chessGame.getIncrementForBlack();
         	}
         }
         
         StringBuilder positionCommand = getCommandLineOptions(command, config).append(postfixIncrement);
+        logger.info("calling command: \n{}", positionCommand);
         writer.println(positionCommand.toString());
         writer.flush();
 
-        // Warte auf die Antwort von UciEngine
         String line;
         while ((line = reader.readLine()) != null) {
             if (line.startsWith("bestmove")) {
                 String bestMoveString = line.split(" ")[1];
-                // Finde den passenden Move und gib ihn zurück
+
                 for (Move move : chessGame.getPlayer().getValidMoves(chessGame)) {
                     if (move.toString().equals(bestMoveString)) {
                         return move;
