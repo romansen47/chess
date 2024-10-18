@@ -37,7 +37,7 @@ public abstract class TestClassAbstract implements TestClass {
 		applicationContext = new Initializer().getApplicationContext();
 		loggerConfig.setLevel(Level.DEBUG);
 		setAdmin((Admin) applicationContext.getBean("chessAdmin"));
-		admin.evaluationEngine().setDepth(1);
+//		admin.evaluationEngine().setDepth(1);
 	}
 
 	@Before

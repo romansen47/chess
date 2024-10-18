@@ -9,6 +9,6 @@ import demo.chess.game.Game;
 
 public interface PlayerEngine extends ChessEngine{
 
-	Move getBestMove(Game chessGame) throws NoMoveFoundException, IOException, InterruptedException, ExecutionException;
+	Move getBestMove(Game chessGame, EngineConfig config) throws NoMoveFoundException, IOException, InterruptedException, ExecutionException;
 
 }

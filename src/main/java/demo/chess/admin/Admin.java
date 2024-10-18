@@ -1,6 +1,11 @@
 package demo.chess.admin;
 
+import java.util.List;
+import java.util.Map;
+
+import demo.chess.definitions.engines.Engine;
 import demo.chess.definitions.engines.EvaluationEngine;
+import demo.chess.definitions.engines.PlayerEngine;
 import demo.chess.game.Game;
 
 /**
@@ -15,7 +20,7 @@ public interface Admin {
 	 */
 	Game chessGame(int time) throws Exception;
 
-	EvaluationEngine evaluationEngine() throws Exception;
+	Map<Engine, EvaluationEngine> evaluationEngines() throws Exception;
 
 	Game simulation();
 }

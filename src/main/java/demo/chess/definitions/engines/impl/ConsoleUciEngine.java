@@ -9,6 +9,8 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
 import demo.chess.definitions.engines.ChessEngine;
+import demo.chess.definitions.engines.EngineConfig;
+import demo.chess.definitions.engines.UciEngineConfig;
 
 public abstract class ConsoleUciEngine implements ChessEngine {
 
@@ -16,20 +18,12 @@ public abstract class ConsoleUciEngine implements ChessEngine {
 
     protected Process uciEngineProcess;
     protected PrintWriter writer;
-    protected BufferedReader reader;
-
-    protected int depth;
-    protected int threads;
-    protected int hashSize;
-    protected int multiPV;
-    protected int contempt;
-    protected int moveOverhead;
-    protected int uciElo;
+    protected BufferedReader reader; 
 
     public ConsoleUciEngine(String path) throws Exception {
         uciEngineProcess = new ProcessBuilder(path).start();
         writer = new PrintWriter(new OutputStreamWriter(uciEngineProcess.getOutputStream()), true);
-        reader = new BufferedReader(new InputStreamReader(uciEngineProcess.getInputStream()));
+        reader = new BufferedReader(new InputStreamReader(uciEngineProcess.getInputStream())); 
     }
 
     @Override
@@ -43,77 +37,8 @@ public abstract class ConsoleUciEngine implements ChessEngine {
             e.printStackTrace();
         }
         uciEngineProcess.destroy();
-    }
+    } 
+	
+    protected abstract StringBuilder getCommandLineOptions(StringBuilder command, EngineConfig config);
 
-    protected abstract StringBuilder getCommandLineOptions(StringBuilder command);
-
-    @Override
-    public int getThreads() {
-        return threads;
-    }
-
-    @Override
-    public void setThreads(Integer threads) {
-        this.threads = threads;
-    }
-
-    @Override
-    public int getHashSize() {
-        return hashSize;
-    }
-
-    @Override
-    public void setHashSize(Integer hashSize) {
-        this.hashSize = hashSize;
-    }
-
-    @Override
-    public int getMultiPV() {
-        return multiPV;
-    }
-
-    @Override
-    public void setMultiPV(Integer multiPV) {
-        this.multiPV = multiPV;
-    }
-
-    @Override
-    public int getMoveOverhead() {
-        return moveOverhead;
-    }
-
-    @Override
-    public void setMoveOverhead(Integer moveOverhead) {
-        this.moveOverhead = moveOverhead;
-    }
-
-    @Override
-    public int getContempt() {
-        return contempt;
-    }
-
-    @Override
-    public void setContempt(Integer contempt) {
-        this.contempt = contempt;
-    }
-
-    @Override
-    public int getUciElo() {
-        return uciElo;
-    }
-
-    @Override
-    public void setUciElo(Integer uciElo) {
-        this.uciElo = uciElo;
-    }
-
-    @Override
-    public int getDepth() {
-        return depth;
-    }
-
-    @Override
-    public void setDepth(int depth) {
-        this.depth = depth;
-    }
 }

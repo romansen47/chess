@@ -10,7 +10,7 @@ import demo.chess.game.Game;
 
 public interface EvaluationEngine extends ChessEngine {
 
-	List<Pair<Double, String>> getBestLines(Game chessgame) throws IOException, InterruptedException, ExecutionException;
+	List<Pair<Double, String>> getBestLines(Game chessgame, EngineConfig config) throws IOException, InterruptedException, ExecutionException;
 
 	void stopInfiniteEvaluation();
 

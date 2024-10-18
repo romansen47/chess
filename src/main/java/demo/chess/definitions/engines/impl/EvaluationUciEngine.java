@@ -14,6 +14,7 @@ import java.util.concurrent.ExecutionException;
 import org.apache.commons.lang3.tuple.Pair;
 
 import demo.chess.definitions.Color;
+import demo.chess.definitions.engines.EngineConfig;
 import demo.chess.definitions.engines.EvaluationEngine;
 import demo.chess.definitions.moves.Move;
 import demo.chess.definitions.moves.MoveList;
@@ -30,12 +31,13 @@ public class EvaluationUciEngine extends ConsoleUciEngine implements EvaluationE
 
     public EvaluationUciEngine(String path, String name) throws Exception {
         super(path);
+    	logger.info("Creating new evaluation engine: {}", name);
         this.path = path;
         this.name = name;
     }
 
     @Override
-    public List<Pair<Double, String>> getBestLines(Game chessGame) throws IOException, InterruptedException, ExecutionException {
+    public List<Pair<Double, String>> getBestLines(Game chessGame, EngineConfig config) throws IOException, InterruptedException, ExecutionException {
     	if (chessGame.getState() != null) {
     		return new ArrayList<>();
     	}
@@ -46,20 +48,18 @@ public class EvaluationUciEngine extends ConsoleUciEngine implements EvaluationE
         }
 
     	cachedBestLines.put(chessGame.getMoveList().toString(), new ArrayList<>());
-    	logger.info("starting new infinite calculation for move list " + movelist);
-        startEvaluationEngine(chessGame, movelist);
+        startEvaluationEngine(chessGame, movelist, config);
         return cachedBestLines.get(movelist);
     }
 
     @Override
-    protected StringBuilder getCommandLineOptions(StringBuilder command) {
+    protected StringBuilder getCommandLineOptions(StringBuilder command, EngineConfig config) {
         StringBuilder positionCommand = new StringBuilder();
         positionCommand.append("position startpos moves ").append(command.toString());
         positionCommand.append("\ngo infinite ");
         return positionCommand;
     }
-
-
+    
     // Methode zum Prüfen, ob ein neuer Zug gemacht wurde
     protected boolean isPositionNew(Game chessGame) {
         String currentPositionHash = chessGame.getMoveList().toString();
@@ -70,9 +70,9 @@ public class EvaluationUciEngine extends ConsoleUciEngine implements EvaluationE
         return false;
     } 
 
-    protected List<Pair<Double, String>> parseBestLines(Color color, List<String> bestLines) {
+    protected List<Pair<Double, String>> parseBestLines(Color color, List<String> bestLines, EngineConfig config) {
         List<Pair<Double, String>> moves = new ArrayList<>();
-        int requiredDepth = getDepth(); // Der Wert der Mindesttiefe wird von der Methode getDepth() geholt
+        int requiredDepth = config.getDepth(); // Der Wert der Mindesttiefe wird von der Methode getDepth() geholt
 
         for (String chessLine : bestLines) {
             if (chessLine.startsWith("info depth")) {
@@ -99,16 +99,19 @@ public class EvaluationUciEngine extends ConsoleUciEngine implements EvaluationE
         return sortLinesByColor(color, moves);
     }
 
-    public void startEvaluationEngine(Game chessGame, String moveListAsString) throws IOException {
+    public void startEvaluationEngine(Game chessGame, String moveListAsString, EngineConfig config) throws IOException {
         if (evaluationThread != null) {
+        	logger.info("stopping actual infinite calculation...");
             stopInfiniteEvaluation();
         }
         if (chessGame.getState() != null) {
+        	logger.info("Game is decided. Not starting new infinite calculation...");
         	return;
         }
         
         List<Move> moveList = chessGame.getMoveList();
-        
+
+    	logger.info("starting new infinite calculation for move list " + moveList);
         evaluationThread = new Thread(() -> {
             try {
                 this.uciEngineProcess.destroy();
@@ -121,7 +124,7 @@ public class EvaluationUciEngine extends ConsoleUciEngine implements EvaluationE
                 }
 
                 // Unendliche Analyse starten
-                StringBuilder evaluationCommand = new StringBuilder("stop\n" + getCommandLineOptions(command).toString());
+                StringBuilder evaluationCommand = new StringBuilder("stop\n" + getCommandLineOptions(command, config).toString());
                 writer.flush();
                 writer.println(evaluationCommand.toString());
                 writer.flush();
@@ -138,7 +141,7 @@ public class EvaluationUciEngine extends ConsoleUciEngine implements EvaluationE
                     if (line.startsWith("info depth")) {
                         bestLines.add(line);
                     	Color color = moveList.size() % 2 == 0 ? Color.WHITE : Color.BLACK;
-                    	List<Pair<Double, String>> newLines = parseBestLines(color, bestLines);
+                    	List<Pair<Double, String>> newLines = parseBestLines(color, bestLines, config);
                     	List<Pair<Double, String>> cached = cachedBestLines.get(moveListAsString);
                     	if (cached != null && !cached.isEmpty()) {
                     		for (Pair<Double,String> pair:cached) {
@@ -158,8 +161,8 @@ public class EvaluationUciEngine extends ConsoleUciEngine implements EvaluationE
                     }
                 }
 
-            } catch (Exception e) {
-                e.printStackTrace();
+            } catch (IOException e) {
+            	logger.debug("Caught IOException since reader is not ready");
             }
         });
         evaluationThread.start();
@@ -167,7 +170,7 @@ public class EvaluationUciEngine extends ConsoleUciEngine implements EvaluationE
     
     @Override
     public void stopInfiniteEvaluation() {
-    	if (evaluationThread.isAlive()) {
+    	if (evaluationThread != null && evaluationThread.isAlive()) {
     		evaluationThread.interrupt();
     	}
     }
@@ -183,5 +186,5 @@ public class EvaluationUciEngine extends ConsoleUciEngine implements EvaluationE
             tmpLines.sort((pair1, pair2) -> Double.compare(pair1.getLeft(), pair2.getLeft()));
         }
         return tmpLines;
-    }
+    } 
 }
