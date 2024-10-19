@@ -13,12 +13,9 @@ import demo.chess.game.Game;
 
 public class PlayerUciEngine extends ConsoleUciEngine implements PlayerEngine {
 
-//	private final String name; 
-	
 	public PlayerUciEngine(String path) throws Exception {
 		super(path);
     	logger.info("Creating new player engine from path {}", path);
-//		this.name = name;
 	}
 
 	@Override
@@ -94,6 +91,13 @@ public class PlayerUciEngine extends ConsoleUciEngine implements PlayerEngine {
 			positionCommand.append("\ngo movetime ").append(config.getMoveOverhead() * 1000);
 		}
 		return positionCommand;
+	}
+
+	@Override
+	public void stopEvaluation() {
+    	logger.info("{} stopping actual player evaluation", this);
+		writer.println("stop");
+		writer.flush(); 
 	}
 
 }

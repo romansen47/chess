@@ -35,7 +35,7 @@ public class EvaluationUciEngine extends ConsoleUciEngine implements EvaluationE
     }
 
     @Override
-    public List<Pair<Double, String>> getBestLines(Game chessGame, EngineConfig config) throws IOException, InterruptedException, ExecutionException {
+    public synchronized List<Pair<Double, String>> getBestLines(Game chessGame, EngineConfig config) throws IOException, InterruptedException, ExecutionException {
     	if (chessGame.getState() != null) {
     		return new ArrayList<>();
     	}
@@ -99,8 +99,7 @@ public class EvaluationUciEngine extends ConsoleUciEngine implements EvaluationE
 
     public void startEvaluationEngine(Game chessGame, String moveListAsString, EngineConfig config) throws IOException {
         if (evaluationThread != null) {
-        	logger.info("stopping actual infinite calculation...");
-            stopInfiniteEvaluation();
+            stopEvaluation();
         }
         if (chessGame.getState() != null) {
         	logger.info("Game is decided. Not starting new infinite calculation...");
@@ -109,7 +108,7 @@ public class EvaluationUciEngine extends ConsoleUciEngine implements EvaluationE
         
         List<Move> moveList = chessGame.getMoveList();
 
-    	logger.info("starting new infinite calculation for move list " + moveList);
+    	logger.info("{} is starting new infinite calculation for move list {}", this, moveList);
         evaluationThread = new Thread(() -> {
             try {
                 this.uciEngineProcess.destroy();
@@ -163,12 +162,17 @@ public class EvaluationUciEngine extends ConsoleUciEngine implements EvaluationE
             	logger.debug("Caught IOException since reader is not ready");
             }
         });
-        evaluationThread.start();
+        try { evaluationThread.start();} catch(NullPointerException np) {
+        	logger.debug("Thread was cancelled...");
+        }
     }
     
     @Override
-    public void stopInfiniteEvaluation() {
+    public void stopEvaluation() {
+    	logger.info("{} stopping actual infinite evaluation", this);
     	if (evaluationThread != null && evaluationThread.isAlive()) {
+    		writer.println("stop");
+    		writer.flush(); 
     		evaluationThread.interrupt();
     	}
     }

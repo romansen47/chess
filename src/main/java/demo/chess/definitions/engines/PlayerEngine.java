@@ -11,4 +11,5 @@ public interface PlayerEngine extends ChessEngine{
 
 	Move getBestMove(Game chessGame, EngineConfig config) throws NoMoveFoundException, IOException, InterruptedException, ExecutionException;
 
+	void stopEvaluation();
 }

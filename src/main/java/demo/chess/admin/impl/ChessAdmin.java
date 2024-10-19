@@ -67,45 +67,17 @@ public class ChessAdmin implements Admin {
 	@Override
 	public Map<Engine, EvaluationEngine> evaluationEngines(){
 		Map<Engine, EvaluationEngine> engines = new HashMap<>();
-		try {
-			engines.put(Engine.STOCKFISH, new EvaluationUciEngine("/usr/games/stockfish") {
-				@Override
-				public String toString() {
-					return Engine.STOCKFISH.toString();
-				}
-			});
-		} catch (Exception e) {
-			logger.info("Failed to create player engine stockfish 16"); 
-		}
-		try {
-			engines.put(Engine.GNUCHESS, new EvaluationUciEngine("/usr/games/gnuchessu") {
-				@Override
-				public String toString() {
-					return Engine.GNUCHESS.toString();
-				}
-			});
-		} catch (Exception e) {
-			logger.info("Failed to create player engine gnuchess"); 
-		}
-		try {
-			engines.put(Engine.FRUIT, new EvaluationUciEngine("/usr/games/fruit") {
-				@Override
-				public String toString() {
-					return Engine.FRUIT.toString();
-				}
-			});
-		} catch (Exception e) {
-			logger.info("Failed to create player engine gnuchess"); 
-		}
-		try {
-			engines.put(Engine.FAIRY, new EvaluationUciEngine("/usr/games/fairy-stockfish") {
-				@Override
-				public String toString() {
-					return Engine.FAIRY.toString();
-				}
-			});
-		} catch (Exception e) {
-			logger.info("Failed to create player engine gnuchess"); 
+		for (Engine engine:Engine.values()) {
+			try {
+				engines.put(engine, new EvaluationUciEngine("/usr/games/" + engine.label()) {
+					@Override
+					public String toString() {
+						return engine.toString();
+					}
+				});
+			} catch (Exception e) {
+				logger.info("Failed to create player engine {}", engine); 
+			}
 		}
 		return engines;
 	} 

@@ -60,7 +60,7 @@ public class ChessClock extends StopWatch{
     private void checkTimePeriodically() {
         scheduler.scheduleAtFixedRate(() -> {
         	if (this.getTime(TimeUnit.MILLISECONDS) >= targetTimeMillis) {
-        		logger.info("targetTimeMillis: {}, incrementTotal: {}, this.getTime(): {}, super.getTime(): {}", targetTimeMillis, incrementTotal, this.getTime(TimeUnit.MILLISECONDS), super.getTime(TimeUnit.MILLISECONDS));
+        		logger.debug("targetTimeMillis: {}, incrementTotal: {}, this.getTime(): {}, super.getTime(): {}", targetTimeMillis, incrementTotal, this.getTime(TimeUnit.MILLISECONDS), super.getTime(TimeUnit.MILLISECONDS));
                 timeUpAction.run();
                 stop();
             }
