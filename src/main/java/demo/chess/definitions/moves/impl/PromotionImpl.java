@@ -38,9 +38,8 @@ public class PromotionImpl extends ChessMove implements Promotion {
 
 	@Override
 	public String toString() {
-		return super.toString()+getPromotedPiece().getType().label;
+		return super.toString() + getPromotedPiece().getType().label;
 	}
-
 
 	@Override
 	public int hashCode() {

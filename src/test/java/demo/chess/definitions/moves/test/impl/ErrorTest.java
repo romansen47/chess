@@ -6,7 +6,7 @@ import org.junit.Test;
 
 import demo.chess.definitions.moves.test.TestClassAbstract;
 
-public class ErrorTest extends TestClassAbstract{
+public class ErrorTest extends TestClassAbstract {
 
 	Exception e;
 
@@ -21,7 +21,7 @@ public class ErrorTest extends TestClassAbstract{
 		setChessGame(getAdmin().chessGame(10));
 		try {
 			loader.loadGame(getPath(), getChessGame());
-		} catch(Exception ex) {
+		} catch (Exception ex) {
 			this.e = ex;
 		}
 	}

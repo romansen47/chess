@@ -13,5 +13,6 @@ public interface Promotion extends Move {
 	 * @return the promoted piece
 	 */
 	Piece getPromotedPiece();
+
 	void setPromotedPiece(Piece piece);
 }

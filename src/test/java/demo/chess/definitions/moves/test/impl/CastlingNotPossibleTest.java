@@ -2,7 +2,7 @@ package demo.chess.definitions.moves.test.impl;
 
 import demo.chess.definitions.moves.test.TestClassAbstract;
 
-public class CastlingNotPossibleTest extends TestClassAbstract{
+public class CastlingNotPossibleTest extends TestClassAbstract {
 
 	@Override
 	public String getPath() {

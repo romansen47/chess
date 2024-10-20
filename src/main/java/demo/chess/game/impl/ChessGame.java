@@ -2,6 +2,8 @@ package demo.chess.game.impl;
 
 import java.io.IOException;
 
+import org.apache.logging.log4j.LogManager;
+
 import demo.chess.admin.Admin;
 import demo.chess.definitions.board.Board;
 import demo.chess.definitions.engines.impl.NoMoveFoundException;
@@ -19,10 +21,9 @@ public class ChessGame extends ChessGameTemplate {
 	private Admin admin;
 
 	final int timeForEachPlayer;
-	
-	int incrementForWhite;	
-	int incrementForBlack;
 
+	int incrementForWhite;
+	int incrementForBlack;
 
 	/**
 	 * Constructs a ChessGame instance with the given chessboard, white player,
@@ -35,8 +36,10 @@ public class ChessGame extends ChessGameTemplate {
 	 * @param chessAdmin
 	 * @throws Exception
 	 */
-	public ChessGame(Board chessBoard, WhitePlayer whitePlayer, BlackPlayer blackPlayer, MoveList moveList, Admin chessAdmin, int timeForEachPlayer) throws Exception {
+	public ChessGame(Board chessBoard, WhitePlayer whitePlayer, BlackPlayer blackPlayer, MoveList moveList,
+			Admin chessAdmin, int timeForEachPlayer) throws Exception {
 		super(chessBoard, whitePlayer, blackPlayer, moveList);
+		LogManager.getLogger().info("creating new Game. time: {}", timeForEachPlayer);
 		this.setAdmin(chessAdmin);
 		this.timeForEachPlayer = timeForEachPlayer;
 	}
@@ -93,7 +96,8 @@ public class ChessGame extends ChessGameTemplate {
 	}
 
 	/**
-	 * Applies the given move to the chess game and computes actual uciEngine evaluation.
+	 * Applies the given move to the chess game and computes actual uciEngine
+	 * evaluation.
 	 *
 	 * @param move the move to apply
 	 * @throws IOException

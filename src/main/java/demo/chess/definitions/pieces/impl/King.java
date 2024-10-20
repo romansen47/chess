@@ -70,7 +70,8 @@ public class King extends PieceImpl {
 	 */
 	private List<Move> addCastlingMoves() {
 		List<Move> moveList = new ArrayList<>();
-		List<Piece> allMovedPieces = this.getMoveList().stream().map(Move::getPiece).distinct().collect(Collectors.toList());
+		List<Piece> allMovedPieces = this.getMoveList().stream().map(Move::getPiece).distinct()
+				.collect(Collectors.toList());
 		if (allMovedPieces.contains(this)) {
 			return moveList;
 		}

@@ -27,6 +27,7 @@ public abstract class TestClassAbstract implements TestClass {
 
 	/**
 	 * Create the annotation application context
+	 * 
 	 * @throws Exception
 	 */
 	@BeforeClass
@@ -52,8 +53,8 @@ public abstract class TestClassAbstract implements TestClass {
 	public abstract String getPath();
 
 	public Logger getLogger() {
-		 logger = logger == null ? logger = LogManager.getLogger(getClass()) : logger;
-		 return logger;
+		logger = logger == null ? logger = LogManager.getLogger(getClass()) : logger;
+		return logger;
 	}
 
 	/**
@@ -84,6 +85,5 @@ public abstract class TestClassAbstract implements TestClass {
 	protected void setChessGame(Game chessGame) {
 		this.chessGame = chessGame;
 	}
-
 
 }

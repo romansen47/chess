@@ -14,7 +14,7 @@ import demo.chess.definitions.states.State;
 /**
  * Abzugschachmatt
  */
-public class MateNotRecognizedTest extends TestClassAbstract{
+public class MateNotRecognizedTest extends TestClassAbstract {
 
 	@Override
 	public String getPath() {
@@ -23,12 +23,13 @@ public class MateNotRecognizedTest extends TestClassAbstract{
 
 	String finalMove = "e7e4";
 	Move checkMate;
+
 	@Override
 	@Before
 	public void prepareForEach() throws Exception {
 		setChessGame(getAdmin().chessGame(10));
 		loader.loadGame(getPath(), getChessGame());
-		for(Move move: getChessGame().getPlayer().getValidMoves(getChessGame())){
+		for (Move move : getChessGame().getPlayer().getValidMoves(getChessGame())) {
 			if (move.toString().equals(finalMove)) {
 				checkMate = move;
 			}

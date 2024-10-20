@@ -6,7 +6,7 @@ import org.junit.Test;
 import demo.chess.definitions.moves.test.TestClassAbstract;
 import demo.chess.definitions.states.State;
 
-public class StaleMateTest extends TestClassAbstract{
+public class StaleMateTest extends TestClassAbstract {
 
 	@Override
 	public String getPath() {
@@ -15,7 +15,8 @@ public class StaleMateTest extends TestClassAbstract{
 
 	@Test
 	public void testStaleMate() {
-		Assert.assertTrue(this.getChessGame().getState() != null && this.getChessGame().getState().equals(State.STALEMATE));
+		Assert.assertTrue(
+				this.getChessGame().getState() != null && this.getChessGame().getState().equals(State.STALEMATE));
 	}
 
 }

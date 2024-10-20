@@ -26,9 +26,9 @@ public class CastlingImpl extends ChessMove implements Castling {
 		this.rook = rook;
 		int rank = getPiece().getField().getRank();
 		if (getRook().getField().getFile() == 8) {
-			name = "e"+rank+"g"+rank;
+			name = "e" + rank + "g" + rank;
 		} else {
-			name = "e"+rank+"c"+rank;
+			name = "e" + rank + "c" + rank;
 		}
 	}
 

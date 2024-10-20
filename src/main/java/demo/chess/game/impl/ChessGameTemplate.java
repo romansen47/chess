@@ -37,8 +37,7 @@ public abstract class ChessGameTemplate implements Game {
 	private final Board chessBoard;
 	private final MoveList moveList;
 	private State state = null;
-	
-	
+
 	/**
 	 * Constructs a ChessGameTemplate instance with the given chessboard, white
 	 * player, black player, and move list.
@@ -181,7 +180,6 @@ public abstract class ChessGameTemplate implements Game {
 		this.state = state;
 	}
 
-
 	/**
 	 * Switches the current player to the other player.
 	 */
@@ -207,14 +205,11 @@ public abstract class ChessGameTemplate implements Game {
 		boolean isRealGame = this instanceof ChessGame;
 		Player opponent = getPlayer().getColor().equals(Color.WHITE) ? this.getBlackPlayer() : this.getWhitePlayer();
 		if (isRealGame) {
-			if (getPlayer().getChessClock().getTime(TimeUnit.MILLISECONDS) / 1000 > getTimeForEachPlayer()) {
+			if ((getPlayer().getChessClock().getTime(TimeUnit.MILLISECONDS) / 1000 > getTimeForEachPlayer())
+					|| (opponent.getChessClock().getTime(TimeUnit.MILLISECONDS) / 1000 > getTimeForEachPlayer())) {
 				setState(State.LOST_ON_TIME);
 				return;
-	        }
-			if (opponent.getChessClock().getTime(TimeUnit.MILLISECONDS) / 1000 > getTimeForEachPlayer()) {
-				setState(State.LOST_ON_TIME);
-				return;
-	        }
+			}
 		}
 		if (move instanceof EnPassant) {
 			applyEnPassant(move);
@@ -231,9 +226,9 @@ public abstract class ChessGameTemplate implements Game {
 		if (!applied) {
 			applyRegularMove(move);
 		}
-		
+
 		if (isRealGame) {
-			if(getPlayer().getValidMoves(this).isEmpty()) {
+			if (getPlayer().getValidMoves(this).isEmpty()) {
 				getPlayer().resignOrStaleMate(this);
 			}
 		}

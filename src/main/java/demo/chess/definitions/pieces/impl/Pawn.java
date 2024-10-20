@@ -223,28 +223,40 @@ public class Pawn extends PieceImpl {
 				Field targetField = getChessBoard().getField(originFile - 1, originRank + 1);
 				Piece targetPiece = targetField.getPiece();
 				if (targetPiece != null && !targetPiece.getColor().equals(getColor())) {
-					moveList.add(new PromotionImpl(this, getField(), targetField, new Queen(this.getColor(),targetField, this.getChessBoard(), false)));
-					moveList.add(new PromotionImpl(this, getField(), targetField, new Rook(this.getColor(),targetField, this.getChessBoard(), false)));
-					moveList.add(new PromotionImpl(this, getField(), targetField, new Knight(this.getColor(),targetField, this.getChessBoard(), false)));
-					moveList.add(new PromotionImpl(this, getField(), targetField, new Bishop(this.getColor(),targetField, this.getChessBoard(), false)));
+					moveList.add(new PromotionImpl(this, getField(), targetField,
+							new Queen(this.getColor(), targetField, this.getChessBoard(), false)));
+					moveList.add(new PromotionImpl(this, getField(), targetField,
+							new Rook(this.getColor(), targetField, this.getChessBoard(), false)));
+					moveList.add(new PromotionImpl(this, getField(), targetField,
+							new Knight(this.getColor(), targetField, this.getChessBoard(), false)));
+					moveList.add(new PromotionImpl(this, getField(), targetField,
+							new Bishop(this.getColor(), targetField, this.getChessBoard(), false)));
 				}
 			}
 			if (originFile < 8) {
 				Field targetField = getChessBoard().getField(originFile + 1, originRank + 1);
 				Piece targetPiece = targetField.getPiece();
 				if (targetPiece != null && !targetPiece.getColor().equals(getColor())) {
-					moveList.add(new PromotionImpl(this, getField(), targetField, new Queen(this.getColor(),targetField, this.getChessBoard(), false)));
-					moveList.add(new PromotionImpl(this, getField(), targetField, new Rook(this.getColor(),targetField, this.getChessBoard(), false)));
-					moveList.add(new PromotionImpl(this, getField(), targetField, new Knight(this.getColor(),targetField, this.getChessBoard(), false)));
-					moveList.add(new PromotionImpl(this, getField(), targetField, new Bishop(this.getColor(),targetField, this.getChessBoard(), false)));
+					moveList.add(new PromotionImpl(this, getField(), targetField,
+							new Queen(this.getColor(), targetField, this.getChessBoard(), false)));
+					moveList.add(new PromotionImpl(this, getField(), targetField,
+							new Rook(this.getColor(), targetField, this.getChessBoard(), false)));
+					moveList.add(new PromotionImpl(this, getField(), targetField,
+							new Knight(this.getColor(), targetField, this.getChessBoard(), false)));
+					moveList.add(new PromotionImpl(this, getField(), targetField,
+							new Bishop(this.getColor(), targetField, this.getChessBoard(), false)));
 				}
 			}
 			if (getChessBoard().getField(originFile, originRank + 1).getPiece() == null) {
 				Field targetField = getChessBoard().getField(originFile, originRank + 1);
-				moveList.add(new PromotionImpl(this, getField(), targetField, new Queen(this.getColor(),targetField, this.getChessBoard(), false)));
-				moveList.add(new PromotionImpl(this, getField(), targetField, new Rook(this.getColor(),targetField, this.getChessBoard(), false)));
-				moveList.add(new PromotionImpl(this, getField(), targetField, new Knight(this.getColor(),targetField, this.getChessBoard(), false)));
-				moveList.add(new PromotionImpl(this, getField(), targetField, new Bishop(this.getColor(),targetField, this.getChessBoard(), false)));
+				moveList.add(new PromotionImpl(this, getField(), targetField,
+						new Queen(this.getColor(), targetField, this.getChessBoard(), false)));
+				moveList.add(new PromotionImpl(this, getField(), targetField,
+						new Rook(this.getColor(), targetField, this.getChessBoard(), false)));
+				moveList.add(new PromotionImpl(this, getField(), targetField,
+						new Knight(this.getColor(), targetField, this.getChessBoard(), false)));
+				moveList.add(new PromotionImpl(this, getField(), targetField,
+						new Bishop(this.getColor(), targetField, this.getChessBoard(), false)));
 			}
 		}
 		return moveList;
@@ -329,28 +341,40 @@ public class Pawn extends PieceImpl {
 				Field targetField = getChessBoard().getField(originFile - 1, originRank - 1);
 				Piece targetPiece = targetField.getPiece();
 				if (targetPiece != null && !targetPiece.getColor().equals(getColor())) {
-					moveList.add(new PromotionImpl(this, getField(), targetField, new Queen(this.getColor(),targetField, this.getChessBoard(), false)));
-					moveList.add(new PromotionImpl(this, getField(), targetField, new Rook(this.getColor(),targetField, this.getChessBoard(), false)));
-					moveList.add(new PromotionImpl(this, getField(), targetField, new Knight(this.getColor(),targetField, this.getChessBoard(), false)));
-					moveList.add(new PromotionImpl(this, getField(), targetField, new Bishop(this.getColor(),targetField, this.getChessBoard(), false)));
+					moveList.add(new PromotionImpl(this, getField(), targetField,
+							new Queen(this.getColor(), targetField, this.getChessBoard(), false)));
+					moveList.add(new PromotionImpl(this, getField(), targetField,
+							new Rook(this.getColor(), targetField, this.getChessBoard(), false)));
+					moveList.add(new PromotionImpl(this, getField(), targetField,
+							new Knight(this.getColor(), targetField, this.getChessBoard(), false)));
+					moveList.add(new PromotionImpl(this, getField(), targetField,
+							new Bishop(this.getColor(), targetField, this.getChessBoard(), false)));
 				}
 			}
 			if (originFile < 8) {
 				Field targetField = getChessBoard().getField(originFile + 1, originRank - 1);
 				Piece targetPiece = targetField.getPiece();
 				if (targetPiece != null && !targetPiece.getColor().equals(getColor())) {
-					moveList.add(new PromotionImpl(this, getField(), targetField, new Queen(this.getColor(),targetField, this.getChessBoard(), false)));
-					moveList.add(new PromotionImpl(this, getField(), targetField, new Rook(this.getColor(),targetField, this.getChessBoard(), false)));
-					moveList.add(new PromotionImpl(this, getField(), targetField, new Knight(this.getColor(),targetField, this.getChessBoard(), false)));
-					moveList.add(new PromotionImpl(this, getField(), targetField, new Bishop(this.getColor(),targetField, this.getChessBoard(), false)));
+					moveList.add(new PromotionImpl(this, getField(), targetField,
+							new Queen(this.getColor(), targetField, this.getChessBoard(), false)));
+					moveList.add(new PromotionImpl(this, getField(), targetField,
+							new Rook(this.getColor(), targetField, this.getChessBoard(), false)));
+					moveList.add(new PromotionImpl(this, getField(), targetField,
+							new Knight(this.getColor(), targetField, this.getChessBoard(), false)));
+					moveList.add(new PromotionImpl(this, getField(), targetField,
+							new Bishop(this.getColor(), targetField, this.getChessBoard(), false)));
 				}
 			}
 			if (getChessBoard().getField(originFile, originRank - 1).getPiece() == null) {
 				Field targetField = getChessBoard().getField(originFile, originRank - 1);
-				moveList.add(new PromotionImpl(this, getField(), targetField, new Queen(this.getColor(),targetField, this.getChessBoard(), false)));
-				moveList.add(new PromotionImpl(this, getField(), targetField, new Rook(this.getColor(),targetField, this.getChessBoard(), false)));
-				moveList.add(new PromotionImpl(this, getField(), targetField, new Knight(this.getColor(),targetField, this.getChessBoard(), false)));
-				moveList.add(new PromotionImpl(this, getField(), targetField, new Bishop(this.getColor(),targetField, this.getChessBoard(), false)));
+				moveList.add(new PromotionImpl(this, getField(), targetField,
+						new Queen(this.getColor(), targetField, this.getChessBoard(), false)));
+				moveList.add(new PromotionImpl(this, getField(), targetField,
+						new Rook(this.getColor(), targetField, this.getChessBoard(), false)));
+				moveList.add(new PromotionImpl(this, getField(), targetField,
+						new Knight(this.getColor(), targetField, this.getChessBoard(), false)));
+				moveList.add(new PromotionImpl(this, getField(), targetField,
+						new Bishop(this.getColor(), targetField, this.getChessBoard(), false)));
 			}
 		}
 		return moveList;

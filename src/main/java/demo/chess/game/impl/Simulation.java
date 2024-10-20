@@ -5,7 +5,7 @@ import demo.chess.definitions.moves.MoveList;
 import demo.chess.definitions.players.BlackPlayer;
 import demo.chess.definitions.players.WhitePlayer;
 
-public class Simulation extends ChessGameTemplate{
+public class Simulation extends ChessGameTemplate {
 
 	/**
 	 * Constructs a ChessGame instance with the given chessboard, white player,
@@ -42,7 +42,7 @@ public class Simulation extends ChessGameTemplate{
 
 	@Override
 	public void setIncrementForBlack(int incrementForBlack) {
-		
+
 	}
 
 }

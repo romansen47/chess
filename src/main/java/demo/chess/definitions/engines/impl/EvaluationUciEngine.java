@@ -17,176 +17,178 @@ import demo.chess.definitions.Color;
 import demo.chess.definitions.engines.EngineConfig;
 import demo.chess.definitions.engines.EvaluationEngine;
 import demo.chess.definitions.moves.Move;
-import demo.chess.definitions.moves.MoveList;
 import demo.chess.game.Game;
 
 public class EvaluationUciEngine extends ConsoleUciEngine implements EvaluationEngine {
 
 	String bestMove;
-    private Map<String, List<Pair<Double, String>>> cachedBestLines = new HashMap<>();
-    private String lastPositionHash = "";
-    private Thread evaluationThread;
-    String path;
+	private Map<String, List<Pair<Double, String>>> cachedBestLines = new HashMap<>();
+	private String lastPositionHash = "";
+	private Thread evaluationThread;
+	String path;
 
-    public EvaluationUciEngine(String path) throws Exception {
-        super(path);
-    	logger.info("Creating new evaluation engine: {}", path);
-        this.path = path;
-    }
+	public EvaluationUciEngine(String path) throws Exception {
+		super(path);
+		logger.info("Creating new evaluation engine: {}", path);
+		this.path = path;
+	}
 
-    @Override
-    public synchronized List<Pair<Double, String>> getBestLines(Game chessGame, EngineConfig config) throws IOException, InterruptedException, ExecutionException {
-    	if (chessGame.getState() != null) {
-    		return new ArrayList<>();
-    	}
-        String movelist = chessGame.getMoveList().toString();
-        List<Pair<Double, String>> cachedLines = cachedBestLines.get(movelist);
-    	if (cachedLines != null) {
-    		return cachedBestLines.get(movelist);
-        }
+	@Override
+	public synchronized List<Pair<Double, String>> getBestLines(Game chessGame, EngineConfig config)
+			throws IOException, InterruptedException, ExecutionException {
+		if (chessGame.getState() != null) {
+			return new ArrayList<>();
+		}
+		String movelist = chessGame.getMoveList().toString();
+		List<Pair<Double, String>> cachedLines = cachedBestLines.get(movelist);
+		if (cachedLines != null) {
+			return cachedBestLines.get(movelist);
+		}
 
-    	cachedBestLines.put(chessGame.getMoveList().toString(), new ArrayList<>());
-        startEvaluationEngine(chessGame, movelist, config);
-        return cachedBestLines.get(movelist);
-    }
+		cachedBestLines.put(chessGame.getMoveList().toString(), new ArrayList<>());
+		startEvaluationEngine(chessGame, movelist, config);
+		return cachedBestLines.get(movelist);
+	}
 
-    @Override
-    protected StringBuilder getCommandLineOptions(StringBuilder command, EngineConfig config) {
-        StringBuilder positionCommand = new StringBuilder();
-        positionCommand.append("position startpos moves ").append(command.toString());
-        positionCommand.append("\ngo infinite ");
-        return positionCommand;
-    }
-    
-    // Methode zum Prüfen, ob ein neuer Zug gemacht wurde
-    protected boolean isPositionNew(Game chessGame) {
-        String currentPositionHash = chessGame.getMoveList().toString();
-        if (!currentPositionHash.equals(lastPositionHash)) {
-            lastPositionHash = currentPositionHash;
-            return true;
-        }
-        return false;
-    } 
+	@Override
+	protected StringBuilder getCommandLineOptions(StringBuilder command, EngineConfig config) {
+		StringBuilder positionCommand = new StringBuilder();
+		positionCommand.append("position startpos moves ").append(command.toString());
+		positionCommand.append("\ngo infinite ");
+		return positionCommand;
+	}
 
-    protected List<Pair<Double, String>> parseBestLines(Color color, List<String> bestLines, EngineConfig config) {
-        List<Pair<Double, String>> moves = new ArrayList<>();
-        int requiredDepth = config.getDepth(); // Der Wert der Mindesttiefe wird von der Methode getDepth() geholt
+	// Methode zum Prüfen, ob ein neuer Zug gemacht wurde
+	protected boolean isPositionNew(Game chessGame) {
+		String currentPositionHash = chessGame.getMoveList().toString();
+		if (!currentPositionHash.equals(lastPositionHash)) {
+			lastPositionHash = currentPositionHash;
+			return true;
+		}
+		return false;
+	}
 
-        for (String chessLine : bestLines) {
-            if (chessLine.startsWith("info depth")) {
-                int currentDepth = Integer.parseInt(chessLine.split("depth ")[1].split(" ")[0]);
+	protected List<Pair<Double, String>> parseBestLines(Color color, List<String> bestLines, EngineConfig config) {
+		List<Pair<Double, String>> moves = new ArrayList<>();
+		int requiredDepth = config.getDepth(); // Der Wert der Mindesttiefe wird von der Methode getDepth() geholt
 
-                if (currentDepth >= requiredDepth) {
-                    double parsedValue = 0;
+		for (String chessLine : bestLines) {
+			if (chessLine.contains("info") && chessLine.contains("depth")) {
+				int currentDepth = Integer.parseInt(chessLine.split("depth ")[1].split(" ")[0]);
 
-                    if (chessLine.contains("mate")) {
-                        parsedValue = Integer.signum(Integer.parseInt(chessLine.split("mate")[1].split(" ")[1])) * 99d;
-                    } else if (chessLine.contains("cp")) {
-                        parsedValue = Double.parseDouble(chessLine.split("cp")[1].split(" ")[1]) / 100.0;
-                    }
+				if (currentDepth >= requiredDepth) {
+					double parsedValue = 0;
 
-                    if (chessLine.contains("pv")) {
-                        String uciEngineLine = chessLine.split(" pv ")[1];
-                        double factor = color.equals(Color.BLACK) ? -1 : 1;
-                        moves.add(Pair.of(factor * parsedValue, uciEngineLine));
-                    }
-                }
-            }
-        }
+					if (chessLine.contains("mate")) {
+						parsedValue = Integer.signum(Integer.parseInt(chessLine.split("mate")[1].split(" ")[1])) * 99d;
+					} else if (chessLine.contains("cp")) {
+						parsedValue = Double.parseDouble(chessLine.split("cp")[1].split(" ")[1]) / 100.0;
+					}
 
-        return sortLinesByColor(color, moves);
-    }
+					if (chessLine.contains("pv")) {
+						String uciEngineLine = chessLine.split(" pv ")[1];
+						double factor = color.equals(Color.BLACK) ? -1 : 1;
+						moves.add(Pair.of(factor * parsedValue, uciEngineLine));
+					}
+				}
+			}
+		}
 
-    public void startEvaluationEngine(Game chessGame, String moveListAsString, EngineConfig config) throws IOException {
-        if (evaluationThread != null) {
-            stopEvaluation();
-        }
-        if (chessGame.getState() != null) {
-        	logger.info("Game is decided. Not starting new infinite calculation...");
-        	return;
-        }
-        
-        List<Move> moveList = chessGame.getMoveList();
+		return sortLinesByColor(color, moves);
+	}
 
-    	logger.info("{} is starting new infinite calculation for move list {}", this, moveList);
-        evaluationThread = new Thread(() -> {
-            try {
-                this.uciEngineProcess.destroy();
-                this.uciEngineProcess = new ProcessBuilder(path).start();
-                writer = new PrintWriter(new OutputStreamWriter(uciEngineProcess.getOutputStream()), true);
-                reader = new BufferedReader(new InputStreamReader(uciEngineProcess.getInputStream()));
-                StringBuilder command = new StringBuilder();
-                for (Move move : moveList) {
-                    command.append(move.toString()).append(" ");
-                }
+	public void startEvaluationEngine(Game chessGame, String moveListAsString, EngineConfig config) throws IOException {
+		if (evaluationThread != null) {
+			stopEvaluation();
+		}
+		if (chessGame.getState() != null) {
+			logger.info("Game is decided. Not starting new infinite calculation...");
+			return;
+		}
 
-                // Unendliche Analyse starten
-                StringBuilder evaluationCommand = new StringBuilder("stop\n" + getCommandLineOptions(command, config).toString());
-                writer.flush();
-                writer.println(evaluationCommand.toString());
-                writer.flush();
-                String line;
-                List<String> bestLines = new ArrayList<>();
-                while ((line = reader.readLine()) != null) {
-                	if (chessGame.getState() != null) {
-                    	return;
-                    }
-                    if (line.startsWith("bestmove")) {
-                    	bestMove = line;
-                        break;
-                    }
-                    if (line.startsWith("info depth")) {
-                        bestLines.add(line);
-                    	Color color = moveList.size() % 2 == 0 ? Color.WHITE : Color.BLACK;
-                    	List<Pair<Double, String>> newLines = parseBestLines(color, bestLines, config);
-                    	List<Pair<Double, String>> cached = cachedBestLines.get(moveListAsString);
-                    	if (cached != null && !cached.isEmpty()) {
-                    		for (Pair<Double,String> pair:cached) {
-                    			boolean contained = false;
-                    			for (Pair<Double,String> newPair:newLines) {
-                    				if (newPair.getRight().startsWith(pair.getRight())) {
-                    					contained = true;
-                    				}
-                    			}
-                    			if (!contained) {
-                    				newLines.add(pair);
-                    			}
-                    		}
-                        	newLines.addAll(cached);
-                    	}
-                        cachedBestLines.put(moveListAsString, newLines);
-                    }
-                }
+		List<Move> moveList = chessGame.getMoveList();
 
-            } catch (IOException e) {
-            	logger.debug("Caught IOException since reader is not ready");
-            }
-        });
-        try { evaluationThread.start();} catch(NullPointerException np) {
-        	logger.debug("Thread was cancelled...");
-        }
-    }
-    
-    @Override
-    public void stopEvaluation() {
-    	logger.info("{} stopping actual infinite evaluation", this);
-    	if (evaluationThread != null && evaluationThread.isAlive()) {
-    		writer.println("stop");
-    		writer.flush(); 
-    		evaluationThread.interrupt();
-    	}
-    }
+		logger.info("{} is starting new infinite calculation for move list {}", this, moveList);
+		evaluationThread = new Thread(() -> {
+			try {
+				this.uciEngineProcess.destroy();
+				this.uciEngineProcess = new ProcessBuilder(path).start();
+				writer = new PrintWriter(new OutputStreamWriter(uciEngineProcess.getOutputStream()), true);
+				reader = new BufferedReader(new InputStreamReader(uciEngineProcess.getInputStream()));
+				StringBuilder command = new StringBuilder();
+				for (Move move : moveList) {
+					command.append(move.toString()).append(" ");
+				}
 
-    // Sortiert die Zuglinien basierend auf der Spielerfarbe
-    protected List<Pair<Double, String>> sortLinesByColor(Color color, List<Pair<Double, String>> lines) {
-        List<Pair<Double, String>> tmpLines = new ArrayList<>(lines);
-        if (color.equals(Color.WHITE)) {
-            // Sortiere für Weiß: positive Bewertungen höher
-            tmpLines.sort((pair1, pair2) -> Double.compare(pair2.getLeft(), pair1.getLeft()));
-        } else {
-            // Sortiere für Schwarz: negative Bewertungen höher
-            tmpLines.sort((pair1, pair2) -> Double.compare(pair1.getLeft(), pair2.getLeft()));
-        }
-        return tmpLines;
-    } 
+				// Unendliche Analyse starten
+				StringBuilder evaluationCommand = new StringBuilder(
+						"stop\n" + getCommandLineOptions(command, config).toString());
+				writer.println(evaluationCommand.toString());
+				writer.flush();
+				String line;
+				List<String> bestLines = new ArrayList<>();
+				while ((line = reader.readLine()) != null) {
+					if (chessGame.getState() != null) {
+						return;
+					}
+					if (line.startsWith("bestmove")) {
+						bestMove = line;
+						// break;
+					}
+					if (line.contains("info") && line.contains("depth") && !(line.split(" ").length == 3)) {
+						bestLines.add(line);
+						Color color = moveList.size() % 2 == 0 ? Color.WHITE : Color.BLACK;
+						List<Pair<Double, String>> newLines = parseBestLines(color, bestLines, config);
+						List<Pair<Double, String>> cached = cachedBestLines.get(moveListAsString);
+						if (cached != null && !cached.isEmpty()) {
+							for (Pair<Double, String> pair : cached) {
+								boolean contained = false;
+								for (Pair<Double, String> newPair : newLines) {
+									if (newPair.getRight().startsWith(pair.getRight())) {
+										contained = true;
+									}
+								}
+								if (!contained) {
+									newLines.add(pair);
+								}
+							}
+							newLines.addAll(cached);
+						}
+						cachedBestLines.put(moveListAsString, newLines);
+					}
+				}
+
+			} catch (IOException e) {
+				logger.debug("Caught IOException since reader is not ready");
+			}
+		});
+		try {
+			evaluationThread.start();
+		} catch (NullPointerException np) {
+			logger.debug("Thread was cancelled...");
+		}
+	}
+
+	@Override
+	public void stopEvaluation() {
+		logger.info("{} stopping actual infinite evaluation", this);
+		if (evaluationThread != null && evaluationThread.isAlive()) {
+			writer.println("stop");
+			writer.flush();
+			evaluationThread.interrupt();
+		}
+	}
+
+	// Sortiert die Zuglinien basierend auf der Spielerfarbe
+	protected List<Pair<Double, String>> sortLinesByColor(Color color, List<Pair<Double, String>> lines) {
+		List<Pair<Double, String>> tmpLines = new ArrayList<>(lines);
+		if (color.equals(Color.WHITE)) {
+			// Sortiere für Weiß: positive Bewertungen höher
+			tmpLines.sort((pair1, pair2) -> Double.compare(pair2.getLeft(), pair1.getLeft()));
+		} else {
+			// Sortiere für Schwarz: negative Bewertungen höher
+			tmpLines.sort((pair1, pair2) -> Double.compare(pair1.getLeft(), pair2.getLeft()));
+		}
+		return tmpLines;
+	}
 }

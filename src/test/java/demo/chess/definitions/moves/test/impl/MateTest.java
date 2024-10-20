@@ -6,7 +6,7 @@ import org.junit.Test;
 import demo.chess.definitions.moves.test.TestClassAbstract;
 import demo.chess.definitions.states.State;
 
-public class MateTest extends TestClassAbstract{
+public class MateTest extends TestClassAbstract {
 
 	@Override
 	public String getPath() {

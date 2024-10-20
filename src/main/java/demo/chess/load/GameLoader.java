@@ -19,30 +19,30 @@ public class GameLoader {
 		String s = bufferedReader.readLine();
 		while (s != null && !s.isBlank()) {
 			Move finalMove = null;
-	    	List<Move> moves = game.getPlayer().getValidMoves(game);
-	    	for (Move move: moves) {
-	    		if (move.toString().equals(s)) {
-	    			finalMove = move;
-	    			continue;
-	    		}
-	    	}
-	    	game.apply(finalMove);
+			List<Move> moves = game.getPlayer().getValidMoves(game);
+			for (Move move : moves) {
+				if (move.toString().equals(s)) {
+					finalMove = move;
+					continue;
+				}
+			}
+			game.apply(finalMove);
 			s = bufferedReader.readLine();
-	    }
+		}
 		bufferedReader.close();
 		fileReader.close();
 	}
 
-	public List<String> loadMoveList(String location) throws IOException{
+	public List<String> loadMoveList(String location) throws IOException {
 		List<String> moveList = new ArrayList<>();
 		FileReader fileReader = new FileReader(location);
 		BufferedReader bufferedReader = new BufferedReader(fileReader);
 
 		String s = bufferedReader.readLine();
 		while (s != null && !s.isBlank()) {
-	    	moveList.add(s);
+			moveList.add(s);
 			s = bufferedReader.readLine();
-	    }
+		}
 		bufferedReader.close();
 		fileReader.close();
 		return moveList;

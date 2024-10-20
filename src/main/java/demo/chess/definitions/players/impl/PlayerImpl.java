@@ -5,8 +5,6 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 
-import org.apache.commons.lang3.time.StopWatch;
-
 import demo.chess.definitions.Color;
 import demo.chess.definitions.board.Board;
 import demo.chess.definitions.clocks.impl.ChessClock;
@@ -37,10 +35,8 @@ import demo.chess.game.impl.ChessGame;
  */
 public abstract class PlayerImpl implements Player {
 
-
 	private static final long SECOND_IN_MILLIS = 1000l;
-	
-	
+
 	private final List<Piece> pieces;
 	private final Color color;
 	private Piece king;
@@ -61,11 +57,11 @@ public abstract class PlayerImpl implements Player {
 		this.moveList = moveList;
 		name = string;
 		this.chessClock = new ChessClock();
-	} 
-	
+	}
+
 	@Override
 	public void setupClock(int timeForEachPlayer, int incrementForWhite, Runnable runnable) {
-		this.chessClock.setIncrementMillis(incrementForWhite * SECOND_IN_MILLIS);	
+		this.chessClock.setIncrementMillis(incrementForWhite * SECOND_IN_MILLIS);
 		this.chessClock.setTargetTimeMillis(timeForEachPlayer * SECOND_IN_MILLIS);
 		this.chessClock.setTimeUpAction(runnable);
 	}
@@ -86,7 +82,8 @@ public abstract class PlayerImpl implements Player {
 		for (Piece piece : getPieces()) {
 			possibleUnvalidetMoves.addAll(piece.getPossibleUnvalidatedMoves());
 		}
-		for (Move move:possibleUnvalidetMoves) {{
+		for (Move move : possibleUnvalidetMoves) {
+			{
 				if (simulate(chessGame, move)) {
 					possibleValidMoves.add(move);
 				}
@@ -98,12 +95,11 @@ public abstract class PlayerImpl implements Player {
 	@Override
 	public void resignOrStaleMate(Game chessGame) {
 		Player opponent = getColor().equals(Color.WHITE) ? chessGame.getBlackPlayer() : chessGame.getWhitePlayer();
-		List<Field> listOfAttackedFields =
-				opponent.getSimpleMoves().stream().map(Move::getTarget).distinct().collect(Collectors.toList());
+		List<Field> listOfAttackedFields = opponent.getSimpleMoves().stream().map(Move::getTarget).distinct()
+				.collect(Collectors.toList());
 		if (!listOfAttackedFields.contains(king.getField())) {
 			chessGame.setState(State.STALEMATE);
-		}
-		else {
+		} else {
 			if (opponent.getColor().equals(Color.WHITE)) {
 				chessGame.setState(State.BLACK_MATED);
 			} else {
@@ -115,7 +111,7 @@ public abstract class PlayerImpl implements Player {
 		}
 		if (chessGame.getBlackPlayer().getChessClock().isStarted()) {
 			chessGame.getBlackPlayer().getChessClock().stop();
-		} 
+		}
 	}
 
 	@Override
@@ -163,13 +159,13 @@ public abstract class PlayerImpl implements Player {
 		boolean fieldsAreFree = true;
 		int rookFile = move.getTarget().getFile() == 1 ? 1 : 8;
 		if (rookFile == 1) {
-			for (int i=2; i<file;i++) {
+			for (int i = 2; i < file; i++) {
 				if (chessGame.getChessBoard().getField(i, rank).getPiece() != null) {
 					fieldsAreFree = false;
 				}
 			}
 		} else {
-			for (int i=file+1; i<7;i++) {
+			for (int i = file + 1; i < 7; i++) {
 				if (chessGame.getChessBoard().getField(i, rank).getPiece() != null) {
 					fieldsAreFree = false;
 				}
@@ -219,9 +215,9 @@ public abstract class PlayerImpl implements Player {
 	 */
 	private boolean simulate(Game chessGame, Move move) throws NoMoveFoundException, IOException {
 		if (move instanceof Castling && !validateCastling(chessGame, move)) {
-				return false;
+			return false;
 		}
-		Game simulation = ((ChessGame)chessGame).getAdmin().simulation();
+		Game simulation = ((ChessGame) chessGame).getAdmin().simulation();
 		for (Move m : getMoveList()) {
 			Move newMove = getMoveInSimulation(simulation, m);
 			simulation.apply(newMove);
@@ -248,14 +244,23 @@ public abstract class PlayerImpl implements Player {
 		Field target = chessBoard.getField(m.getTarget().getFile(), m.getTarget().getRank());
 		Piece piece = source.getPiece();
 		if (m instanceof Promotion) {
-			Piece promotedPiece = ((Promotion)m).getPromotedPiece();
+			Piece promotedPiece = ((Promotion) m).getPromotedPiece();
 			Piece simulatedPromotedPiece = null;
 			switch (promotedPiece.getType()) {
-				case QUEEN: simulatedPromotedPiece = new Queen(promotedPiece.getColor(), target, chessBoard, false); break;
-				case ROOK: simulatedPromotedPiece = new Rook(promotedPiece.getColor(), target, chessBoard, false); break;
-				case KNIGHT: simulatedPromotedPiece = new Knight(promotedPiece.getColor(), target, chessBoard, false); break;
-				case BISHOP: simulatedPromotedPiece = new Bishop(promotedPiece.getColor(), target, chessBoard, false); break;
-				default: break;
+			case QUEEN:
+				simulatedPromotedPiece = new Queen(promotedPiece.getColor(), target, chessBoard, false);
+				break;
+			case ROOK:
+				simulatedPromotedPiece = new Rook(promotedPiece.getColor(), target, chessBoard, false);
+				break;
+			case KNIGHT:
+				simulatedPromotedPiece = new Knight(promotedPiece.getColor(), target, chessBoard, false);
+				break;
+			case BISHOP:
+				simulatedPromotedPiece = new Bishop(promotedPiece.getColor(), target, chessBoard, false);
+				break;
+			default:
+				break;
 			}
 			return new PromotionImpl(piece, source, target, simulatedPromotedPiece);
 		}
@@ -316,7 +321,7 @@ public abstract class PlayerImpl implements Player {
 	public void setChessClock(ChessClock chessClock) {
 		this.chessClock = chessClock;
 	}
-	
+
 	@Override
 	public Color getColor() {
 		return color;

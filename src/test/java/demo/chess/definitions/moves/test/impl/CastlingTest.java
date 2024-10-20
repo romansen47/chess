@@ -7,7 +7,7 @@ import demo.chess.definitions.moves.Castling;
 import demo.chess.definitions.moves.MoveList;
 import demo.chess.definitions.moves.test.TestClassAbstract;
 
-public class CastlingTest extends TestClassAbstract{
+public class CastlingTest extends TestClassAbstract {
 
 	@Override
 	public String getPath() {
@@ -17,7 +17,7 @@ public class CastlingTest extends TestClassAbstract{
 	@Test
 	public void testCastling() {
 		MoveList moveList = getChessGame().getMoveList();
-		Assert.assertTrue(moveList.get(moveList.size()-1) instanceof Castling);
+		Assert.assertTrue(moveList.get(moveList.size() - 1) instanceof Castling);
 	}
 
 }

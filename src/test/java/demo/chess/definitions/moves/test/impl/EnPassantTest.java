@@ -7,7 +7,7 @@ import demo.chess.definitions.moves.EnPassant;
 import demo.chess.definitions.moves.MoveList;
 import demo.chess.definitions.moves.test.TestClassAbstract;
 
-public class EnPassantTest extends TestClassAbstract{
+public class EnPassantTest extends TestClassAbstract {
 
 	@Override
 	public String getPath() {
@@ -17,7 +17,7 @@ public class EnPassantTest extends TestClassAbstract{
 	@Test
 	public void testEnPassant() {
 		MoveList moveList = getChessGame().getMoveList();
-		Assert.assertTrue(moveList.get(moveList.size()-1) instanceof EnPassant);
+		Assert.assertTrue(moveList.get(moveList.size() - 1) instanceof EnPassant);
 	}
 
 }

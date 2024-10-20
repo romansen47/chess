@@ -1,8 +1,6 @@
 package demo.chess.admin.impl;
 
-import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 
 import org.apache.logging.log4j.LogManager;
@@ -15,9 +13,7 @@ import demo.chess.admin.Admin;
 import demo.chess.definitions.board.impl.ChessBoard;
 import demo.chess.definitions.engines.Engine;
 import demo.chess.definitions.engines.EvaluationEngine;
-import demo.chess.definitions.engines.PlayerEngine;
 import demo.chess.definitions.engines.impl.EvaluationUciEngine;
-import demo.chess.definitions.engines.impl.PlayerUciEngine;
 import demo.chess.definitions.moves.MoveList;
 import demo.chess.definitions.moves.impl.MoveListImpl;
 import demo.chess.definitions.players.impl.BlackPlayerImpl;
@@ -34,7 +30,7 @@ import demo.chess.game.impl.Simulation;
 public class ChessAdmin implements Admin {
 
 	private static final Logger logger = LogManager.getLogger(ChessAdmin.class);
-	
+
 	/**
 	 * Returns the chess game instance managed by the admin.
 	 * <p>
@@ -65,20 +61,20 @@ public class ChessAdmin implements Admin {
 
 	@Bean
 	@Override
-	public Map<Engine, EvaluationEngine> evaluationEngines(){
+	public Map<Engine, EvaluationEngine> evaluationEngines() {
 		Map<Engine, EvaluationEngine> engines = new HashMap<>();
-		for (Engine engine:Engine.values()) {
+		for (Engine engine : Engine.values()) {
 			try {
-				engines.put(engine, new EvaluationUciEngine("/usr/games/" + engine.label()) {
+				engines.put(engine, new EvaluationUciEngine("/usr/games/" + engine.path()) {
 					@Override
 					public String toString() {
-						return engine.toString();
+						return engine.comment();
 					}
 				});
 			} catch (Exception e) {
-				logger.info("Failed to create player engine {}", engine); 
+				logger.info("Failed to create player engine {}", engine);
 			}
 		}
 		return engines;
-	} 
+	}
 }

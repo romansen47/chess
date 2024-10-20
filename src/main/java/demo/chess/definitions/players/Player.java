@@ -3,8 +3,6 @@ package demo.chess.definitions.players;
 import java.io.IOException;
 import java.util.List;
 
-import org.apache.commons.lang3.time.StopWatch;
-
 import demo.chess.definitions.Color;
 import demo.chess.definitions.clocks.impl.ChessClock;
 import demo.chess.definitions.engines.impl.NoMoveFoundException;

@@ -29,5 +29,5 @@ public interface EngineConfig {
 	int getUciElo();
 
 	void setUciElo(Integer uciElo);
-	
+
 }

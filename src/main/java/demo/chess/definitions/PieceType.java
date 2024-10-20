@@ -23,7 +23,6 @@ public enum PieceType {
 	/** The rook chess piece. */
 	ROOK("r");
 
-
 	/** The label representing the color. */
 	public final String label;
 
