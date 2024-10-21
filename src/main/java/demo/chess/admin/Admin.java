@@ -19,7 +19,7 @@ public interface Admin {
 	 */
 	Game chessGame(int time) throws Exception;
 
-	Map<Engine, EvaluationEngine> evaluationEngines() throws Exception;
+	Map<String, EvaluationEngine> evaluationEngines() throws Exception;
 
 	Game simulation();
 }

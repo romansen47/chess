@@ -61,14 +61,14 @@ public class ChessAdmin implements Admin {
 
 	@Bean
 	@Override
-	public Map<Engine, EvaluationEngine> evaluationEngines() {
-		Map<Engine, EvaluationEngine> engines = new HashMap<>();
+	public Map<String, EvaluationEngine> evaluationEngines() {
+		Map<String, EvaluationEngine> engines = new HashMap<>();
 		for (Engine engine : Engine.values()) {
 			try {
-				engines.put(engine, new EvaluationUciEngine("/usr/games/" + engine.path()) {
+				engines.put(engine.toString(), new EvaluationUciEngine("/usr/games/" + engine.path()) {
 					@Override
 					public String toString() {
-						return engine.comment();
+						return engine.toString();
 					}
 				});
 			} catch (Exception e) {
