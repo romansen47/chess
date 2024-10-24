@@ -1,6 +1,7 @@
 package demo.chess.game;
 
 import java.io.IOException;
+import java.util.List;
 
 import demo.chess.definitions.board.Board;
 import demo.chess.definitions.engines.impl.NoMoveFoundException;
@@ -88,4 +89,8 @@ public interface Game {
 	int getIncrementForBlack();
 
 	void setIncrementForBlack(int incrementForBlack);
+
+	List<String> getSanMoveList();
+
+	void setSanMoveList(List<String> sanMoveList);
 }

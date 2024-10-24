@@ -63,7 +63,7 @@ public class PlayerUciEngine extends ConsoleUciEngine implements PlayerEngine {
 						return move;
 					}
 				}
-				throw new NoMoveFoundException("Move " + bestMoveString + " not found...");
+				logger.info("No move {} found, frontend and backend might be out of sync due to user interaction...", bestMoveString); 
 			}
 		}
 		Thread.sleep(200);

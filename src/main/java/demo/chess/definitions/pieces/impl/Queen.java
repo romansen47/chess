@@ -40,8 +40,7 @@ public class Queen extends PieceImpl implements BishopLike, RookLike {
 	@Override
 	public List<Move> getPossibleUnvalidatedMoves() {
 		List<Move> moveList = new ArrayList<>();
-		moveList.addAll(getPossibleUnvalidatedRookLikeMoves());
-		moveList.addAll(getPossibleUnvalidatedBishopLikeMoves());
+		moveList.addAll(getSimpleUnvalidatedMoves()); 
 		return moveList;
 	}
 

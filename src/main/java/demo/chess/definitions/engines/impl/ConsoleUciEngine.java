@@ -15,11 +15,14 @@ public abstract class ConsoleUciEngine implements ChessEngine {
 
 	protected static final Logger logger = LogManager.getLogger(ConsoleUciEngine.class);
 
+	final private String path;
+
 	protected Process uciEngineProcess;
 	protected PrintWriter writer;
 	protected BufferedReader reader;
 
 	public ConsoleUciEngine(String path) throws Exception {
+		this.path = path;
 		uciEngineProcess = new ProcessBuilder(path).start();
 		writer = new PrintWriter(new OutputStreamWriter(uciEngineProcess.getOutputStream()), true);
 		reader = new BufferedReader(new InputStreamReader(uciEngineProcess.getInputStream()));
@@ -27,9 +30,9 @@ public abstract class ConsoleUciEngine implements ChessEngine {
 
 	@Override
 	public void close() {
-		writer.println("quit");
-		writer.flush();
-		writer.close();
+		getWriter().println("quit");
+		getWriter().flush();
+		getWriter().close();
 		try {
 			reader.close();
 		} catch (Exception e) {
@@ -39,5 +42,9 @@ public abstract class ConsoleUciEngine implements ChessEngine {
 	}
 
 	protected abstract StringBuilder getCommandLineOptions(StringBuilder command, EngineConfig config);
+
+	protected PrintWriter getWriter() {
+		return writer;
+	}
 
 }

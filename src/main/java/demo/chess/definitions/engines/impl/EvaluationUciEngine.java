@@ -123,8 +123,8 @@ public class EvaluationUciEngine extends ConsoleUciEngine implements EvaluationE
 				// Unendliche Analyse starten
 				StringBuilder evaluationCommand = new StringBuilder(
 						"stop\n" + getCommandLineOptions(command, config).toString());
-				writer.println(evaluationCommand.toString());
-				writer.flush();
+				getWriter().println(evaluationCommand.toString());
+				getWriter().flush();
 				String line;
 				List<String> bestLines = new ArrayList<>();
 				while ((line = reader.readLine()) != null) {
@@ -173,8 +173,8 @@ public class EvaluationUciEngine extends ConsoleUciEngine implements EvaluationE
 	public void stopEvaluation() {
 		logger.info("{} stopping actual infinite evaluation", this);
 		if (evaluationThread != null && evaluationThread.isAlive()) {
-			writer.println("stop");
-			writer.flush();
+			getWriter().println("stop");
+			getWriter().flush();
 			evaluationThread.interrupt();
 		}
 	}

@@ -238,7 +238,8 @@ public abstract class PlayerImpl implements Player {
 	 * @param m          the move to process in the simulation
 	 * @return the corresponding move in the simulation
 	 */
-	private Move getMoveInSimulation(Game simulation, Move m) {
+	@Override
+	public Move getMoveInSimulation(Game simulation, Move m) {
 		Board chessBoard = simulation.getChessBoard();
 		Field source = chessBoard.getField(m.getSource().getFile(), m.getSource().getRank());
 		Field target = chessBoard.getField(m.getTarget().getFile(), m.getTarget().getRank());

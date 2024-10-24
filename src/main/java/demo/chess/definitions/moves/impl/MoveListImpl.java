@@ -11,5 +11,4 @@ import demo.chess.definitions.moves.MoveList;
 public class MoveListImpl extends ArrayList<Move> implements MoveList {
 
 	private static final long serialVersionUID = 1L;
-
 }

@@ -27,7 +27,7 @@ public abstract class TestClassAbstract implements TestClass {
 
 	/**
 	 * Create the annotation application context
-	 * 
+	 *
 	 * @throws Exception
 	 */
 	@BeforeClass

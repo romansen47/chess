@@ -96,4 +96,13 @@ public interface Player {
 	void setChessClock(ChessClock stopWatch);
 
 	void setupClock(int timeForEachPlayer, int incrementForWhite, Runnable runnable);
+
+	/**
+	 * Gets the corresponding move in the simulation.
+	 *
+	 * @param simulation the game simulation
+	 * @param m          the move to process in the simulation
+	 * @return the corresponding move in the simulation
+	 */
+	Move getMoveInSimulation(Game simulation, Move m);
 }

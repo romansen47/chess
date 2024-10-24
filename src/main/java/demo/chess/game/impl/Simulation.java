@@ -1,5 +1,8 @@
 package demo.chess.game.impl;
 
+import java.util.Collections;
+import java.util.List;
+
 import demo.chess.definitions.board.Board;
 import demo.chess.definitions.moves.MoveList;
 import demo.chess.definitions.players.BlackPlayer;
@@ -43,6 +46,15 @@ public class Simulation extends ChessGameTemplate {
 	@Override
 	public void setIncrementForBlack(int incrementForBlack) {
 
+	}
+
+	@Override
+	public List<String> getSanMoveList() {
+		return Collections.emptyList();
+	}
+
+	@Override
+	public void setSanMoveList(List<String> sanMoveList) {
 	}
 
 }
