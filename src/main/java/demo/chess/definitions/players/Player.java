@@ -105,4 +105,8 @@ public interface Player {
 	 * @return the corresponding move in the simulation
 	 */
 	Move getMoveInSimulation(Game simulation, Move m);
+
+	void setAdditionalTime(int additionalTime);
+
+	int getAdditionalTime();
 }

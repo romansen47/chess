@@ -19,4 +19,5 @@ public class BlackPlayerImpl extends PlayerImpl implements BlackPlayer {
 	public BlackPlayerImpl(MoveList moveList, String string) {
 		super(Color.BLACK, moveList, string);
 	}
+
 }

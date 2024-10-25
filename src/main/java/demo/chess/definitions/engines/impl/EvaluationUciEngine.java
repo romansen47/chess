@@ -102,13 +102,13 @@ public class EvaluationUciEngine extends ConsoleUciEngine implements EvaluationE
 			stopEvaluation();
 		}
 		if (chessGame.getState() != null) {
-			logger.info("Game is decided. Not starting new infinite calculation...");
+			logger.info("Game is decided. Not starting new infinite analysis...");
 			return;
 		}
 
 		List<Move> moveList = chessGame.getMoveList();
 
-		logger.info("{} is starting new infinite calculation for move list {}", this, moveList);
+		logger.info("{} is starting new infinite analysis for move list {}", this, moveList);
 		evaluationThread = new Thread(() -> {
 			try {
 				this.uciEngineProcess.destroy();
@@ -171,7 +171,7 @@ public class EvaluationUciEngine extends ConsoleUciEngine implements EvaluationE
 
 	@Override
 	public void stopEvaluation() {
-		logger.info("{} stopping actual infinite evaluation", this);
+		logger.info("{} stopping actual infinite analysis", this);
 		if (evaluationThread != null && evaluationThread.isAlive()) {
 			getWriter().println("stop");
 			getWriter().flush();

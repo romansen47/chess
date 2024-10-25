@@ -3,6 +3,7 @@ package demo.chess.game.impl;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.TimeUnit;
 
 import org.apache.commons.lang3.StringUtils;
 import org.apache.logging.log4j.LogManager;
@@ -20,7 +21,9 @@ import demo.chess.definitions.moves.MoveList;
 import demo.chess.definitions.moves.Promotion;
 import demo.chess.definitions.pieces.Piece;
 import demo.chess.definitions.players.BlackPlayer;
+import demo.chess.definitions.players.Player;
 import demo.chess.definitions.players.WhitePlayer;
+import demo.chess.definitions.states.State;
 import demo.chess.game.Game;
 
 /**
@@ -38,6 +41,8 @@ public class ChessGame extends ChessGameTemplate {
 	int incrementForBlack;
 
 	private List<String> sanMoveList = new ArrayList<>();
+	
+	private final List<Long> moveHashes = new ArrayList<>();
 
 	/**
 	 * Constructs a ChessGame instance with the given chessboard, white player,
@@ -56,6 +61,7 @@ public class ChessGame extends ChessGameTemplate {
 		LogManager.getLogger().info("creating new Game. time: {}", timeForEachPlayer);
 		this.setAdmin(chessAdmin);
 		this.timeForEachPlayer = timeForEachPlayer;
+		moveHashes.add(0l);
 	}
 
 	public Admin getAdmin() {
@@ -75,6 +81,9 @@ public class ChessGame extends ChessGameTemplate {
 			getPlayer().getChessClock().start();
 		}
 		getPlayer().getChessClock().addIncrement();
+		if (getMoveList().size() == 79 || getMoveList().size() == 80) {
+			getPlayer().getChessClock().addAdditionalTime(getPlayer().getAdditionalTime());
+		}
 		getPlayer().getChessClock().suspend();
 		super.switchPlayer();
 		if (!getPlayer().getChessClock().isStarted()) {
@@ -83,7 +92,53 @@ public class ChessGame extends ChessGameTemplate {
 			getPlayer().getChessClock().resume();
 		}
 	}
+	
 
+	private boolean checkForGameEnd() throws NoMoveFoundException, IOException {
+		boolean gameEnd = false;
+		if (getPlayer().getValidMoves(this).isEmpty()) {
+			getPlayer().resignOrStaleMate(this);
+			return true;
+		}
+		if (getState() == null) {
+			gameEnd = checkForThreefoldRepetition(0);
+			if (getMoveList().size() > 130) {
+//				gameEnd = checkFor50MovesRule();
+			}
+		}
+		return gameEnd;
+	}
+
+	private boolean checkFor50MovesRule() { 
+		boolean gameEnd = false;
+		List<Move> reducedMoveList = getMoveList().subList(getMoveList().size() - 50, getMoveList().size());
+		List<PieceType> piecesMoved = new ArrayList<>();
+		reducedMoveList.forEach(move -> piecesMoved.add(move.getPiece().getType()));
+		if (!piecesMoved.contains(PieceType.PAWN)) {
+			this.setState(State.DRAW_BY_50_MOVES_RULE);
+			gameEnd = true;
+		}
+		return gameEnd;
+	}
+	
+	private boolean checkForThreefoldRepetition(int movesBeforeRule) {
+		boolean gameEnd = false;
+		List<Long> reducedMoveList = moveHashes.subList(movesBeforeRule, getMoveList().size()); 
+		for (Long hash : reducedMoveList) {
+			int count = 0;
+			for (Long otherHash : moveHashes) {
+				if (otherHash.equals(hash)) {
+					count++;
+				}
+			}
+			if (count > 2) {
+				setState(State.DRAW_BY_THREEFOLD_REPETITION);
+				gameEnd = true;
+				continue;
+			}
+		}
+		return gameEnd;
+	}
 	@Override
 	public int getTimeForEachPlayer() {
 		return timeForEachPlayer;
@@ -129,10 +184,37 @@ public class ChessGame extends ChessGameTemplate {
 	 */
 	@Override
 	public void apply(Move move) throws NoMoveFoundException, IOException {
-		sanMoveList.add(getShortAlgebraicNotatedMove(move));
+		sanMoveList.add(getShortAlgebraicNotatedMove(move)); 
+		Player opponent = getPlayer().getColor().equals(Color.WHITE) ? this.getBlackPlayer() : this.getWhitePlayer();
+		if ((getPlayer().getChessClock().getTime(TimeUnit.MILLISECONDS) / 1000 > getTimeForEachPlayer())
+				|| (opponent.getChessClock().getTime(TimeUnit.MILLISECONDS) / 1000 > getTimeForEachPlayer())) {
+			setState(State.LOST_ON_TIME);
+			return;
+		}
 		super.apply(move);
+		moveHashes.add(positionHash());
+		checkForGameEnd();
+	}
+	
+	private long hashOf(Piece piece) { 
+		final long primeBiggerThanProductOfAll = 11;
+		final long color = piece.getColor().equals(Color.WHITE) ? 1 : 2;
+		return (long) (color  	+ primeBiggerThanProductOfAll * piece.getType().hash() 
+						+ Math.pow(primeBiggerThanProductOfAll, 2) * (piece.getField().getFile())
+						+ Math.pow(primeBiggerThanProductOfAll, 3) * (piece.getField().getRank()));
 	}
 
+	private Long positionHash() {
+		long hash = 1;
+		for (Piece piece : getWhitePlayer().getPieces()) {
+			hash *= hashOf(piece);
+		}
+		for (Piece piece : getBlackPlayer().getPieces()) {
+			hash *= hashOf(piece);
+		}
+		return hash * getWhitePlayer().getPieces().size() * getBlackPlayer().getPieces().size();
+	}
+	
 	public String getUnicodeSymbol(String s, Color color) { 
 			switch (color) {
 			case WHITE:

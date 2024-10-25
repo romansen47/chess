@@ -51,6 +51,12 @@ public class ChessClock extends StopWatch {
 			incrementTotal += incrementMillis;
 		}
 	}
+	
+	public void addAdditionalTime(long additionalMillis) {
+		if (this.isStarted()) {
+			this.targetTimeMillis += additionalMillis;
+		}
+	}
 
 	@Override
 	public long getTime(TimeUnit timeUnit) {

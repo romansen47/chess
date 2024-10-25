@@ -1,10 +1,12 @@
 package demo.chess.game.impl;
 
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 
 import demo.chess.definitions.Color;
+import demo.chess.definitions.PieceType;
 import demo.chess.definitions.board.Board;
 import demo.chess.definitions.engines.impl.NoMoveFoundException;
 import demo.chess.definitions.fields.Field;
@@ -201,16 +203,7 @@ public abstract class ChessGameTemplate implements Game {
 	 */
 	@Override
 	public void apply(Move move) throws NoMoveFoundException, IOException {
-		boolean applied = false;
-		boolean isRealGame = this instanceof ChessGame;
-		Player opponent = getPlayer().getColor().equals(Color.WHITE) ? this.getBlackPlayer() : this.getWhitePlayer();
-		if (isRealGame) {
-			if ((getPlayer().getChessClock().getTime(TimeUnit.MILLISECONDS) / 1000 > getTimeForEachPlayer())
-					|| (opponent.getChessClock().getTime(TimeUnit.MILLISECONDS) / 1000 > getTimeForEachPlayer())) {
-				setState(State.LOST_ON_TIME);
-				return;
-			}
-		}
+		boolean applied = false; 
 		if (move instanceof EnPassant) {
 			applyEnPassant(move);
 			applied = true;
@@ -226,13 +219,7 @@ public abstract class ChessGameTemplate implements Game {
 		if (!applied) {
 			applyRegularMove(move);
 		}
-
-		if (isRealGame) {
-			if (getPlayer().getValidMoves(this).isEmpty()) {
-				getPlayer().resignOrStaleMate(this);
-			}
-		}
-	}
+	} 
 
 	/**
 	 * Applies a castling move.

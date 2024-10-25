@@ -43,6 +43,7 @@ public abstract class PlayerImpl implements Player {
 	private MoveList moveList;
 	private ChessClock chessClock;
 	private final String name;
+	private int additionalTime;
 
 	/**
 	 * Constructs a PlayerImpl instance with the specified color and move list.
@@ -331,6 +332,16 @@ public abstract class PlayerImpl implements Player {
 	@Override
 	public List<Piece> getPieces() {
 		return pieces;
+	}
+
+	@Override
+	public int getAdditionalTime() {
+		return additionalTime;
+	}
+
+	@Override
+	public void setAdditionalTime(int additionalTime) {
+		this.additionalTime = additionalTime;
 	}
 
 	@Override
