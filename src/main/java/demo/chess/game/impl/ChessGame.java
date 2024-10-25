@@ -103,7 +103,7 @@ public class ChessGame extends ChessGameTemplate {
 		if (getState() == null) {
 			gameEnd = checkForThreefoldRepetition(0);
 			if (getMoveList().size() > 130) {
-//				gameEnd = checkFor50MovesRule();
+				gameEnd = checkFor50MovesRule();
 			}
 		}
 		return gameEnd;
