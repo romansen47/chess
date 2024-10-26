@@ -21,6 +21,7 @@ public class PlayerUciEngine extends ConsoleUciEngine implements PlayerEngine {
 	public Move getBestMove(Game chessGame, EngineConfig config)
 			throws NoMoveFoundException, IOException, InterruptedException {
 
+		logger.info("computing next move for movelist {}", chessGame.getMoveList());
 		StringBuilder command = new StringBuilder("");
 		MoveList moveList = chessGame.getMoveList();
 		for (Move move : moveList) {
