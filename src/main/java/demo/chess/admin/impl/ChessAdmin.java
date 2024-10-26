@@ -58,23 +58,4 @@ public class ChessAdmin implements Admin {
 		return new Simulation(new ChessBoard(), new WhitePlayerImpl(moveList, "Simulation"),
 				new BlackPlayerImpl(moveList, "Simulation"), moveList);
 	}
-
-	@Bean
-	@Override
-	public Map<String, EvaluationEngine> evaluationEngines() {
-		Map<String, EvaluationEngine> engines = new HashMap<>();
-		for (Engine engine : Engine.values()) {
-			try {
-				engines.put(engine.toString(), new EvaluationUciEngine("/usr/games/" + engine.path()) {
-					@Override
-					public String toString() {
-						return engine.toString();
-					}
-				});
-			} catch (Exception e) {
-				logger.info("Failed to create player engine {}", engine);
-			}
-		}
-		return engines;
-	}
 }

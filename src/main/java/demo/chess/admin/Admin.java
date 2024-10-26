@@ -18,7 +18,5 @@ public interface Admin {
 	 */
 	Game chessGame(int time) throws Exception;
 
-	Map<String, EvaluationEngine> evaluationEngines() throws Exception;
-
 	Game simulation();
 }
