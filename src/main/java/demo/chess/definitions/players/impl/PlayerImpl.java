@@ -154,7 +154,6 @@ public abstract class PlayerImpl implements Player {
 			return false;
 		}
 
-		List<Field> listOfFieldsBetweenKingAndRook = new ArrayList<>();
 		int rank = move.getPiece().getField().getRank();
 		int file = move.getPiece().getField().getFile();
 		boolean fieldsAreFree = true;

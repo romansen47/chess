@@ -1,8 +1,5 @@
 package demo.chess.admin.impl;
 
-import java.util.HashMap;
-import java.util.Map;
-
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.springframework.context.annotation.Bean;
@@ -11,9 +8,6 @@ import org.springframework.context.annotation.Scope;
 
 import demo.chess.admin.Admin;
 import demo.chess.definitions.board.impl.ChessBoard;
-import demo.chess.definitions.engines.Engine;
-import demo.chess.definitions.engines.EvaluationEngine;
-import demo.chess.definitions.engines.impl.EvaluationUciEngine;
 import demo.chess.definitions.moves.MoveList;
 import demo.chess.definitions.moves.impl.MoveListImpl;
 import demo.chess.definitions.players.impl.BlackPlayerImpl;

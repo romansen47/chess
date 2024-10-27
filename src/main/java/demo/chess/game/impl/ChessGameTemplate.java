@@ -1,12 +1,9 @@
 package demo.chess.game.impl;
 
 import java.io.IOException;
-import java.util.ArrayList;
 import java.util.List;
-import java.util.concurrent.TimeUnit;
 
 import demo.chess.definitions.Color;
-import demo.chess.definitions.PieceType;
 import demo.chess.definitions.board.Board;
 import demo.chess.definitions.engines.impl.NoMoveFoundException;
 import demo.chess.definitions.fields.Field;
@@ -203,7 +200,7 @@ public abstract class ChessGameTemplate implements Game {
 	 */
 	@Override
 	public void apply(Move move) throws NoMoveFoundException, IOException {
-		boolean applied = false; 
+		boolean applied = false;
 		if (move instanceof EnPassant) {
 			applyEnPassant(move);
 			applied = true;
@@ -219,7 +216,7 @@ public abstract class ChessGameTemplate implements Game {
 		if (!applied) {
 			applyRegularMove(move);
 		}
-	} 
+	}
 
 	/**
 	 * Applies a castling move.

@@ -41,7 +41,7 @@ public class ChessGame extends ChessGameTemplate {
 	int incrementForBlack;
 
 	private List<String> sanMoveList = new ArrayList<>();
-	
+
 	private final List<Long> moveHashes = new ArrayList<>();
 
 	/**
@@ -92,7 +92,7 @@ public class ChessGame extends ChessGameTemplate {
 			getPlayer().getChessClock().resume();
 		}
 	}
-	
+
 
 	private boolean checkForGameEnd() throws NoMoveFoundException, IOException {
 		boolean gameEnd = false;
@@ -101,15 +101,15 @@ public class ChessGame extends ChessGameTemplate {
 			return true;
 		}
 		if (getState() == null) {
-			gameEnd = checkForThreefoldRepetition(0);
 			if (getMoveList().size() > 130) {
 				gameEnd = checkFor50MovesRule();
 			}
+			gameEnd = checkForThreefoldRepetition(0);
 		}
 		return gameEnd;
 	}
 
-	private boolean checkFor50MovesRule() { 
+	private boolean checkFor50MovesRule() {
 		boolean gameEnd = false;
 		List<Move> reducedMoveList = getMoveList().subList(getMoveList().size() - 50, getMoveList().size());
 		List<PieceType> piecesMoved = new ArrayList<>();
@@ -120,10 +120,10 @@ public class ChessGame extends ChessGameTemplate {
 		}
 		return gameEnd;
 	}
-	
+
 	private boolean checkForThreefoldRepetition(int movesBeforeRule) {
 		boolean gameEnd = false;
-		List<Long> reducedMoveList = moveHashes.subList(movesBeforeRule, getMoveList().size()); 
+		List<Long> reducedMoveList = moveHashes.subList(movesBeforeRule, getMoveList().size());
 		for (Long hash : reducedMoveList) {
 			int count = 0;
 			for (Long otherHash : moveHashes) {
@@ -184,7 +184,7 @@ public class ChessGame extends ChessGameTemplate {
 	 */
 	@Override
 	public void apply(Move move) throws NoMoveFoundException, IOException {
-		sanMoveList.add(getShortAlgebraicNotatedMove(move)); 
+		sanMoveList.add(getShortAlgebraicNotatedMove(move));
 		Player opponent = getPlayer().getColor().equals(Color.WHITE) ? this.getBlackPlayer() : this.getWhitePlayer();
 		if ((getPlayer().getChessClock().getTime(TimeUnit.MILLISECONDS) / 1000 > getTimeForEachPlayer())
 				|| (opponent.getChessClock().getTime(TimeUnit.MILLISECONDS) / 1000 > getTimeForEachPlayer())) {
@@ -195,11 +195,11 @@ public class ChessGame extends ChessGameTemplate {
 		moveHashes.add(positionHash());
 		checkForGameEnd();
 	}
-	
-	private long hashOf(Piece piece) { 
+
+	private long hashOf(Piece piece) {
 		final long primeBiggerThanProductOfAll = 11;
 		final long color = piece.getColor().equals(Color.WHITE) ? 1 : 2;
-		return (long) (color  	+ primeBiggerThanProductOfAll * piece.getType().hash() 
+		return (long) (color  	+ primeBiggerThanProductOfAll * piece.getType().hash()
 						+ Math.pow(primeBiggerThanProductOfAll, 2) * (piece.getField().getFile())
 						+ Math.pow(primeBiggerThanProductOfAll, 3) * (piece.getField().getRank()));
 	}
@@ -214,8 +214,8 @@ public class ChessGame extends ChessGameTemplate {
 		}
 		return hash * getWhitePlayer().getPieces().size() * getBlackPlayer().getPieces().size();
 	}
-	
-	public String getUnicodeSymbol(String s, Color color) { 
+
+	public String getUnicodeSymbol(String s, Color color) {
 			switch (color) {
 			case WHITE:
 				switch (s.toLowerCase()) {
@@ -228,7 +228,7 @@ public class ChessGame extends ChessGameTemplate {
 				case "b":
 					return "♗";
 				case "n":
-					return "♘"; 
+					return "♘";
 				}
 			case BLACK:
 				switch (s.toLowerCase()) {
@@ -247,7 +247,7 @@ public class ChessGame extends ChessGameTemplate {
 				return "";
 			}
 	}
-	
+
 	public String getShortAlgebraicNotatedMove(Move moveToExecute) throws NoMoveFoundException, IOException {
 		Game simulation = getAdmin().simulation();
 		for (Move move : getMoveList()) {

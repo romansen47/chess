@@ -1,8 +1,5 @@
 package demo.chess.admin;
 
-import java.util.Map;
-
-import demo.chess.definitions.engines.EvaluationEngine;
 import demo.chess.game.Game;
 
 /**

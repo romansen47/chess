@@ -25,7 +25,7 @@ public enum PieceType {
 
 	/** The label representing the color. */
 	public final String label;
-	
+
 	public final long hash;
 	/**
 	 * Constructs a PieceType enum with the specified label.
@@ -36,9 +36,9 @@ public enum PieceType {
 		this.label = label;
 		this.hash = hash;
 	}
-	
+
 	public long hash() {
 		return hash;
 	}
-	
+
 }
