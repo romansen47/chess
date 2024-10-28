@@ -15,14 +15,11 @@ public abstract class ConsoleUciEngine implements ChessEngine {
 
 	protected static final Logger logger = LogManager.getLogger(ConsoleUciEngine.class);
 
-	final private String path;
-
 	protected Process uciEngineProcess;
 	protected PrintWriter writer;
 	protected BufferedReader reader;
 
 	public ConsoleUciEngine(String path) throws Exception {
-		this.path = path;
 		uciEngineProcess = new ProcessBuilder(path).start();
 		writer = new PrintWriter(new OutputStreamWriter(uciEngineProcess.getOutputStream()), true);
 		reader = new BufferedReader(new InputStreamReader(uciEngineProcess.getInputStream()));
