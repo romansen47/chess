@@ -90,8 +90,10 @@ public class PlayerUciEngine extends ConsoleUciEngine implements PlayerEngine {
 		positionCommand.append("position startpos moves ").append(command.toString()).append("\n");
 		if (config.getDepth() > 0) {
 			positionCommand.append("\ngo depth ").append(config.getDepth());
-		} else {
+		} else if (config.getMoveOverhead() > 0){
 			positionCommand.append("\ngo movetime ").append(config.getMoveOverhead() * 1000);
+		} else {
+			positionCommand.append("\ngo ");
 		}
 		return positionCommand;
 	}
