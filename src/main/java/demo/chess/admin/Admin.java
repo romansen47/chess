@@ -15,5 +15,8 @@ public interface Admin {
 	 */
 	Game chessGame(int time) throws Exception;
 
+	/**
+	 * Creates an instance of a simulation in order to be used for forecasts for move validation.
+	 */
 	Game simulation();
 }
