@@ -13,4 +13,5 @@ public interface EvaluationEngine extends ChessEngine {
 	List<Pair<Double, String>> getBestLines(Game chessgame, EngineConfig config)
 			throws IOException, InterruptedException, ExecutionException;
 
+	void clearChachedLines();
 }

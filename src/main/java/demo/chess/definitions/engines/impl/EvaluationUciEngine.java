@@ -34,6 +34,11 @@ public class EvaluationUciEngine extends ConsoleUciEngine implements EvaluationE
 	}
 
 	@Override
+	public void clearChachedLines() {
+		cachedBestLines.clear();
+	}
+	
+	@Override
 	public synchronized List<Pair<Double, String>> getBestLines(Game chessGame, EngineConfig config)
 			throws IOException, InterruptedException, ExecutionException {
 		if (chessGame.getState() != null) {
