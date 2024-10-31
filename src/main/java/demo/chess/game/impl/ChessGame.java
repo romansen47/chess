@@ -58,7 +58,6 @@ public class ChessGame extends ChessGameTemplate {
 	public ChessGame(Board chessBoard, WhitePlayer whitePlayer, BlackPlayer blackPlayer, MoveList moveList,
 			Admin chessAdmin, int timeForEachPlayer) throws Exception {
 		super(chessBoard, whitePlayer, blackPlayer, moveList);
-		LogManager.getLogger().info("creating new Game. time: {}", timeForEachPlayer);
 		this.setAdmin(chessAdmin);
 		this.timeForEachPlayer = timeForEachPlayer;
 		moveHashes.add(0l);

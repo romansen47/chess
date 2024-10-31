@@ -62,8 +62,7 @@ public class EvaluationUciEngine extends ConsoleUciEngine implements EvaluationE
 		positionCommand.append("\ngo infinite ");
 		return positionCommand;
 	}
-
-	// Methode zum Prüfen, ob ein neuer Zug gemacht wurde
+ 
 	protected boolean isPositionNew(Game chessGame) {
 		String currentPositionHash = chessGame.getMoveList().toString();
 		if (!currentPositionHash.equals(lastPositionHash)) {
@@ -75,7 +74,7 @@ public class EvaluationUciEngine extends ConsoleUciEngine implements EvaluationE
 
 	protected List<Pair<Double, String>> parseBestLines(Color color, List<String> bestLines, EngineConfig config) {
 		List<Pair<Double, String>> moves = new ArrayList<>();
-		int requiredDepth = config.getDepth(); // Der Wert der Mindesttiefe wird von der Methode getDepth() geholt
+		int requiredDepth = config.getDepth();
 
 		for (String chessLine : bestLines) {
 			if (chessLine.contains("info") && chessLine.contains("depth")) {
@@ -125,7 +124,6 @@ public class EvaluationUciEngine extends ConsoleUciEngine implements EvaluationE
 					command.append(move.toString()).append(" ");
 				}
 
-				// Unendliche Analyse starten
 				StringBuilder evaluationCommand = new StringBuilder(
 						"stop\n" + getCommandLineOptions(command, config).toString());
 				getWriter().println(evaluationCommand.toString());
@@ -135,10 +133,6 @@ public class EvaluationUciEngine extends ConsoleUciEngine implements EvaluationE
 				while ((line = reader.readLine()) != null) {
 					if (chessGame.getState() != null) {
 						return;
-					}
-					if (line.startsWith("bestmove")) {
-						bestMove = line;
-						// break;
 					}
 					if (line.contains("info") && line.contains("depth") && !(line.split(" ").length == 3)) {
 						bestLines.add(line);
@@ -184,14 +178,11 @@ public class EvaluationUciEngine extends ConsoleUciEngine implements EvaluationE
 		}
 	}
 
-	// Sortiert die Zuglinien basierend auf der Spielerfarbe
 	protected List<Pair<Double, String>> sortLinesByColor(Color color, List<Pair<Double, String>> lines) {
 		List<Pair<Double, String>> tmpLines = new ArrayList<>(lines);
 		if (color.equals(Color.WHITE)) {
-			// Sortiere für Weiß: positive Bewertungen höher
 			tmpLines.sort((pair1, pair2) -> Double.compare(pair2.getLeft(), pair1.getLeft()));
 		} else {
-			// Sortiere für Schwarz: negative Bewertungen höher
 			tmpLines.sort((pair1, pair2) -> Double.compare(pair1.getLeft(), pair2.getLeft()));
 		}
 		return tmpLines;
