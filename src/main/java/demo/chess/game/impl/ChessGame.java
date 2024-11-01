@@ -76,14 +76,16 @@ public class ChessGame extends ChessGameTemplate {
 	 */
 	@Override
 	public void switchPlayer() {
-		if (!getPlayer().getChessClock().isStarted()) {
+		if (!getPlayer().getChessClock().isRunning()) {
 			getPlayer().getChessClock().start();
 		}
 		getPlayer().getChessClock().addIncrement();
 		if (getMoveList().size() == 79 || getMoveList().size() == 80) {
 			getPlayer().getChessClock().addAdditionalTime(getPlayer().getAdditionalTime());
 		}
-		getPlayer().getChessClock().suspend();
+		if (getPlayer().getChessClock().isRunning()) {
+			getPlayer().getChessClock().suspend();
+		}
 		super.switchPlayer();
 		if (!getPlayer().getChessClock().isStarted()) {
 			getPlayer().getChessClock().start();
