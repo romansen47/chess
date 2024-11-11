@@ -16,5 +16,5 @@ public class WhitePlayerImpl extends PlayerImpl implements WhitePlayer {
 	 */
 	public WhitePlayerImpl(MoveList moveList, String string) {
 		super(Color.WHITE, moveList, string);
-	}
+	} 
 }

@@ -213,7 +213,7 @@ public abstract class PlayerImpl implements Player {
 	 * @throws IOException
 	 * @throws NoMoveFoundException
 	 */
-	private boolean simulate(Game chessGame, Move move) throws NoMoveFoundException, IOException {
+	protected boolean simulate(Game chessGame, Move move) throws NoMoveFoundException, IOException {
 		if (move instanceof Castling && !validateCastling(chessGame, move)) {
 			return false;
 		}

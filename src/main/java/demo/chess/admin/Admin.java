@@ -1,5 +1,6 @@
 package demo.chess.admin;
 
+import demo.chess.game.DummyGame;
 import demo.chess.game.Game;
 
 /**
