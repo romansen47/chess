@@ -6,7 +6,6 @@ import java.util.List;
 import java.util.concurrent.TimeUnit;
 
 import org.apache.commons.lang3.StringUtils;
-import org.apache.logging.log4j.LogManager;
 
 import demo.chess.admin.Admin;
 import demo.chess.definitions.Color;
@@ -56,7 +55,7 @@ public class ChessGame extends ChessGameTemplate {
 	 * @throws Exception
 	 */
 	public ChessGame(Board chessBoard, WhitePlayer whitePlayer, BlackPlayer blackPlayer, MoveList moveList,
-			Admin chessAdmin, int timeForEachPlayer) throws Exception {
+			Admin chessAdmin, int timeForEachPlayer){
 		super(chessBoard, whitePlayer, blackPlayer, moveList);
 		this.setAdmin(chessAdmin);
 		this.timeForEachPlayer = timeForEachPlayer;
@@ -140,7 +139,7 @@ public class ChessGame extends ChessGameTemplate {
 		}
 		return gameEnd;
 	}
-	
+
 	@Override
 	public int getTimeForEachPlayer() {
 		return timeForEachPlayer;

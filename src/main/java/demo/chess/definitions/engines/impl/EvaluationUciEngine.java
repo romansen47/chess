@@ -37,7 +37,7 @@ public class EvaluationUciEngine extends ConsoleUciEngine implements EvaluationE
 	public void clearChachedLines() {
 		cachedBestLines.clear();
 	}
-	
+
 	@Override
 	public synchronized List<Pair<Double, String>> getBestLines(Game chessGame, EngineConfig config)
 			throws IOException, InterruptedException, ExecutionException {
@@ -62,7 +62,7 @@ public class EvaluationUciEngine extends ConsoleUciEngine implements EvaluationE
 		positionCommand.append("\ngo infinite ");
 		return positionCommand;
 	}
- 
+
 	protected boolean isPositionNew(Game chessGame) {
 		String currentPositionHash = chessGame.getMoveList().toString();
 		if (!currentPositionHash.equals(lastPositionHash)) {

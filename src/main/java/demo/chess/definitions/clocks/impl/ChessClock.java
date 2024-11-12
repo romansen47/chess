@@ -80,9 +80,9 @@ public class ChessClock extends StopWatch {
 		super.stop();
 		scheduler.shutdown();
 	}
-	
+
 	public boolean isRunning() {
 		return this.isStarted() && !this.isSuspended();
 	}
-	
+
 }

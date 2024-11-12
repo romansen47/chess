@@ -15,7 +15,6 @@ public class GameLoader {
 	public void loadGame(String location, Game game) throws IOException, NoMoveFoundException {
 		FileReader fileReader = new FileReader(location);
 		BufferedReader bufferedReader = new BufferedReader(fileReader);
-
 		String s = bufferedReader.readLine();
 		while (s != null && !s.isBlank()) {
 			Move finalMove = null;

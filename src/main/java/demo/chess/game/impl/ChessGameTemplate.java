@@ -45,7 +45,6 @@ public abstract class ChessGameTemplate implements Game {
 	 * @param whitePlayer the white player
 	 * @param blackPlayer the black player
 	 * @param moveList    the list of moves
-	 * @param chessAdmin
 	 */
 	public ChessGameTemplate(Board chessBoard, WhitePlayer whitePlayer, BlackPlayer blackPlayer, MoveList moveList) {
 		this.player = whitePlayer;

@@ -1,7 +1,5 @@
 package demo.chess.admin.impl;
 
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Scope;
@@ -23,8 +21,6 @@ import demo.chess.game.impl.Simulation;
 @Configuration
 public class ChessAdmin implements Admin {
 
-	private static final Logger logger = LogManager.getLogger(ChessAdmin.class);
-
 	/**
 	 * Returns the chess game instance managed by the admin.
 	 * <p>
@@ -33,12 +29,11 @@ public class ChessAdmin implements Admin {
 	 * </p>
 	 *
 	 * @return a new instance of {@link ChessGame}
-	 * @throws Exception
 	 */
 	@Override
 	@Bean
 	@Scope("prototype")
-	public Game chessGame(int time) throws Exception {
+	public Game chessGame(int time) {
 		MoveList moveList = new MoveListImpl();
 		return new ChessGame(new ChessBoard(), new WhitePlayerImpl(moveList, "ChessGame"),
 				new BlackPlayerImpl(moveList, "ChessGame"), moveList, this, time);

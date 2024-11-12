@@ -12,7 +12,7 @@ public class DummyBlackPlayer extends BlackPlayerImpl{
 	public DummyBlackPlayer(MoveList moveList) {
 		super(moveList, "Dummy black player");
 	}
-	
+
 	@Override
 	protected boolean simulate(Game chessGame, Move move) throws NoMoveFoundException, IOException {
 		return true;
