@@ -35,7 +35,7 @@ public class EvaluationUciEngine extends ConsoleUciEngine implements EvaluationE
 
 	@Override
 	public void clearChachedLines() {
-		cachedBestLines.clear();
+		getCachedBestLines().clear();
 	}
 
 	@Override
@@ -45,14 +45,14 @@ public class EvaluationUciEngine extends ConsoleUciEngine implements EvaluationE
 			return new ArrayList<>();
 		}
 		String movelist = chessGame.getMoveList().toString();
-		List<Pair<Double, String>> cachedLines = cachedBestLines.get(movelist);
+		List<Pair<Double, String>> cachedLines = getCachedBestLines().get(movelist);
 		if (cachedLines != null) {
-			return cachedBestLines.get(movelist);
+			return getCachedBestLines().get(movelist);
 		}
 
-		cachedBestLines.put(chessGame.getMoveList().toString(), new ArrayList<>());
+		getCachedBestLines().put(chessGame.getMoveList().toString(), new ArrayList<>());
 		startEvaluationEngine(chessGame, movelist, config);
-		return cachedBestLines.get(movelist);
+		return getCachedBestLines().get(movelist);
 	}
 
 	@Override
@@ -138,7 +138,7 @@ public class EvaluationUciEngine extends ConsoleUciEngine implements EvaluationE
 						bestLines.add(line);
 						Color color = moveList.size() % 2 == 0 ? Color.WHITE : Color.BLACK;
 						List<Pair<Double, String>> newLines = parseBestLines(color, bestLines, config);
-						List<Pair<Double, String>> cached = cachedBestLines.get(moveListAsString);
+						List<Pair<Double, String>> cached = getCachedBestLines().get(moveListAsString);
 						if (cached != null && !cached.isEmpty()) {
 							for (Pair<Double, String> pair : cached) {
 								boolean contained = false;
@@ -151,12 +151,10 @@ public class EvaluationUciEngine extends ConsoleUciEngine implements EvaluationE
 									newLines.add(pair);
 								}
 							}
-							newLines.addAll(cached);
 						}
-						cachedBestLines.put(moveListAsString, newLines);
+						getCachedBestLines().put(moveListAsString, newLines);
 					}
 				}
-
 			} catch (IOException e) {
 				logger.debug("Caught IOException since reader is not ready");
 			}
@@ -186,5 +184,13 @@ public class EvaluationUciEngine extends ConsoleUciEngine implements EvaluationE
 			tmpLines.sort((pair1, pair2) -> Double.compare(pair1.getLeft(), pair2.getLeft()));
 		}
 		return tmpLines;
+	}
+
+	/**
+	 * @return the cachedBestLines
+	 */
+	@Override
+	public Map<String, List<Pair<Double, String>>> getCachedBestLines() {
+		return cachedBestLines;
 	}
 }
