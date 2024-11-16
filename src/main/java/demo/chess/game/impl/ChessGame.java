@@ -185,7 +185,7 @@ public class ChessGame extends ChessGameTemplate {
 	 */
 	@Override
 	public void apply(Move move) throws NoMoveFoundException, IOException {
-		if (this.getState() == null) {
+//		if (this.getState() == null) {
 			sanMoveList.add(getShortAlgebraicNotatedMove(move));
 			Player opponent = getPlayer().getColor().equals(Color.WHITE) ? this.getBlackPlayer() : this.getWhitePlayer();
 			if ((getPlayer().getChessClock().getTime(TimeUnit.MILLISECONDS) / 1000 > getTimeForEachPlayer())
@@ -196,8 +196,8 @@ public class ChessGame extends ChessGameTemplate {
 			super.apply(move);
 			moveHashes.add(positionHash());
 			checkForGameEnd();
-		}
-		return;
+//		}
+//		return;
 	}
 
 	protected long hashOf(Piece piece) {

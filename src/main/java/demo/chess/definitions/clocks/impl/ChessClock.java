@@ -32,8 +32,10 @@ public class ChessClock extends StopWatch {
 
 	@Override
 	public void start() {
-		super.start();
-		checkTimePeriodically();
+		if (!this.isStarted()) {
+			super.start();
+			checkTimePeriodically();
+		}
 	}
 
 	@Override

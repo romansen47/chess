@@ -67,7 +67,7 @@ public class PlayerUciEngine extends ConsoleUciEngine implements PlayerEngine {
 				logger.info("No move {} found, frontend and backend might be out of sync due to user interaction...", bestMoveString);
 			}
 		}
-		Thread.sleep(200);
+//		Thread.sleep(200);
 		throw new NoMoveFoundException("No valid move found");
 	}
 
