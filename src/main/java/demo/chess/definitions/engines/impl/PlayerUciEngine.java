@@ -24,10 +24,13 @@ public class PlayerUciEngine extends ConsoleUciEngine implements PlayerEngine {
 		logger.debug("{} computing next move for movelist {}", this, chessGame.getMoveList());
 		StringBuilder command = new StringBuilder("");
 		MoveList moveList = chessGame.getMoveList();
-		for (Move move : moveList) {
-			command.append(move.toString()).append(" ");
+		if (moveList.isEmpty()) {
+			command.append(" []");
+		} else {
+			for (Move move : moveList) {
+				command.append(move.toString()).append(" ");
+			}
 		}
-
 		Color color = moveList.size() % 2 == 0 ? Color.WHITE : Color.BLACK;
 
 		String postfixIncrement = "";
