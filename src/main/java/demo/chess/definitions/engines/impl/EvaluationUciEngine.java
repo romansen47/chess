@@ -62,7 +62,7 @@ public class EvaluationUciEngine extends ConsoleUciEngine implements EvaluationE
 			positionCommand.append("setoption name MultiPV value " + config.getMultiPV());
 		}
 		if (config.getThreads() > 0) {
-			positionCommand.append("setoption name Threads value " + config.getThreads());
+			positionCommand.append("\nsetoption name Threads value " + config.getThreads());
 		}
 		positionCommand.append("\nposition startpos moves ").append(command.toString());
 		positionCommand.append("\ngo infinite ");
@@ -128,7 +128,7 @@ public class EvaluationUciEngine extends ConsoleUciEngine implements EvaluationE
 	    return sortedLines;
 	}
 
-	public void startEvaluationEngine(Game chessGame, String moveListAsString, EngineConfig config) throws IOException {
+	public synchronized void startEvaluationEngine(Game chessGame, String moveListAsString, EngineConfig config) throws IOException {
 	    if (evaluationThread != null) {
 	        stopEvaluation();
 	    }
@@ -181,7 +181,7 @@ public class EvaluationUciEngine extends ConsoleUciEngine implements EvaluationE
 	                        bestLines.add(line);
 
 	                        // Verarbeite die Zeilen, wenn alle Varianten gesammelt wurden
-	                        if (bestLines.stream().filter(l -> l.contains("multipv")).count() >= config.getMultiPV()) {
+	                        if (config.getMultiPV() == 1 || bestLines.stream().filter(l -> l.contains("multipv")).count() >= config.getMultiPV()) {
 	                            Color color = moveList.size() % 2 == 0 ? Color.WHITE : Color.BLACK;
 	                            List<Pair<Pair<Double, Integer>, String>> newLines = parseBestLines(color, bestLines, config);
 
@@ -194,6 +194,7 @@ public class EvaluationUciEngine extends ConsoleUciEngine implements EvaluationE
 	                    }
 	                }
 	            }
+	            reader.close();
 	        } catch (IOException e) {
 	            logger.debug("Caught IOException since reader is not ready");
 	        }
