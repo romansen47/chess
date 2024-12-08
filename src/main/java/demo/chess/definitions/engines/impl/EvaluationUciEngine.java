@@ -140,7 +140,7 @@ public class EvaluationUciEngine extends ConsoleUciEngine implements EvaluationE
 
 //	    List<Move> movelist = new ArrayList<>(chessGame.getMoveList());
 //	    Color color = movelist.size() % 2 == 0 ? Color.WHITE : Color.BLACK;
-	    List<Move> moveList = chessGame.getMoveList();
+	    List<Move> moveList = new ArrayList<>(chessGame.getMoveList());
 	    logger.info("{} is starting new infinite analysis for move list {}", this, moveList);
 
 	    if (evaluationThread != null && !evaluationThread.isInterrupted()) {
