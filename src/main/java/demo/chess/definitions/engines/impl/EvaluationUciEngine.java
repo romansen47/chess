@@ -119,7 +119,8 @@ public class EvaluationUciEngine extends ConsoleUciEngine implements EvaluationE
 	    }
 
 	    List<Pair<Pair<Double, Integer>, String>> sortedLines = new ArrayList<>(multipvLines.values());
-	    sortedLines.sort((pair1, pair2) -> Double.compare(pair2.getLeft().getLeft(), pair1.getLeft().getLeft()));
+	    sortLinesByColor(color, sortedLines);
+//	    sortedLines.sort((pair1, pair2) -> Double.compare(pair2.getLeft().getLeft(), pair1.getLeft().getLeft()));
 
 	    if (sortedLines.size() > maxVariants) {
 	        sortedLines = sortedLines.subList(0, maxVariants);
@@ -137,6 +138,8 @@ public class EvaluationUciEngine extends ConsoleUciEngine implements EvaluationE
 	        return;
 	    }
 
+//	    List<Move> movelist = new ArrayList<>(chessGame.getMoveList());
+//	    Color color = movelist.size() % 2 == 0 ? Color.WHITE : Color.BLACK;
 	    List<Move> moveList = chessGame.getMoveList();
 	    logger.info("{} is starting new infinite analysis for move list {}", this, moveList);
 
