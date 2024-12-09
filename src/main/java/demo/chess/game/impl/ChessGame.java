@@ -101,7 +101,7 @@ public class ChessGame extends ChessGameTemplate {
 			return true;
 		}
 		if (getState() == null) {
-			if (getMoveList().size() > 130) {
+			if (getMoveList().size() > 180) {
 				gameEnd = checkFor50MovesRule();
 			}
 			gameEnd = checkForThreefoldRepetition(0);
@@ -111,7 +111,7 @@ public class ChessGame extends ChessGameTemplate {
 
 	protected boolean checkFor50MovesRule() {
 		boolean gameEnd = false;
-		List<Move> reducedMoveList = getMoveList().subList(getMoveList().size() - 50, getMoveList().size());
+		List<Move> reducedMoveList = getMoveList().subList(getMoveList().size() - 100, getMoveList().size());
 		List<PieceType> piecesMoved = new ArrayList<>();
 		reducedMoveList.forEach(move -> piecesMoved.add(move.getPiece().getType()));
 		if (!piecesMoved.contains(PieceType.PAWN)) {
