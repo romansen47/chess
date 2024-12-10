@@ -161,6 +161,7 @@ public class EvaluationUciEngine extends ConsoleUciEngine implements EvaluationE
 
 	            StringBuilder evaluationCommand = new StringBuilder(
 	                    "stop\n" + getCommandLineOptions(command, config).toString());
+	            logger.info("Starting new infinite analysis with {} threads", config.getThreads());
 	            getWriter().println(evaluationCommand.toString());
 	            getWriter().flush();
 
