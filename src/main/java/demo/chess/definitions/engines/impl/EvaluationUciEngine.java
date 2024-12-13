@@ -99,6 +99,7 @@ public class EvaluationUciEngine extends ConsoleUciEngine implements EvaluationE
 
 	                if (chessLine.contains("mate")) {
 	                    parsedValue = Integer.signum(Integer.parseInt(chessLine.split("mate")[1].split(" ")[1])) * 99d;
+						currentDepth = Math.abs(Integer.parseInt(chessLine.split("mate")[1].split(" ")[1]));
 	                } else if (chessLine.contains("cp")) {
 	                    parsedValue = Double.parseDouble(chessLine.split("cp")[1].split(" ")[1]) / 100.0;
 	                }
