@@ -13,8 +13,9 @@ import demo.chess.definitions.moves.impl.MoveListImpl;
 import demo.chess.definitions.players.BlackPlayer;
 import demo.chess.definitions.players.WhitePlayer;
 import demo.chess.definitions.players.impl.BlackPlayerImpl;
+import demo.chess.definitions.players.impl.DummyBlackPlayer;
+import demo.chess.definitions.players.impl.DummyWhitePlayer;
 import demo.chess.definitions.players.impl.WhitePlayerImpl;
-import demo.chess.game.Game;
 
 public class Simulation extends ChessGameTemplate {
 
@@ -38,14 +39,22 @@ public class Simulation extends ChessGameTemplate {
 				new BlackPlayerImpl(moveList, "Simulation"), moveList);
 	}
 	
-	public static Simulation forkFromn(MoveList ml) throws NoMoveFoundException, IOException {
-		MoveList moveList = new MoveListImpl();
-		Simulation simulation = new Simulation(new ChessBoard(), new WhitePlayerImpl(moveList, "Simulation"),
-				new BlackPlayerImpl(moveList, "Simulation"), moveList);
+	public static Simulation forkSimulationFrom(MoveList ml) throws NoMoveFoundException, IOException {
+		Simulation simulation = createSimulation();
 		for (Move move : ml) {
 			simulation.apply(simulation.getPlayer().getMoveInSimulation(simulation, move));
 		}
 		return simulation;
+	}
+
+	public static DummyChessGame forkDummyFrom(MoveList ml) throws NoMoveFoundException, IOException {
+		MoveList moveList = new MoveListImpl();
+		DummyChessGame fork = new DummyChessGame(new ChessBoard(), new DummyWhitePlayer(moveList),
+				new DummyBlackPlayer(moveList), moveList);
+		for (Move move : ml) {
+			fork.apply(fork.getPlayer().getMoveInSimulation(fork, move));
+		}
+		return fork;
 	}
 	
 	@Override

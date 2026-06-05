@@ -2,7 +2,6 @@ package demo.chess.game.impl;
 
 import java.io.IOException;
 
-import demo.chess.admin.Admin;
 import demo.chess.definitions.board.Board;
 import demo.chess.definitions.engines.impl.NoMoveFoundException;
 import demo.chess.definitions.moves.MoveList;
@@ -13,8 +12,7 @@ import demo.chess.game.DummyGame;
 
 public class DummyChessGame extends Simulation implements DummyGame{
 
-	public DummyChessGame(Board chessBoard, DummyWhitePlayer whitePlayer, DummyBlackPlayer blackPlayer, MoveList moveList,
-			Admin chessAdmin){
+	public DummyChessGame(Board chessBoard, DummyWhitePlayer whitePlayer, DummyBlackPlayer blackPlayer, MoveList moveList){
 		super(chessBoard, whitePlayer, blackPlayer, moveList);
 	}
 

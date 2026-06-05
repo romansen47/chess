@@ -28,7 +28,6 @@ import demo.chess.definitions.pieces.impl.Rook;
 import demo.chess.definitions.players.Player;
 import demo.chess.definitions.states.State;
 import demo.chess.game.Game;
-import demo.chess.game.impl.ChessGame;
 import demo.chess.game.impl.Simulation;
 
 /**

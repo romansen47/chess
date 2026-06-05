@@ -23,7 +23,7 @@ import demo.chess.definitions.players.BlackPlayer;
 import demo.chess.definitions.players.Player;
 import demo.chess.definitions.players.WhitePlayer;
 import demo.chess.definitions.states.State;
-import demo.chess.game.Game;
+import demo.chess.game.DummyGame;
 
 /**
  * The ChessGame class implements the core functionality for applying different
@@ -185,19 +185,16 @@ public class ChessGame extends ChessGameTemplate {
 	 */
 	@Override
 	public void apply(Move move) throws NoMoveFoundException, IOException {
-//		if (this.getState() == null) {
-			sanMoveList.add(getShortAlgebraicNotatedMove(move));
-			Player opponent = getPlayer().getColor().equals(Color.WHITE) ? this.getBlackPlayer() : this.getWhitePlayer();
-			if ((getPlayer().getChessClock().getTime(TimeUnit.MILLISECONDS) / 1000 > getTimeForEachPlayer())
-					|| (opponent.getChessClock().getTime(TimeUnit.MILLISECONDS) / 1000 > getTimeForEachPlayer())) {
-				setState(State.LOST_ON_TIME);
-				return;
-			}
-			super.apply(move);
-			moveHashes.add(positionHash());
-			checkForGameEnd();
-//		}
-//		return;
+		sanMoveList.add(getShortAlgebraicNotatedMove(move));
+		Player opponent = getPlayer().getColor().equals(Color.WHITE) ? this.getBlackPlayer() : this.getWhitePlayer();
+		if ((getPlayer().getChessClock().getTime(TimeUnit.MILLISECONDS) / 1000 > getTimeForEachPlayer())
+				|| (opponent.getChessClock().getTime(TimeUnit.MILLISECONDS) / 1000 > getTimeForEachPlayer())) {
+			setState(State.LOST_ON_TIME);
+			return;
+		}
+		super.apply(move);
+		moveHashes.add(positionHash());
+		checkForGameEnd();
 	}
 
 	protected long hashOf(Piece piece) {
@@ -254,11 +251,8 @@ public class ChessGame extends ChessGameTemplate {
 
 	public String getShortAlgebraicNotatedMove(Move moveToExecute) throws NoMoveFoundException, IOException {
 		
-//		Game simulation = getAdmin().simulation();
-//		for (Move move : getMoveList()) {
-//			simulation.apply(simulation.getPlayer().getMoveInSimulation(simulation, move));
-//		}
-		Simulation simulation = Simulation.forkFromn(getMoveList());
+		DummyGame simulation = Simulation.forkDummyFrom(getMoveList());
+		
 		String convertedMove = "";
 		Field originalSource = moveToExecute.getSource();
 		Field originalTarget = moveToExecute.getTarget();
