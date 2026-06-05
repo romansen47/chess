@@ -253,10 +253,12 @@ public class ChessGame extends ChessGameTemplate {
 	}
 
 	public String getShortAlgebraicNotatedMove(Move moveToExecute) throws NoMoveFoundException, IOException {
-		Game simulation = getAdmin().simulation();
-		for (Move move : getMoveList()) {
-			simulation.apply(simulation.getPlayer().getMoveInSimulation(simulation, move));
-		}
+		
+//		Game simulation = getAdmin().simulation();
+//		for (Move move : getMoveList()) {
+//			simulation.apply(simulation.getPlayer().getMoveInSimulation(simulation, move));
+//		}
+		Simulation simulation = Simulation.forkFromn(getMoveList());
 		String convertedMove = "";
 		Field originalSource = moveToExecute.getSource();
 		Field originalTarget = moveToExecute.getTarget();

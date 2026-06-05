@@ -38,13 +38,4 @@ public class ChessAdmin implements Admin {
 		return new ChessGame(new ChessBoard(), new WhitePlayerImpl(moveList, "ChessGame"),
 				new BlackPlayerImpl(moveList, "ChessGame"), moveList, this, time);
 	}
-
-	@Override
-	@Bean
-	@Scope("prototype")
-	public Game simulation() {
-		MoveList moveList = new MoveListImpl();
-		return new Simulation(new ChessBoard(), new WhitePlayerImpl(moveList, "Simulation"),
-				new BlackPlayerImpl(moveList, "Simulation"), moveList);
-	}
 }

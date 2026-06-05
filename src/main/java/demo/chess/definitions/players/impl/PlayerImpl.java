@@ -29,6 +29,7 @@ import demo.chess.definitions.players.Player;
 import demo.chess.definitions.states.State;
 import demo.chess.game.Game;
 import demo.chess.game.impl.ChessGame;
+import demo.chess.game.impl.Simulation;
 
 /**
  * Abstract class representing a chess player with common functionalities.
@@ -217,7 +218,7 @@ public abstract class PlayerImpl implements Player {
 		if (move instanceof Castling && !validateCastling(chessGame, move)) {
 			return false;
 		}
-		Game simulation = ((ChessGame) chessGame).getAdmin().simulation();
+		Game simulation = Simulation.createSimulation();
 		for (Move m : getMoveList()) {
 			Move newMove = getMoveInSimulation(simulation, m);
 			simulation.apply(newMove);

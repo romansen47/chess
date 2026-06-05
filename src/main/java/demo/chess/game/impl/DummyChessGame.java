@@ -11,25 +11,25 @@ import demo.chess.definitions.players.impl.DummyWhitePlayer;
 import demo.chess.definitions.states.State;
 import demo.chess.game.DummyGame;
 
-public class DummyChessGame extends ChessGame implements DummyGame{
+public class DummyChessGame extends Simulation implements DummyGame{
 
 	public DummyChessGame(Board chessBoard, DummyWhitePlayer whitePlayer, DummyBlackPlayer blackPlayer, MoveList moveList,
 			Admin chessAdmin){
-		super(chessBoard, whitePlayer, blackPlayer, moveList, chessAdmin, 1000000);
+		super(chessBoard, whitePlayer, blackPlayer, moveList);
 	}
 
 	@Override
-	protected boolean checkForGameEnd() throws NoMoveFoundException, IOException {
+	public boolean checkForGameEnd() throws NoMoveFoundException, IOException {
 		return false;
 	}
 
 	@Override
-	protected boolean checkFor50MovesRule() {
+	public boolean checkFor50MovesRule() {
 		return false;
 	}
 
 	@Override
-	protected boolean checkForThreefoldRepetition(int movesBeforeRule) {
+	public boolean checkForThreefoldRepetition(int movesBeforeRule) {
 		return false;
 	}
 

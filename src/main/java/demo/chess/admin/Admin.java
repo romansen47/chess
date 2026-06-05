@@ -13,9 +13,4 @@ public interface Admin {
 	 * @return the chess game instance
 	 */
 	Game chessGame(int time);
-
-	/**
-	 * Creates an instance of a simulation in order to be used for forecasts for move validation.
-	 */
-	Game simulation();
 }
