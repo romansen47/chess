@@ -12,7 +12,6 @@ import demo.chess.definitions.players.impl.BlackPlayerImpl;
 import demo.chess.definitions.players.impl.WhitePlayerImpl;
 import demo.chess.game.Game;
 import demo.chess.game.impl.ChessGame;
-import demo.chess.game.impl.Simulation;
 
 /**
  * Configuration class providing the chess game bean and implementing the Admin
