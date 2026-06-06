@@ -4,6 +4,7 @@ import java.io.BufferedReader;
 import java.io.InputStreamReader;
 import java.io.OutputStreamWriter;
 import java.io.PrintWriter;
+import java.util.concurrent.TimeUnit;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -26,16 +27,36 @@ public abstract class ConsoleUciEngine implements ChessEngine {
 	}
 
 	@Override
-	public void close() {
-		getWriter().println("quit");
-		getWriter().flush();
-		getWriter().close();
+	public synchronized void close() {
 		try {
-			reader.close();
+			if (writer != null) {
+				writer.println("quit");
+				writer.flush();
+				writer.close();
+			}
 		} catch (Exception e) {
-			e.printStackTrace();
+			logger.debug("Could not send quit to UCI engine", e);
 		}
-		uciEngineProcess.destroy();
+
+		try {
+			if (reader != null) {
+				reader.close();
+			}
+		} catch (Exception e) {
+			logger.debug("Could not close UCI engine reader", e);
+		}
+
+		if (uciEngineProcess != null) {
+			uciEngineProcess.destroy();
+			try {
+				if (!uciEngineProcess.waitFor(1, TimeUnit.SECONDS)) {
+					uciEngineProcess.destroyForcibly();
+				}
+			} catch (InterruptedException e) {
+				Thread.currentThread().interrupt();
+				uciEngineProcess.destroyForcibly();
+			}
+		}
 	}
 
 	protected abstract StringBuilder getCommandLineOptions(StringBuilder command, EngineConfig config);
