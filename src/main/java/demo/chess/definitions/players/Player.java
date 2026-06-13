@@ -24,6 +24,13 @@ public interface Player {
 	Color getColor();
 
 	/**
+	 * Returns the display name of the player.
+	 *
+	 * @return the player name
+	 */
+	String getName();
+
+	/**
 	 * Returns the list of pieces owned by the player.
 	 *
 	 * @return the list of pieces

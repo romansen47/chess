@@ -329,6 +329,11 @@ public abstract class PlayerImpl implements Player {
 	}
 
 	@Override
+	public String getName() {
+		return name;
+	}
+
+	@Override
 	public List<Piece> getPieces() {
 		return pieces;
 	}
