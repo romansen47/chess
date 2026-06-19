@@ -296,37 +296,59 @@ public class ChessGame extends ChessGameTemplate {
 			postFix = "=" + getPiecePrefix(((Promotion) moveInSimulation).getPromotedPiece());
 
 		} else {
-			List<Piece> possiblePieces = new ArrayList<>();
-			validMoves.forEach(move -> {
-				if (move.getTarget().equals(target)) {
-					possiblePieces.add(move.getPiece());
-				}
-			});
-			if (possiblePieces.size() != 1) {
-				List<String> s = new ArrayList<>();
-				String relevantType = getPiecePrefix(source.getPiece());
-				possiblePieces.forEach(piece -> {
-					if (getPiecePrefix(piece).equals(relevantType) && piece != moveInSimulation.getPiece()) {
-						s.add(relevantType);
-					}
-				});
-				if (s.size() > 0) {
-					if (s.size() > 1) {
-						sourceFieldToString = source.toString();
-					} else {
-						if (s.size() == 1) {
-							if (moveInSimulation.getSource().getFile() != possiblePieces.get(0).getField().getFile()) {
-								sourceFieldToString = moveInSimulation.getSource().toString().substring(0,1);
-							} else {
-								sourceFieldToString = moveInSimulation.getSource().toString().substring(1,2);
-							}
-						}
-					}
-				}
-			}
+			sourceFieldToString = getSourceDisambiguationForMove(validMoves, moveInSimulation);
 		}
 		convertedMove = pieceToString + sourceFieldToString + hits + targetFieldToString + postFix;
 		return convertedMove;
+	}
+
+	private String getSourceDisambiguationForMove(List<Move> validMoves, Move moveInSimulation) {
+		if (moveInSimulation == null
+				|| moveInSimulation.getPiece() == null
+				|| moveInSimulation.getPiece().getType().equals(PieceType.PAWN)
+				|| moveInSimulation.getSource() == null
+				|| moveInSimulation.getTarget() == null) {
+			return StringUtils.EMPTY;
+		}
+
+		List<Move> competingMoves = new ArrayList<>();
+		for (Move candidate : validMoves) {
+			if (candidate == null
+					|| candidate.getPiece() == null
+					|| candidate.getSource() == null
+					|| candidate.getTarget() == null) {
+				continue;
+			}
+
+			if (candidate.getSource().equals(moveInSimulation.getSource())
+					&& candidate.getTarget().equals(moveInSimulation.getTarget())) {
+				continue;
+			}
+
+			if (candidate.getTarget().equals(moveInSimulation.getTarget())
+					&& candidate.getPiece().getType().equals(moveInSimulation.getPiece().getType())) {
+				competingMoves.add(candidate);
+			}
+		}
+
+		if (competingMoves.isEmpty()) {
+			return StringUtils.EMPTY;
+		}
+
+		boolean sameFileExists = competingMoves.stream()
+				.anyMatch(candidate -> candidate.getSource().getFile() == moveInSimulation.getSource().getFile());
+		boolean sameRankExists = competingMoves.stream()
+				.anyMatch(candidate -> candidate.getSource().getRank() == moveInSimulation.getSource().getRank());
+
+		if (sameFileExists && sameRankExists) {
+			return moveInSimulation.getSource().toString();
+		}
+
+		if (sameFileExists) {
+			return moveInSimulation.getSource().toString().substring(1, 2);
+		}
+
+		return moveInSimulation.getSource().toString().substring(0, 1);
 	}
 
 	String getPiecePrefix(Piece piece) {
