@@ -3,7 +3,6 @@ package demo.chess.definitions.engines.impl;
 import java.io.IOException;
 import java.util.concurrent.TimeUnit;
 
-import demo.chess.definitions.Color;
 import demo.chess.definitions.engines.EngineConfig;
 import demo.chess.definitions.engines.PlayerEngine;
 import demo.chess.definitions.moves.Move;
@@ -31,28 +30,21 @@ public class PlayerUciEngine extends ConsoleUciEngine implements PlayerEngine {
 				command.append(move.toString()).append(" ");
 			}
 		}
-		Color color = moveList.size() % 2 == 0 ? Color.WHITE : Color.BLACK;
 
-		String postfixIncrement = "";
-		long whiteTime = chessGame.getTimeForEachPlayer() * 1000l
-				- chessGame.getWhitePlayer().getChessClock().getTime(TimeUnit.MILLISECONDS);
-		long blackTime = chessGame.getTimeForEachPlayer() * 1000l
-				- chessGame.getBlackPlayer().getChessClock().getTime(TimeUnit.MILLISECONDS);
+		long whiteTimeMillis = Math.max(0L, chessGame.getTimeForEachPlayer() * 1000L
+				- chessGame.getWhitePlayer().getChessClock().getTime(TimeUnit.MILLISECONDS));
+		long blackTimeMillis = Math.max(0L, chessGame.getTimeForEachPlayer() * 1000L
+				- chessGame.getBlackPlayer().getChessClock().getTime(TimeUnit.MILLISECONDS));
+		long whiteIncrementMillis = Math.max(0L, chessGame.getIncrementForWhite() * 1000L);
+		long blackIncrementMillis = Math.max(0L, chessGame.getIncrementForBlack() * 1000L);
 
-		if (color.equals(Color.WHITE)) {
-			postfixIncrement = " wtime " + whiteTime;
-			if (chessGame.getIncrementForWhite() > 0) {
-				postfixIncrement += " winc " + chessGame.getIncrementForWhite();
-			}
-		}
-		if (color.equals(Color.BLACK)) {
-			postfixIncrement = " btime " + blackTime;
-			if (chessGame.getIncrementForBlack() > 0) {
-				postfixIncrement += " binc " + chessGame.getIncrementForBlack();
-			}
-		}
-
-		StringBuilder positionCommand = getCommandLineOptions(command, config).append(postfixIncrement);
+		StringBuilder positionCommand = getPlayerCommandLineOptions(
+				command,
+				config,
+				whiteTimeMillis,
+				blackTimeMillis,
+				whiteIncrementMillis,
+				blackIncrementMillis);
 		logger.debug("calling command: \n{}", positionCommand);
 		writer.println(positionCommand.toString());
 		writer.flush();
@@ -77,6 +69,16 @@ public class PlayerUciEngine extends ConsoleUciEngine implements PlayerEngine {
 
 	@Override
 	protected StringBuilder getCommandLineOptions(StringBuilder command, EngineConfig config) {
+		return getPlayerCommandLineOptions(command, config, 0L, 0L, 0L, 0L);
+	}
+
+	private StringBuilder getPlayerCommandLineOptions(
+			StringBuilder command,
+			EngineConfig config,
+			long whiteTimeMillis,
+			long blackTimeMillis,
+			long whiteIncrementMillis,
+			long blackIncrementMillis) {
 		StringBuilder positionCommand = new StringBuilder();
 		if (config.getThreads() > 0) {
 			positionCommand.append("setoption name Threads value ").append(config.getThreads()).append("\n");
@@ -93,11 +95,15 @@ public class PlayerUciEngine extends ConsoleUciEngine implements PlayerEngine {
 		}
 		positionCommand.append("position startpos moves ").append(command.toString()).append("\n");
 		if (config.getDepth() > 0) {
-			positionCommand.append("\ngo depth ").append(config.getDepth());
-		} else if (config.getMoveOverhead() > 0){
-			positionCommand.append("\ngo movetime ").append(config.getMoveOverhead() * 1000);
+			positionCommand.append("go depth ").append(config.getDepth());
+		} else if (config.getMoveOverhead() > 0) {
+			positionCommand.append("go movetime ").append(config.getMoveOverhead() * 1000L);
 		} else {
-			positionCommand.append("\ngo ");
+			positionCommand.append("go")
+					.append(" wtime ").append(Math.max(0L, whiteTimeMillis))
+					.append(" btime ").append(Math.max(0L, blackTimeMillis))
+					.append(" winc ").append(Math.max(0L, whiteIncrementMillis))
+					.append(" binc ").append(Math.max(0L, blackIncrementMillis));
 		}
 		return positionCommand;
 	}
