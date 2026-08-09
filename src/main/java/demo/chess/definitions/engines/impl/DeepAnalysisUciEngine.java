@@ -5,11 +5,10 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.ExecutionException;
 
-import org.apache.commons.lang3.tuple.Pair;
-
 import demo.chess.definitions.Color;
 import demo.chess.definitions.engines.DeepAnalysisEngine;
 import demo.chess.definitions.engines.EngineConfig;
+import demo.chess.definitions.engines.EngineLine;
 import demo.chess.definitions.moves.Move;
 import demo.chess.game.Game;
 
@@ -29,10 +28,10 @@ public class DeepAnalysisUciEngine extends EvaluationUciEngine implements DeepAn
      * konkurrieren.
      */
     @Override
-    public synchronized List<Pair<Pair<Double, Integer>, String>> getBestLines(Game chessGame, EngineConfig config)
+    public synchronized List<EngineLine> getBestLines(Game chessGame, EngineConfig config)
             throws IOException, InterruptedException, ExecutionException {
         String moveListAsString = chessGame.getMoveList().toString();
-        List<Pair<Pair<Double, Integer>, String>> cachedLines = getCachedBestLines().get(moveListAsString);
+        List<EngineLine> cachedLines = getCachedBestLines().get(moveListAsString);
         if (cachedLines != null) {
             return cachedLines;
         }
@@ -57,7 +56,7 @@ public class DeepAnalysisUciEngine extends EvaluationUciEngine implements DeepAn
         }
 
         Color sideToMove = moveList.size() % 2 == 0 ? Color.WHITE : Color.BLACK;
-        List<Pair<Pair<Double, Integer>, String>> parsedLines = parseBestLines(sideToMove, rawInfoLines, config);
+        List<EngineLine> parsedLines = parseBestLines(sideToMove, rawInfoLines, config);
         getCachedBestLines().put(moveListAsString, parsedLines);
         return parsedLines;
     }

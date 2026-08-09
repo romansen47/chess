@@ -5,12 +5,12 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.TreeMap;
 import java.util.concurrent.ExecutionException;
-
-import org.apache.commons.lang3.tuple.Pair;
 
 import demo.chess.definitions.Color;
 import demo.chess.definitions.engines.EngineConfig;
+import demo.chess.definitions.engines.EngineLine;
 import demo.chess.definitions.engines.EvaluationEngine;
 import demo.chess.definitions.moves.Move;
 import demo.chess.game.Game;
@@ -18,7 +18,7 @@ import demo.chess.game.Game;
 public class EvaluationUciEngine extends ConsoleUciEngine implements EvaluationEngine {
 
 	String bestMove;
-	private Map<String, List<Pair<Pair<Double, Integer>, String>>> cachedBestLines = new HashMap<>();
+	private Map<String, List<EngineLine>> cachedBestLines = new HashMap<>();
 	private String lastPositionHash = "";
 	private Thread evaluationThread;
 
@@ -33,13 +33,13 @@ public class EvaluationUciEngine extends ConsoleUciEngine implements EvaluationE
 	}
 
 	@Override
-	public synchronized List<Pair<Pair<Double, Integer>, String>> getBestLines(Game chessGame, EngineConfig config)
+	public synchronized List<EngineLine> getBestLines(Game chessGame, EngineConfig config)
 			throws IOException, InterruptedException, ExecutionException {
 		if (chessGame.getState() != null) {
 			return new ArrayList<>();
 		}
 		String movelist = chessGame.getMoveList().toString();
-		List<Pair<Pair<Double, Integer>, String>> cachedLines = getCachedBestLines().get(movelist);
+		List<EngineLine> cachedLines = getCachedBestLines().get(movelist);
 		if (cachedLines != null) {
 			return getCachedBestLines().get(movelist);
 		}
@@ -72,8 +72,8 @@ public class EvaluationUciEngine extends ConsoleUciEngine implements EvaluationE
 		return false;
 	}
 
-	protected List<Pair<Pair<Double, Integer>, String>> parseBestLines(Color color, List<String> bestLines, EngineConfig config) {
-	    Map<Integer, Pair<Pair<Double, Integer>, String>> multipvLines = new HashMap<>();
+	protected List<EngineLine> parseBestLines(Color color, List<String> bestLines, EngineConfig config) {
+	    Map<Integer, EngineLine> multipvLines = new TreeMap<>();
 	    int requiredDepth = config.getDepth();
 	    int maxVariants = config.getMultiPV();
 
@@ -90,10 +90,12 @@ public class EvaluationUciEngine extends ConsoleUciEngine implements EvaluationE
 	            // Ignoriere Zeilen mit geringerer Tiefe
 	            if (currentDepth >= maxDepth && currentDepth >= requiredDepth) {
 	                double parsedValue = 0;
+	                Integer mateDistance = null;
 
 	                if (chessLine.contains("mate")) {
-	                    parsedValue = Integer.signum(Integer.parseInt(chessLine.split("mate")[1].split(" ")[1])) * 99d;
-						currentDepth = Math.abs(Integer.parseInt(chessLine.split("mate")[1].split(" ")[1]));
+	                    int mateScore = Integer.parseInt(chessLine.split("mate")[1].split(" ")[1]);
+	                    parsedValue = mateScore == 0 ? -99d : Integer.signum(mateScore) * 99d;
+	                    mateDistance = Math.abs(mateScore);
 	                } else if (chessLine.contains("cp")) {
 	                    parsedValue = Double.parseDouble(chessLine.split("cp")[1].split(" ")[1]) / 100.0;
 	                }
@@ -101,20 +103,22 @@ public class EvaluationUciEngine extends ConsoleUciEngine implements EvaluationE
 	                if (chessLine.contains("multipv")) {
 	                    int multipv = Integer.parseInt(chessLine.split("multipv ")[1].split(" ")[0]);
 
-	                    if (!multipvLines.containsKey(multipv)) {
-	                        if (chessLine.contains("pv")) {
-	                            String uciEngineLine = chessLine.split(" pv ")[1];
-	                            double factor = color.equals(Color.BLACK) ? -1 : 1;
-	                            multipvLines.put(multipv, Pair.of(Pair.of(factor * parsedValue, currentDepth), uciEngineLine));
-	                        }
+	                    if (!multipvLines.containsKey(multipv) && chessLine.contains("pv")) {
+	                        String uciEngineLine = chessLine.split(" pv ")[1];
+	                        double factor = color.equals(Color.BLACK) ? -1 : 1;
+	                        multipvLines.put(multipv, new EngineLine(
+	                                factor * parsedValue,
+	                                currentDepth,
+	                                mateDistance,
+	                                uciEngineLine));
 	                    }
 	                }
 	            }
 	        }
 	    }
 
-	    List<Pair<Pair<Double, Integer>, String>> sortedLines = new ArrayList<>(multipvLines.values());
-	    sortLinesByColor(color, sortedLines);
+	    // Die UCI-Engine liefert die Rangfolge bereits über multipv 1, 2, 3, ...
+	    List<EngineLine> sortedLines = new ArrayList<>(multipvLines.values());
 
 	    if (sortedLines.size() > maxVariants) {
 	        sortedLines = sortedLines.subList(0, maxVariants);
@@ -175,7 +179,7 @@ public class EvaluationUciEngine extends ConsoleUciEngine implements EvaluationE
 	                        // Verarbeite die Zeilen, wenn alle Varianten gesammelt wurden
 	                        if (config.getMultiPV() == 1 || bestLines.stream().filter(l -> l.contains("multipv")).count() >= config.getMultiPV()) {
 	                            Color color = moveList.size() % 2 == 0 ? Color.WHITE : Color.BLACK;
-	                            List<Pair<Pair<Double, Integer>, String>> newLines = parseBestLines(color, bestLines, config);
+	                            List<EngineLine> newLines = parseBestLines(color, bestLines, config);
 
 	                            synchronized (getCachedBestLines()) {
 	                                getCachedBestLines().put(moveListAsString, newLines);
@@ -209,12 +213,12 @@ public class EvaluationUciEngine extends ConsoleUciEngine implements EvaluationE
 		}
 	}
 
-	protected List<Pair<Pair<Double, Integer> , String>> sortLinesByColor(Color color, List<Pair<Pair<Double, Integer>, String>> moves) {
-		List<Pair<Pair<Double, Integer>, String>> tmpLines = new ArrayList<>(moves);
+	protected List<EngineLine> sortLinesByColor(Color color, List<EngineLine> moves) {
+		List<EngineLine> tmpLines = new ArrayList<>(moves);
 		if (color.equals(Color.WHITE)) {
-			tmpLines.sort((pair1, pair2) -> Double.compare(pair2.getLeft().getLeft(), pair1.getLeft().getLeft()));
+			tmpLines.sort((line1, line2) -> Double.compare(line2.getEvaluation(), line1.getEvaluation()));
 		} else {
-			tmpLines.sort((pair1, pair2) -> Double.compare(pair1.getLeft().getLeft(), pair2.getLeft().getLeft()));
+			tmpLines.sort((line1, line2) -> Double.compare(line1.getEvaluation(), line2.getEvaluation()));
 		}
 		return tmpLines;
 	}
@@ -223,7 +227,7 @@ public class EvaluationUciEngine extends ConsoleUciEngine implements EvaluationE
 	 * @return the cachedBestLines
 	 */
 	@Override
-	public Map<String, List<Pair<Pair<Double, Integer>, String>>> getCachedBestLines() {
+	public Map<String, List<EngineLine>> getCachedBestLines() {
 		return cachedBestLines;
 	}
 }
