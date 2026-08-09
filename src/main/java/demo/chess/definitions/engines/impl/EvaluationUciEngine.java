@@ -1,10 +1,6 @@
 package demo.chess.definitions.engines.impl;
 
-import java.io.BufferedReader;
 import java.io.IOException;
-import java.io.InputStreamReader;
-import java.io.OutputStreamWriter;
-import java.io.PrintWriter;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -25,12 +21,10 @@ public class EvaluationUciEngine extends ConsoleUciEngine implements EvaluationE
 	private Map<String, List<Pair<Pair<Double, Integer>, String>>> cachedBestLines = new HashMap<>();
 	private String lastPositionHash = "";
 	private Thread evaluationThread;
-	String path;
 
 	public EvaluationUciEngine(String path) throws Exception {
 		super(path);
 		logger.info("Creating new evaluation engine: {}", path);
-		this.path = path;
 	}
 
 	@Override
@@ -145,15 +139,11 @@ public class EvaluationUciEngine extends ConsoleUciEngine implements EvaluationE
 	    	evaluationThread.interrupt();
 	    }
 	    
-	    writer.close();
-	    reader.close();
-	    
 	    evaluationThread = new Thread(() -> {
 	        try {
-	            this.uciEngineProcess.destroy();
-	            this.uciEngineProcess = new ProcessBuilder(path).start();
-	            writer = new PrintWriter(new OutputStreamWriter(uciEngineProcess.getOutputStream()), true);
-	            reader = new BufferedReader(new InputStreamReader(uciEngineProcess.getInputStream()));
+	            restartProcess();
+	            final java.io.PrintWriter processWriter = writer;
+	            final java.io.BufferedReader processReader = reader;
 
 	            StringBuilder command = new StringBuilder();
 	            for (Move move : moveList) {
@@ -163,13 +153,13 @@ public class EvaluationUciEngine extends ConsoleUciEngine implements EvaluationE
 	            StringBuilder evaluationCommand = new StringBuilder(
 	                    "stop\n" + getCommandLineOptions(command, config).toString());
 	            logger.info("Starting new infinite analysis with {} threads", config.getThreads());
-	            getWriter().println(evaluationCommand.toString());
-	            getWriter().flush();
+	            processWriter.println(evaluationCommand.toString());
+	            processWriter.flush();
 
 	            List<String> bestLines = new ArrayList<>();
 	            int currentMaxDepth = 10;
 	            String line;
-	            while ((line = reader.readLine()) != null) {
+	            while ((line = processReader.readLine()) != null) {
 	                if (chessGame.getState() != null) {
 	                    return;
 	                }
@@ -196,8 +186,8 @@ public class EvaluationUciEngine extends ConsoleUciEngine implements EvaluationE
 	                    }
 	                }
 	            }
-	            reader.close();
-	        } catch (IOException e) {
+	            processReader.close();
+	        } catch (Exception e) {
 	            logger.debug("Caught IOException since reader is not ready");
 	        }
 	    });
