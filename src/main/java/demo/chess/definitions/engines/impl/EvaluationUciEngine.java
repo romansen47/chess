@@ -73,58 +73,157 @@ public class EvaluationUciEngine extends ConsoleUciEngine implements EvaluationE
 	}
 
 	protected List<EngineLine> parseBestLines(Color color, List<String> bestLines, EngineConfig config) {
-	    Map<Integer, EngineLine> multipvLines = new TreeMap<>();
-	    int requiredDepth = config.getDepth();
-	    int maxVariants = config.getMultiPV();
+		return parseBestLines(color, bestLines, config, Math.max(0, config.getDepth()));
+	}
 
-	    // Erstelle eine Liste nur mit Zeilen der maximalen Tiefe
-	    int maxDepth = bestLines.stream()
-	            .mapToInt(line -> Integer.parseInt(line.split("depth ")[1].split(" ")[0]))
-	            .max()
-	            .orElse(0);
+	/**
+	 * Parses only the highest depth reached by a finite analysis.
+	 *
+	 * We deliberately do not fall back to an older, complete MultiPV depth.
+	 * If one variant of the highest depth is unusable (for example a transient
+	 * "score mate 0"), that variant is simply omitted from the result.
+	 */
+	protected List<EngineLine> parseBestLinesAtHighestDepth(
+			Color color,
+			List<String> bestLines,
+			EngineConfig config) {
+		int maxDepth = bestLines.stream()
+				.filter(line -> line.contains("info") && line.contains("depth") && line.contains(" pv "))
+				.mapToInt(line -> Integer.parseInt(line.split("depth ")[1].split(" ")[0]))
+				.max()
+				.orElse(0);
 
-	    for (String chessLine : bestLines) {
-	        if (chessLine.contains("info") && chessLine.contains("depth")) {
-	            int currentDepth = Integer.parseInt(chessLine.split("depth ")[1].split(" ")[0]);
+		if (maxDepth == 0) {
+			return new ArrayList<>();
+		}
 
-	            // Ignoriere Zeilen mit geringerer Tiefe
-	            if (currentDepth >= maxDepth && currentDepth >= requiredDepth) {
-	                double parsedValue = 0;
-	                Integer mateDistance = null;
+		List<String> highestDepthLines = bestLines.stream()
+				.filter(line -> line.contains("depth "))
+				.filter(line -> Integer.parseInt(line.split("depth ")[1].split(" ")[0]) == maxDepth)
+				.toList();
 
-	                if (chessLine.contains("mate")) {
-	                    int mateScore = Integer.parseInt(chessLine.split("mate")[1].split(" ")[1]);
-	                    parsedValue = mateScore == 0 ? -99d : Integer.signum(mateScore) * 99d;
-	                    mateDistance = Math.abs(mateScore);
-	                } else if (chessLine.contains("cp")) {
-	                    parsedValue = Double.parseDouble(chessLine.split("cp")[1].split(" ")[1]) / 100.0;
-	                }
+		return parseBestLines(color, highestDepthLines, config, 0);
+	}
 
-	                if (chessLine.contains("multipv")) {
-	                    int multipv = Integer.parseInt(chessLine.split("multipv ")[1].split(" ")[0]);
+	private List<EngineLine> parseBestLines(
+			Color color,
+			List<String> bestLines,
+			EngineConfig config,
+			int minimumDepth) {
+		int requestedVariants = Math.max(1, config.getMultiPV());
+		TreeMap<Integer, Map<Integer, EngineLine>> linesByDepth = new TreeMap<>();
 
-	                    if (!multipvLines.containsKey(multipv) && chessLine.contains("pv")) {
-	                        String uciEngineLine = chessLine.split(" pv ")[1];
-	                        double factor = color.equals(Color.BLACK) ? -1 : 1;
-	                        multipvLines.put(multipv, new EngineLine(
-	                                factor * parsedValue,
-	                                currentDepth,
-	                                mateDistance,
-	                                uciEngineLine));
-	                    }
-	                }
-	            }
-	        }
-	    }
+		for (String chessLine : bestLines) {
+			if (!chessLine.contains("info") || !chessLine.contains("depth") || !chessLine.contains(" pv ")) {
+				continue;
+			}
 
-	    // Die UCI-Engine liefert die Rangfolge bereits über multipv 1, 2, 3, ...
-	    List<EngineLine> sortedLines = new ArrayList<>(multipvLines.values());
+			int currentDepth = Integer.parseInt(chessLine.split("depth ")[1].split(" ")[0]);
+			if (currentDepth < minimumDepth) {
+				continue;
+			}
 
-	    if (sortedLines.size() > maxVariants) {
-	        sortedLines = sortedLines.subList(0, maxVariants);
-	    }
+			int multipv = chessLine.contains("multipv ")
+					? Integer.parseInt(chessLine.split("multipv ")[1].split(" ")[0])
+					: 1;
+			if (multipv < 1 || multipv > requestedVariants) {
+				continue;
+			}
 
-	    return sortedLines;
+			Map<Integer, EngineLine> depthLines = linesByDepth.computeIfAbsent(
+					currentDepth,
+					ignored -> new TreeMap<>());
+
+			double parsedValue;
+			Integer mateDistance = null;
+
+			if (chessLine.contains(" score mate ")) {
+				int mateScore = Integer.parseInt(chessLine.split(" score mate ")[1].split(" ")[0]);
+
+				// Stockfish 8 can emit "mate 0" for an unfinished MultiPV root
+				// score when a search is stopped between variants. Such a value must
+				// not replace a real evaluation and must not make this depth look
+				// complete.
+				if (mateScore == 0) {
+					depthLines.remove(multipv);
+					logger.debug(
+							"Ignoring transient UCI score mate 0 at depth {} multipv {}",
+							currentDepth,
+							multipv);
+					continue;
+				}
+
+				parsedValue = Integer.signum(mateScore) * 99d;
+				mateDistance = Math.abs(mateScore);
+			} else if (chessLine.contains(" score cp ")) {
+				parsedValue = Double.parseDouble(chessLine.split(" score cp ")[1].split(" ")[0]) / 100.0;
+			} else {
+				continue;
+			}
+
+			String uciEngineLine = chessLine.split(" pv ", 2)[1];
+			double factor = color.equals(Color.BLACK) ? -1 : 1;
+			depthLines.put(
+					multipv,
+					new EngineLine(
+							factor * parsedValue,
+							currentDepth,
+							mateDistance,
+							uciEngineLine));
+		}
+
+		List<EngineLine> completeLines = selectHighestCompleteDepth(
+				linesByDepth,
+				requestedVariants);
+		if (!completeLines.isEmpty()) {
+			return completeLines;
+		}
+
+		// A legal position can contain fewer moves than the configured MultiPV
+		// value. If no depth ever contained all requested variants, return the
+		// largest contiguous MultiPV prefix that was actually completed.
+		int largestCompletedVariantCount = 0;
+		for (Map<Integer, EngineLine> depthLines : linesByDepth.values()) {
+			largestCompletedVariantCount = Math.max(
+					largestCompletedVariantCount,
+					countContiguousVariants(depthLines, requestedVariants));
+		}
+
+		if (largestCompletedVariantCount == 0) {
+			return new ArrayList<>();
+		}
+
+		return selectHighestCompleteDepth(linesByDepth, largestCompletedVariantCount);
+	}
+
+	private List<EngineLine> selectHighestCompleteDepth(
+			TreeMap<Integer, Map<Integer, EngineLine>> linesByDepth,
+			int expectedVariants) {
+		for (Map.Entry<Integer, Map<Integer, EngineLine>> depthEntry : linesByDepth.descendingMap().entrySet()) {
+			Map<Integer, EngineLine> depthLines = depthEntry.getValue();
+			if (countContiguousVariants(depthLines, expectedVariants) < expectedVariants) {
+				continue;
+			}
+
+			List<EngineLine> result = new ArrayList<>();
+			for (int multipv = 1; multipv <= expectedVariants; multipv++) {
+				result.add(depthLines.get(multipv));
+			}
+			return result;
+		}
+
+		return new ArrayList<>();
+	}
+
+	private int countContiguousVariants(Map<Integer, EngineLine> depthLines, int maxVariants) {
+		int count = 0;
+		for (int multipv = 1; multipv <= maxVariants; multipv++) {
+			if (!depthLines.containsKey(multipv)) {
+				break;
+			}
+			count++;
+		}
+		return count;
 	}
 
 	public synchronized void startEvaluationEngine(Game chessGame, String moveListAsString, EngineConfig config) throws IOException {

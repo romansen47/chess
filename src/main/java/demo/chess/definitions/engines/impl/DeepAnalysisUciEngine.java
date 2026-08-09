@@ -56,7 +56,7 @@ public class DeepAnalysisUciEngine extends EvaluationUciEngine implements DeepAn
         }
 
         Color sideToMove = moveList.size() % 2 == 0 ? Color.WHITE : Color.BLACK;
-        List<EngineLine> parsedLines = parseBestLines(sideToMove, rawInfoLines, config);
+        List<EngineLine> parsedLines = parseBestLinesAtHighestDepth(sideToMove, rawInfoLines, config);
         getCachedBestLines().put(moveListAsString, parsedLines);
         return parsedLines;
     }
