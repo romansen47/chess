@@ -38,6 +38,12 @@ public class Simulation extends ChessGameTemplate {
 		return new Simulation(new ChessBoard(), new WhitePlayerImpl(moveList, "Simulation"),
 				new BlackPlayerImpl(moveList, "Simulation"), moveList);
 	}
+
+	public static DummyChessGame createDummySimulation() {
+		MoveList moveList = new MoveListImpl();
+		return new DummyChessGame(new ChessBoard(), new DummyWhitePlayer(moveList),
+				new DummyBlackPlayer(moveList), moveList);
+	}
 	
 	public static Simulation forkSimulationFrom(MoveList ml) throws NoMoveFoundException, IOException {
 		Simulation simulation = createSimulation();
@@ -48,9 +54,7 @@ public class Simulation extends ChessGameTemplate {
 	}
 
 	public static DummyChessGame forkDummyFrom(MoveList ml) throws NoMoveFoundException, IOException {
-		MoveList moveList = new MoveListImpl();
-		DummyChessGame fork = new DummyChessGame(new ChessBoard(), new DummyWhitePlayer(moveList),
-				new DummyBlackPlayer(moveList), moveList);
+		DummyChessGame fork = createDummySimulation();
 		for (Move move : ml) {
 			fork.apply(fork.getPlayer().getMoveInSimulation(fork, move));
 		}

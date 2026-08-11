@@ -5,14 +5,28 @@ import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Locale;
+import java.util.Map;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import demo.chess.definitions.engines.impl.NoMoveFoundException;
 import demo.chess.definitions.moves.Move;
+import demo.chess.game.DummyGame;
 import demo.chess.game.Game;
+import demo.chess.game.impl.Simulation;
+import demo.chess.notation.PgnNotation;
 
 public class GameLoader {
+
+    private static final Pattern PGN_TAG_PATTERN = Pattern.compile(
+            "(?m)^\\s*\\[([A-Za-z0-9_]+)\\s+\"((?:\\\\.|[^\"])*)\"\\]\\s*$");
+    private static final Pattern PGN_BRACE_COMMENT_PATTERN = Pattern.compile("\\{.*?\\}", Pattern.DOTALL);
+    private static final Pattern PGN_LINE_COMMENT_PATTERN = Pattern.compile("(?m);[^\\r\\n]*$");
+    private static final Pattern PGN_NAG_PATTERN = Pattern.compile("\\$\\d+");
+    private static final Pattern MOVE_NUMBER_PREFIX_PATTERN = Pattern.compile("^\\d+\\.(?:\\.\\.)?");
 
     public void loadGame(String location, Game game) throws IOException, NoMoveFoundException {
         String content = Files.readString(Path.of(location), StandardCharsets.UTF_8);
@@ -72,10 +86,7 @@ public class GameLoader {
             return moveList;
         }
 
-        String normalizedContent = content.trim();
-        if (normalizedContent.startsWith("\uFEFF")) {
-            normalizedContent = normalizedContent.substring(1).trim();
-        }
+        String normalizedContent = stripBom(content).trim();
         if (normalizedContent.isEmpty()) {
             return moveList;
         }
@@ -114,6 +125,72 @@ public class GameLoader {
         return moveList;
     }
 
+    /**
+     * Parses the first PGN game in the supplied content and returns its move list as
+     * UCI coordinates. SAN-to-move conversion is performed exclusively on a
+     * {@link DummyGame}.
+     */
+    public List<String> parsePgnMoveList(String content) throws NoMoveFoundException, IOException {
+        List<String> moveList = new ArrayList<>();
+        if (content == null || content.isBlank()) {
+            return moveList;
+        }
+
+        String movetext = stripBom(content);
+        movetext = PGN_TAG_PATTERN.matcher(movetext).replaceAll(" ");
+        movetext = PGN_BRACE_COMMENT_PATTERN.matcher(movetext).replaceAll(" ");
+        movetext = PGN_LINE_COMMENT_PATTERN.matcher(movetext).replaceAll(" ");
+        movetext = removeVariations(movetext);
+        movetext = PGN_NAG_PATTERN.matcher(movetext).replaceAll(" ");
+
+        DummyGame dummyGame = Simulation.createDummySimulation();
+        int ply = 0;
+
+        for (String rawToken : movetext.trim().split("\\s+")) {
+            String token = stripMoveNumberPrefix(rawToken.trim());
+            if (token.isEmpty() || "e.p.".equalsIgnoreCase(token) || "ep".equalsIgnoreCase(token)) {
+                continue;
+            }
+            if (isResultToken(token)) {
+                break;
+            }
+
+            ply++;
+            try {
+                Move move = PgnNotation.resolveSan(dummyGame, token);
+                moveList.add(move.toString());
+                dummyGame.apply(move);
+            } catch (NoMoveFoundException e) {
+                throw new NoMoveFoundException("Invalid PGN move at ply " + ply + ": " + token + " (" + e.getMessage() + ")");
+            }
+        }
+
+        return moveList;
+    }
+
+    public Map<String, String> parsePgnTags(String content) {
+        Map<String, String> tags = new LinkedHashMap<>();
+        if (content == null || content.isBlank()) {
+            return tags;
+        }
+
+        for (String line : stripBom(content).split("\\R", -1)) {
+            if (line.isBlank()) {
+                if (!tags.isEmpty()) {
+                    break;
+                }
+                continue;
+            }
+
+            Matcher matcher = PGN_TAG_PATTERN.matcher(line);
+            if (!matcher.matches()) {
+                break;
+            }
+            tags.put(matcher.group(1), unescapePgnTagValue(matcher.group(2)));
+        }
+        return tags;
+    }
+
     public List<String> loadMoveList(String location) throws IOException {
         String content = Files.readString(Path.of(location), StandardCharsets.UTF_8);
         try {
@@ -121,5 +198,74 @@ public class GameLoader {
         } catch (NoMoveFoundException e) {
             throw new IOException(e.getMessage(), e);
         }
+    }
+
+    private String stripBom(String content) {
+        if (content != null && content.startsWith("\uFEFF")) {
+            return content.substring(1);
+        }
+        return content;
+    }
+
+    private String stripMoveNumberPrefix(String token) {
+        String result = token;
+        Matcher matcher = MOVE_NUMBER_PREFIX_PATTERN.matcher(result);
+        while (matcher.find()) {
+            result = result.substring(matcher.end());
+            matcher = MOVE_NUMBER_PREFIX_PATTERN.matcher(result);
+        }
+        return result;
+    }
+
+    private boolean isResultToken(String token) {
+        return "1-0".equals(token)
+                || "0-1".equals(token)
+                || "1/2-1/2".equals(token)
+                || "*".equals(token);
+    }
+
+    private String removeVariations(String value) {
+        StringBuilder result = new StringBuilder(value.length());
+        int depth = 0;
+
+        for (int i = 0; i < value.length(); i++) {
+            char current = value.charAt(i);
+            if (current == '(') {
+                depth++;
+                continue;
+            }
+            if (current == ')') {
+                if (depth > 0) {
+                    depth--;
+                }
+                continue;
+            }
+            if (depth == 0) {
+                result.append(current);
+            }
+        }
+
+        return result.toString();
+    }
+
+    private String unescapePgnTagValue(String value) {
+        StringBuilder result = new StringBuilder();
+        boolean escaped = false;
+
+        for (int i = 0; i < value.length(); i++) {
+            char current = value.charAt(i);
+            if (escaped) {
+                result.append(current);
+                escaped = false;
+            } else if (current == '\\') {
+                escaped = true;
+            } else {
+                result.append(current);
+            }
+        }
+        if (escaped) {
+            result.append('\\');
+        }
+        return result.toString();
     }
 }

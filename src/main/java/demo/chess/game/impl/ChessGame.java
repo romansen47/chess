@@ -295,7 +295,7 @@ public class ChessGame extends ChessGameTemplate {
 			}
 			postFix = "=" + getPiecePrefix(((Promotion) moveInSimulation).getPromotedPiece());
 
-		} else {
+		} else if (!moveInSimulation.getPiece().getType().equals(PieceType.PAWN)) {
 			sourceFieldToString = getSourceDisambiguationForMove(validMoves, moveInSimulation);
 		}
 		convertedMove = pieceToString + sourceFieldToString + hits + targetFieldToString + postFix;
