@@ -113,6 +113,12 @@ public class DeepAnalysisUciEngine extends EvaluationUciEngine implements DeepAn
         return new StringBuilder(buildDeepAnalysisCommand(List.of(), config));
     }
 
+    /**
+     * Deep-analysis engines are owned by one analysis replay session.
+     * Stopping such an engine is therefore terminal: stop the current search
+     * and close the UCI process afterwards so that it cannot remain as a
+     * stopped/orphaned process in the engine manager.
+     */
     @Override
     public synchronized void stopEvaluation() {
         try {
@@ -122,6 +128,8 @@ public class DeepAnalysisUciEngine extends EvaluationUciEngine implements DeepAn
             }
         } catch (Exception e) {
             logger.debug("Could not stop deep analysis engine", e);
+        } finally {
+            super.close();
         }
     }
 }
