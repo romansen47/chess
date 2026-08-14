@@ -4,6 +4,8 @@ import java.util.Map;
 
 public interface EngineConfig {
 
+    EngineConfigType getType();
+
     String getEngine();
 
     int getDepth();

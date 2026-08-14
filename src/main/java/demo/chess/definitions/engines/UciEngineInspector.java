@@ -31,11 +31,11 @@ public final class UciEngineInspector {
     private UciEngineInspector() {
     }
 
-    public static UciEngineConfig inspect(String enginePath) throws Exception {
-        return inspect(enginePath, DEFAULT_TIMEOUT);
+    public static UciEngineConfig inspect(String enginePath, EngineConfigType type) throws Exception {
+        return inspect(enginePath, type, DEFAULT_TIMEOUT);
     }
 
-    public static UciEngineConfig inspect(String enginePath, Duration timeout) throws Exception {
+    public static UciEngineConfig inspect(String enginePath, EngineConfigType type, Duration timeout) throws Exception {
         if (enginePath == null || enginePath.isBlank()) {
             throw new IllegalArgumentException("enginePath must not be blank");
         }
@@ -73,6 +73,7 @@ public final class UciEngineInspector {
             writer.flush();
 
             return new UciEngineConfig(
+                    type,
                     normalizedPath,
                     fallbackName(handshake.engineName, normalizedPath),
                     handshake.engineAuthor,
