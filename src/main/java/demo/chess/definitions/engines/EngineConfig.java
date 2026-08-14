@@ -1,33 +1,55 @@
 package demo.chess.definitions.engines;
 
+import java.util.Map;
+
 public interface EngineConfig {
 
-	int getDepth();
+    String getEngine();
 
-	void setDepth(int depth);
+    int getDepth();
 
-	int getThreads();
+    void setDepth(int depth);
 
-	void setThreads(Integer threads);
+    int getMoveTimeSeconds();
 
-	int getHashSize();
+    void setMoveTimeSeconds(int moveTimeSeconds);
 
-	void setHashSize(Integer hashSize);
+    Map<String, UciOption> getOptions();
 
-	int getMultiPV();
+    default UciOption getOption(String name) {
+        if (name == null) {
+            return null;
+        }
 
-	void setMultiPV(Integer multiPV);
+        UciOption exact = getOptions().get(name);
+        if (exact != null) {
+            return exact;
+        }
 
-	int getMoveOverhead();
+        for (Map.Entry<String, UciOption> entry : getOptions().entrySet()) {
+            if (entry.getKey().equalsIgnoreCase(name)) {
+                return entry.getValue();
+            }
+        }
+        return null;
+    }
 
-	void setMoveOverhead(Integer moveOverhead);
+    default int getIntOption(String name, int fallback) {
+        UciOption option = getOption(name);
+        if (option == null || option.getValue() == null || option.getValue().isBlank()) {
+            return fallback;
+        }
+        try {
+            return Integer.parseInt(option.getValue().trim());
+        } catch (NumberFormatException e) {
+            return fallback;
+        }
+    }
 
-	int getContempt();
+    default String getStringOption(String name, String fallback) {
+        UciOption option = getOption(name);
+        return option == null || option.getValue() == null ? fallback : option.getValue();
+    }
 
-	void setContempt(Integer contempt);
-
-	int getUciElo();
-
-	void setUciElo(Integer uciElo);
-
+    String toUciSetOptionCommands();
 }

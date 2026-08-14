@@ -52,13 +52,7 @@ public class EvaluationUciEngine extends ConsoleUciEngine implements EvaluationE
 	@Override
 	protected StringBuilder getCommandLineOptions(StringBuilder command, EngineConfig config) {
 		StringBuilder positionCommand = new StringBuilder();
-		if (config.getMultiPV() > 0) {
-			positionCommand.append("setoption name MultiPV value " + config.getMultiPV());
-		}
-		if (config.getThreads() > 0) {
-			positionCommand.append("\nsetoption name Threads value " + config.getThreads());
-		}
-		positionCommand.append("\nposition startpos moves ").append(command.toString());
+		positionCommand.append("position startpos moves ").append(command.toString());
 		positionCommand.append("\ngo infinite ");
 		return positionCommand;
 	}
@@ -110,7 +104,7 @@ public class EvaluationUciEngine extends ConsoleUciEngine implements EvaluationE
 			List<String> bestLines,
 			EngineConfig config,
 			int minimumDepth) {
-		int requestedVariants = Math.max(1, config.getMultiPV());
+		int requestedVariants = Math.max(1, config.getIntOption("MultiPV", 1));
 		TreeMap<Integer, Map<Integer, EngineLine>> linesByDepth = new TreeMap<>();
 
 		for (String chessLine : bestLines) {
@@ -245,6 +239,7 @@ public class EvaluationUciEngine extends ConsoleUciEngine implements EvaluationE
 	    evaluationThread = new Thread(() -> {
 	        try {
 	            restartProcess();
+		            applyConfig(config);
 	            final java.io.PrintWriter processWriter = writer;
 	            final java.io.BufferedReader processReader = reader;
 
@@ -255,7 +250,7 @@ public class EvaluationUciEngine extends ConsoleUciEngine implements EvaluationE
 
 	            StringBuilder evaluationCommand = new StringBuilder(
 	                    "stop\n" + getCommandLineOptions(command, config).toString());
-	            logger.info("Starting new infinite analysis with {} threads", config.getThreads());
+	            logger.info("Starting new infinite analysis with {} threads", config.getIntOption("Threads", 0));
 	            processWriter.println(evaluationCommand.toString());
 	            processWriter.flush();
 
@@ -276,7 +271,7 @@ public class EvaluationUciEngine extends ConsoleUciEngine implements EvaluationE
 	                        bestLines.add(line);
 
 	                        // Verarbeite die Zeilen, wenn alle Varianten gesammelt wurden
-	                        if (config.getMultiPV() == 1 || bestLines.stream().filter(l -> l.contains("multipv")).count() >= config.getMultiPV()) {
+	                        if (config.getIntOption("MultiPV", 1) == 1 || bestLines.stream().filter(l -> l.contains("multipv")).count() >= config.getIntOption("MultiPV", 1)) {
 	                            Color color = moveList.size() % 2 == 0 ? Color.WHITE : Color.BLACK;
 	                            List<EngineLine> newLines = parseBestLines(color, bestLines, config);
 

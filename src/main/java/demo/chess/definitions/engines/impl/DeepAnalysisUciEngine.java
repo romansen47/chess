@@ -18,15 +18,6 @@ public class DeepAnalysisUciEngine extends EvaluationUciEngine implements DeepAn
         super(path);
     }
 
-    /**
-     * Führt eine endliche Analyse für genau eine Stellung aus.
-     *
-     * Anders als EvaluationUciEngine verwendet diese Engine kein dauerhaftes
-     * "go infinite" mit Hintergrundthread, sondern wartet synchron auf das
-     * UCI-"bestmove" nach der konfigurierten Zeit bzw. Tiefe. Damit eignet sie
-     * sich für Post-Game-Analyse/Replay-Jobs, ohne mit der Live-Evaluation zu
-     * konkurrieren.
-     */
     @Override
     public synchronized List<EngineLine> getBestLines(Game chessGame, EngineConfig config)
             throws IOException, InterruptedException, ExecutionException {
@@ -35,6 +26,8 @@ public class DeepAnalysisUciEngine extends EvaluationUciEngine implements DeepAn
         if (cachedLines != null) {
             return cachedLines;
         }
+
+        applyConfig(config);
 
         List<Move> moveList = new ArrayList<>(chessGame.getMoveList());
         List<String> rawInfoLines = new ArrayList<>();
@@ -63,19 +56,6 @@ public class DeepAnalysisUciEngine extends EvaluationUciEngine implements DeepAn
 
     private String buildDeepAnalysisCommand(List<Move> moveList, EngineConfig config) {
         StringBuilder command = new StringBuilder();
-        appendOption(command, "MultiPV", Math.max(1, config.getMultiPV()));
-        appendOption(command, "Threads", Math.max(1, config.getThreads()));
-        appendOption(command, "Hash", Math.max(1, config.getHashSize()));
-
-        if (config.getContempt() != 0) {
-            appendOption(command, "Contempt", config.getContempt());
-        }
-
-        if (config.getUciElo() > 0) {
-            appendOption(command, "UCI_LimitStrength", "true");
-            appendOption(command, "UCI_Elo", config.getUciElo());
-        }
-
         command.append("ucinewgame\n");
         command.append("position startpos");
         if (!moveList.isEmpty()) {
@@ -89,23 +69,11 @@ public class DeepAnalysisUciEngine extends EvaluationUciEngine implements DeepAn
         if (config.getDepth() > 0) {
             command.append("go depth ").append(config.getDepth()).append('\n');
         } else {
-            int moveTimeMillis = Math.max(100, config.getMoveOverhead() * 1000);
+            int moveTimeMillis = Math.max(100, config.getMoveTimeSeconds() * 1000);
             command.append("go movetime ").append(moveTimeMillis).append('\n');
         }
 
         return command.toString();
-    }
-
-    private void appendOption(StringBuilder command, String name, int value) {
-        appendOption(command, name, Integer.toString(value));
-    }
-
-    private void appendOption(StringBuilder command, String name, String value) {
-        command.append("setoption name ")
-                .append(name)
-                .append(" value ")
-                .append(value)
-                .append('\n');
     }
 
     @Override
@@ -113,12 +81,6 @@ public class DeepAnalysisUciEngine extends EvaluationUciEngine implements DeepAn
         return new StringBuilder(buildDeepAnalysisCommand(List.of(), config));
     }
 
-    /**
-     * Deep-analysis engines are owned by one analysis replay session.
-     * Stopping such an engine is therefore terminal: stop the current search
-     * and close the UCI process afterwards so that it cannot remain as a
-     * stopped/orphaned process in the engine manager.
-     */
     @Override
     public synchronized void stopEvaluation() {
         try {

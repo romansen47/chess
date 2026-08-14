@@ -1,11 +1,15 @@
 package demo.chess.definitions.engines.impl;
 
 import java.io.BufferedReader;
+import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.OutputStreamWriter;
 import java.io.PrintWriter;
 import java.io.Reader;
 import java.io.Writer;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 
 import org.apache.logging.log4j.LogManager;
@@ -18,6 +22,8 @@ import demo.chess.definitions.engines.management.UciEngineProcessManager;
 public abstract class ConsoleUciEngine implements ChessEngine {
 
     protected static final Logger logger = LogManager.getLogger(ConsoleUciEngine.class);
+
+    private static final long UCI_HANDSHAKE_TIMEOUT_SECONDS = 5L;
 
     protected Process uciEngineProcess;
     protected PrintWriter writer;
@@ -49,6 +55,38 @@ public abstract class ConsoleUciEngine implements ChessEngine {
         startProcess();
     }
 
+    /**
+     * Applies the complete dynamic UCI option map from the config and waits until
+     * the engine confirms that it processed all options. The config is bound to
+     * one immutable engine path; applying it to another executable is therefore
+     * rejected instead of silently sending foreign options.
+     */
+    protected synchronized void applyConfig(EngineConfig config) throws IOException, InterruptedException {
+        if (config == null) {
+            return;
+        }
+        if (!enginePath.equals(config.getEngine())) {
+            throw new IllegalArgumentException(
+                    "Engine config belongs to '" + config.getEngine()
+                            + "' but running engine is '" + enginePath + "'");
+        }
+
+        String commands = config.toUciSetOptionCommands();
+        if (!commands.isBlank()) {
+            writer.println(commands);
+        }
+        writer.println("isready");
+        writer.flush();
+        try {
+            awaitLine("readyok", UCI_HANDSHAKE_TIMEOUT_SECONDS);
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+            throw e;
+        } catch (Exception e) {
+            throw new IOException("Engine did not become ready: " + enginePath, e);
+        }
+    }
+
     private void startProcess() throws Exception {
         uciEngineProcess = new ProcessBuilder(enginePath).redirectErrorStream(true).start();
         UciEngineProcessManager.attachProcess(managementId, uciEngineProcess);
@@ -58,6 +96,37 @@ public abstract class ConsoleUciEngine implements ChessEngine {
         reader = new LoggingBufferedReader(
                 new InputStreamReader(uciEngineProcess.getInputStream()),
                 managementId);
+
+        try {
+            writer.println("uci");
+            writer.flush();
+            awaitLine("uciok", UCI_HANDSHAKE_TIMEOUT_SECONDS);
+        } catch (Exception e) {
+            destroyCurrentProcess();
+            throw new IllegalStateException("UCI handshake failed for engine " + enginePath, e);
+        }
+    }
+
+    private void awaitLine(String expected, long timeoutSeconds) throws Exception {
+        ExecutorService executor = Executors.newSingleThreadExecutor(runnable -> {
+            Thread thread = new Thread(runnable, "uci-await-" + expected);
+            thread.setDaemon(true);
+            return thread;
+        });
+        try {
+            Future<Void> future = executor.submit(() -> {
+                String line;
+                while ((line = reader.readLine()) != null) {
+                    if (expected.equals(line.trim())) {
+                        return null;
+                    }
+                }
+                throw new IllegalStateException("Engine output ended before " + expected);
+            });
+            future.get(timeoutSeconds, TimeUnit.SECONDS);
+        } finally {
+            executor.shutdownNow();
+        }
     }
 
     @Override

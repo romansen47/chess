@@ -1,83 +1,124 @@
 package demo.chess.definitions.engines;
 
+import java.util.Collections;
+import java.util.LinkedHashMap;
+import java.util.Map;
+import java.util.Objects;
+
 public class UciEngineConfig implements EngineConfig {
 
-	protected int depth;
-	protected int threads;
-	protected int hashSize;
-	protected int multiPV;
-	protected int contempt;
-	protected int moveOverhead;
-	protected int uciElo;
+    private final String engine;
+    private final String engineName;
+    private final String engineAuthor;
+    private final LinkedHashMap<String, UciOption> options;
 
-	@Override
-	public int getThreads() {
-		return threads;
-	}
+    private int depth;
+    private int moveTimeSeconds;
 
-	@Override
-	public void setThreads(Integer threads) {
-		this.threads = threads;
-	}
+    public UciEngineConfig(
+            String engine,
+            String engineName,
+            String engineAuthor,
+            Map<String, UciOption> options) {
+        if (engine == null || engine.isBlank()) {
+            throw new IllegalArgumentException("engine must not be blank");
+        }
+        this.engine = engine.trim();
+        this.engineName = engineName == null || engineName.isBlank() ? this.engine : engineName.trim();
+        this.engineAuthor = engineAuthor == null ? "" : engineAuthor.trim();
+        this.options = copyOptions(options);
+    }
 
-	@Override
-	public int getHashSize() {
-		return hashSize;
-	}
+    public UciEngineConfig(UciEngineConfig source) {
+        this(
+                source.engine,
+                source.engineName,
+                source.engineAuthor,
+                source.options);
+        this.depth = source.depth;
+        this.moveTimeSeconds = source.moveTimeSeconds;
+    }
 
-	@Override
-	public void setHashSize(Integer hashSize) {
-		this.hashSize = hashSize;
-	}
+    @Override
+    public String getEngine() {
+        return engine;
+    }
 
-	@Override
-	public int getMultiPV() {
-		return multiPV;
-	}
+    public String getEngineName() {
+        return engineName;
+    }
 
-	@Override
-	public void setMultiPV(Integer multiPV) {
-		this.multiPV = multiPV;
-	}
+    public String getEngineAuthor() {
+        return engineAuthor;
+    }
 
-	@Override
-	public int getMoveOverhead() {
-		return moveOverhead;
-	}
+    @Override
+    public int getDepth() {
+        return depth;
+    }
 
-	@Override
-	public void setMoveOverhead(Integer moveOverhead) {
-		this.moveOverhead = moveOverhead;
-	}
+    @Override
+    public void setDepth(int depth) {
+        this.depth = Math.max(0, depth);
+    }
 
-	@Override
-	public int getContempt() {
-		return contempt;
-	}
+    @Override
+    public int getMoveTimeSeconds() {
+        return moveTimeSeconds;
+    }
 
-	@Override
-	public void setContempt(Integer contempt) {
-		this.contempt = contempt;
-	}
+    @Override
+    public void setMoveTimeSeconds(int moveTimeSeconds) {
+        this.moveTimeSeconds = Math.max(0, moveTimeSeconds);
+    }
 
-	@Override
-	public int getUciElo() {
-		return uciElo;
-	}
+    @Override
+    public Map<String, UciOption> getOptions() {
+        return Collections.unmodifiableMap(options);
+    }
 
-	@Override
-	public void setUciElo(Integer uciElo) {
-		this.uciElo = uciElo;
-	}
+    public void setOptionValue(String name, String value) {
+        UciOption option = getOption(name);
+        if (option == null) {
+            throw new IllegalArgumentException("Unknown UCI option: " + name);
+        }
+        option.setValue(value);
+    }
 
-	@Override
-	public int getDepth() {
-		return depth;
-	}
+    public UciEngineConfig copy() {
+        return new UciEngineConfig(this);
+    }
 
-	@Override
-	public void setDepth(int depth) {
-		this.depth = depth;
-	}
+    @Override
+    public String toUciSetOptionCommands() {
+        StringBuilder result = new StringBuilder();
+        for (Map.Entry<String, UciOption> entry : options.entrySet()) {
+            UciOption option = entry.getValue();
+            if (option == null || !option.isConfigurable()) {
+                continue;
+            }
+            String command = option.toSetOptionCommand(entry.getKey());
+            if (command.isBlank()) {
+                continue;
+            }
+            if (result.length() > 0) {
+                result.append('\n');
+            }
+            result.append(command);
+        }
+        return result.toString();
+    }
 
+    private static LinkedHashMap<String, UciOption> copyOptions(Map<String, UciOption> source) {
+        LinkedHashMap<String, UciOption> result = new LinkedHashMap<>();
+        if (source == null) {
+            return result;
+        }
+        for (Map.Entry<String, UciOption> entry : source.entrySet()) {
+            String name = Objects.requireNonNull(entry.getKey(), "UCI option name");
+            UciOption option = Objects.requireNonNull(entry.getValue(), "UCI option " + name);
+            result.put(name, option.copy());
+        }
+        return result;
+    }
 }
