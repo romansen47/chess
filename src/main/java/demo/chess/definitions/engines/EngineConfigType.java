@@ -2,7 +2,8 @@ package demo.chess.definitions.engines;
 
 public enum EngineConfigType {
     PLAYER,
-    EVALUATION;
+    EVALUATION,
+    DEEP_ANALYSIS;
 
     public static EngineConfigType fromValue(String value) {
         if (value == null || value.isBlank()) {

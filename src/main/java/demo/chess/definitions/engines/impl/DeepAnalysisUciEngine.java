@@ -8,6 +8,7 @@ import java.util.concurrent.ExecutionException;
 import demo.chess.definitions.Color;
 import demo.chess.definitions.engines.DeepAnalysisEngine;
 import demo.chess.definitions.engines.EngineConfig;
+import demo.chess.definitions.engines.EngineConfigType;
 import demo.chess.definitions.engines.EngineLine;
 import demo.chess.definitions.moves.Move;
 import demo.chess.game.Game;
@@ -21,6 +22,11 @@ public class DeepAnalysisUciEngine extends EvaluationUciEngine implements DeepAn
     @Override
     public synchronized List<EngineLine> getBestLines(Game chessGame, EngineConfig config)
             throws IOException, InterruptedException, ExecutionException {
+        if (config == null || config.getType() != EngineConfigType.DEEP_ANALYSIS) {
+            throw new IllegalArgumentException(
+                    "DeepAnalysisUciEngine requires a DEEP_ANALYSIS engine configuration");
+        }
+
         String moveListAsString = chessGame.getMoveList().toString();
         List<EngineLine> cachedLines = getCachedBestLines().get(moveListAsString);
         if (cachedLines != null) {
@@ -69,7 +75,7 @@ public class DeepAnalysisUciEngine extends EvaluationUciEngine implements DeepAn
         if (config.getDepth() > 0) {
             command.append("go depth ").append(config.getDepth()).append('\n');
         } else {
-            int moveTimeMillis = Math.max(100, config.getMoveTimeSeconds() * 1000);
+            int moveTimeMillis = Math.max(1, config.getMoveTimeSeconds()) * 1000;
             command.append("go movetime ").append(moveTimeMillis).append('\n');
         }
 
