@@ -18,8 +18,8 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 /**
- * Creates a UciEngineConfig from the UCI handshake of one concrete executable.
- * The executable path becomes immutable identity of the resulting config.
+ * Creates a {@link UciEngineDefinition} from the UCI handshake of one concrete
+ * executable. Profile-specific settings are deliberately not part of inspection.
  */
 public final class UciEngineInspector {
 
@@ -31,11 +31,11 @@ public final class UciEngineInspector {
     private UciEngineInspector() {
     }
 
-    public static UciEngineConfig inspect(String enginePath, EngineConfigType type) throws Exception {
-        return inspect(enginePath, type, DEFAULT_TIMEOUT);
+    public static UciEngineDefinition inspect(String enginePath) throws Exception {
+        return inspect(enginePath, DEFAULT_TIMEOUT);
     }
 
-    public static UciEngineConfig inspect(String enginePath, EngineConfigType type, Duration timeout) throws Exception {
+    public static UciEngineDefinition inspect(String enginePath, Duration timeout) throws Exception {
         if (enginePath == null || enginePath.isBlank()) {
             throw new IllegalArgumentException("enginePath must not be blank");
         }
@@ -72,8 +72,7 @@ public final class UciEngineInspector {
             writer.println("quit");
             writer.flush();
 
-            return new UciEngineConfig(
-                    type,
+            return new UciEngineDefinition(
                     normalizedPath,
                     fallbackName(handshake.engineName, normalizedPath),
                     handshake.engineAuthor,
@@ -90,6 +89,22 @@ public final class UciEngineInspector {
                 }
             }
         }
+    }
+
+    /**
+     * Compatibility helper for callers that still need a fully resolved runtime
+     * configuration directly after inspection. New code should persist the
+     * returned engine definition and create profiles separately.
+     */
+    public static UciEngineConfig inspect(String enginePath, EngineConfigType type) throws Exception {
+        return inspect(enginePath).createRuntimeConfig(type, 0, 0, Map.of());
+    }
+
+    public static UciEngineConfig inspect(
+            String enginePath,
+            EngineConfigType type,
+            Duration timeout) throws Exception {
+        return inspect(enginePath, timeout).createRuntimeConfig(type, 0, 0, Map.of());
     }
 
     static Map.Entry<String, UciOption> parseOptionLine(String line) {
