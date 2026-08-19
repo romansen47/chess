@@ -2,9 +2,15 @@ package demo.chess.definitions.engines;
 
 import java.util.Map;
 
+/**
+ * Runtime configuration for one concrete UCI engine invocation.
+ *
+ * The configuration deliberately has no player/evaluation/analysis type. The
+ * caller decides how the configured engine is used. Search limits such as
+ * depth and move time are runtime/use-case settings, while UCI option values
+ * originate from the selected reusable engine profile.
+ */
 public interface EngineConfig {
-
-    EngineConfigType getType();
 
     String getEngine();
 

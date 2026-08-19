@@ -5,9 +5,14 @@ import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Objects;
 
+/**
+ * Fully resolved runtime configuration for a UCI engine process.
+ *
+ * There is intentionally no Player/Evaluation/DeepAnalysis discriminator here.
+ * The same configured profile can be consumed by any of those use cases.
+ */
 public class UciEngineConfig implements EngineConfig {
 
-    private final EngineConfigType type;
     private final String engine;
     private final String engineName;
     private final String engineAuthor;
@@ -17,12 +22,10 @@ public class UciEngineConfig implements EngineConfig {
     private int moveTimeSeconds;
 
     public UciEngineConfig(
-            EngineConfigType type,
             String engine,
             String engineName,
             String engineAuthor,
             Map<String, UciOption> options) {
-        this.type = Objects.requireNonNull(type, "type");
         if (engine == null || engine.isBlank()) {
             throw new IllegalArgumentException("engine must not be blank");
         }
@@ -34,18 +37,12 @@ public class UciEngineConfig implements EngineConfig {
 
     public UciEngineConfig(UciEngineConfig source) {
         this(
-                source.type,
                 source.engine,
                 source.engineName,
                 source.engineAuthor,
                 source.options);
         this.depth = source.depth;
         this.moveTimeSeconds = source.moveTimeSeconds;
-    }
-
-    @Override
-    public EngineConfigType getType() {
-        return type;
     }
 
     @Override

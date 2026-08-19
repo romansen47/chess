@@ -97,14 +97,14 @@ public final class UciEngineInspector {
      * returned engine definition and create profiles separately.
      */
     public static UciEngineConfig inspect(String enginePath, EngineConfigType type) throws Exception {
-        return inspect(enginePath).createRuntimeConfig(type, 0, 0, Map.of());
+        return inspect(enginePath).createRuntimeConfig(0, 0, Map.of());
     }
 
     public static UciEngineConfig inspect(
             String enginePath,
             EngineConfigType type,
             Duration timeout) throws Exception {
-        return inspect(enginePath, timeout).createRuntimeConfig(type, 0, 0, Map.of());
+        return inspect(enginePath, timeout).createRuntimeConfig(0, 0, Map.of());
     }
 
     static Map.Entry<String, UciOption> parseOptionLine(String line) {

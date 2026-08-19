@@ -88,12 +88,10 @@ public final class UciEngineDefinition {
      * runtime configuration consumed by the existing UCI engine classes.
      */
     public UciEngineConfig createRuntimeConfig(
-            EngineConfigType type,
             int depth,
             int moveTimeSeconds,
             Map<String, String> optionValues) {
         UciEngineConfig result = new UciEngineConfig(
-                Objects.requireNonNull(type, "type"),
                 engine,
                 engineName,
                 engineAuthor,
