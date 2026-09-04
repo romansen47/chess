@@ -10,11 +10,18 @@ public class ErrorTest extends TestClassAbstract {
 
 	Exception e;
 
+	/**
+	 * Returns the path.
+	 * @return the path
+	 */
 	@Override
 	public String getPath() {
 		return "src/test/resources/testfiles/error.demo";
 	}
 
+	/**
+	 * Performs the prepare for each operation.
+	 */
 	@Override
 	@Before
 	public void prepareForEach() throws Exception {
@@ -26,6 +33,9 @@ public class ErrorTest extends TestClassAbstract {
 		}
 	}
 
+	/**
+	 * Performs the test error operation.
+	 */
 	@Test
 	public void testError() {
 		boolean correctExceptionThrown = e != null;

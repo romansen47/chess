@@ -8,11 +8,18 @@ import demo.chess.definitions.states.State;
 
 public class StaleMateTest extends TestClassAbstract {
 
+	/**
+	 * Returns the path.
+	 * @return the path
+	 */
 	@Override
 	public String getPath() {
 		return "src/test/resources/testfiles/stalemate.demo";
 	}
 
+	/**
+	 * Performs the test stale mate operation.
+	 */
 	@Test
 	public void testStaleMate() {
 		Assert.assertTrue(

@@ -8,7 +8,8 @@ import demo.chess.game.Game;
 public abstract interface TestClass {
 
 	/**
-	 * @return the chessGame
+	 * Returns the chess game.
+	 * @return the chess game
 	 */
 	Game getChessGame();
 }

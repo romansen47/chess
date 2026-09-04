@@ -26,9 +26,7 @@ public abstract class TestClassAbstract implements TestClass {
 	private Game chessGame;
 
 	/**
-	 * Create the annotation application context
-	 *
-	 * @throws Exception
+	 * Performs the prepare operation.
 	 */
 	@BeforeClass
 	public static void prepare() throws Exception {
@@ -41,6 +39,9 @@ public abstract class TestClassAbstract implements TestClass {
 //		admin.evaluationEngine().setDepth(1);
 	}
 
+	/**
+	 * Performs the prepare for each operation.
+	 */
 	@Before
 	public void prepareForEach() throws IOException, Exception {
 		setChessGame(getAdmin().chessGame(10));
@@ -48,16 +49,22 @@ public abstract class TestClassAbstract implements TestClass {
 	}
 
 	/**
+	 * Returns the path.
 	 * @return the path
 	 */
 	public abstract String getPath();
 
+	/**
+	 * Returns the logger.
+	 * @return the logger
+	 */
 	public Logger getLogger() {
 		logger = logger == null ? logger = LogManager.getLogger(getClass()) : logger;
 		return logger;
 	}
 
 	/**
+	 * Returns the admin.
 	 * @return the admin
 	 */
 	public static Admin getAdmin() {
@@ -65,14 +72,16 @@ public abstract class TestClassAbstract implements TestClass {
 	}
 
 	/**
-	 * @param admin the admin to set
+	 * Sets the admin.
+	 * @param admin the admin
 	 */
 	public static void setAdmin(Admin admin) {
 		TestClassAbstract.admin = admin;
 	}
 
 	/**
-	 * @return the chessGame
+	 * Returns the chess game.
+	 * @return the chess game
 	 */
 	@Override
 	public Game getChessGame() {
@@ -80,7 +89,8 @@ public abstract class TestClassAbstract implements TestClass {
 	}
 
 	/**
-	 * @param chessGame the chessGame to set
+	 * Sets the chess game.
+	 * @param chessGame the chess game
 	 */
 	protected void setChessGame(Game chessGame) {
 		this.chessGame = chessGame;

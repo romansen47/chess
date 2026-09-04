@@ -9,11 +9,18 @@ import demo.chess.definitions.moves.test.TestClassAbstract;
 
 public class CastlingTest extends TestClassAbstract {
 
+	/**
+	 * Returns the path.
+	 * @return the path
+	 */
 	@Override
 	public String getPath() {
 		return "src/test/resources/testfiles/castling.demo";
 	}
 
+	/**
+	 * Performs the test castling operation.
+	 */
 	@Test
 	public void testCastling() {
 		MoveList moveList = getChessGame().getMoveList();

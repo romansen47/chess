@@ -4,6 +4,10 @@ import demo.chess.definitions.moves.test.TestClassAbstract;
 
 public class CastlingNotPossibleTest extends TestClassAbstract {
 
+	/**
+	 * Returns the path.
+	 * @return the path
+	 */
 	@Override
 	public String getPath() {
 		return "src/test/resources/testfiles/castlingNotPossible.demo";

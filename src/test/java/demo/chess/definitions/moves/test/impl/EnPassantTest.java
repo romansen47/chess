@@ -9,11 +9,18 @@ import demo.chess.definitions.moves.test.TestClassAbstract;
 
 public class EnPassantTest extends TestClassAbstract {
 
+	/**
+	 * Returns the path.
+	 * @return the path
+	 */
 	@Override
 	public String getPath() {
 		return "src/test/resources/testfiles/enpassant.demo";
 	}
 
+	/**
+	 * Performs the test en passant operation.
+	 */
 	@Test
 	public void testEnPassant() {
 		MoveList moveList = getChessGame().getMoveList();

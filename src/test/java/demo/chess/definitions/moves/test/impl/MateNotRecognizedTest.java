@@ -16,6 +16,10 @@ import demo.chess.definitions.states.State;
  */
 public class MateNotRecognizedTest extends TestClassAbstract {
 
+	/**
+	 * Returns the path.
+	 * @return the path
+	 */
 	@Override
 	public String getPath() {
 		return "src/test/resources/testfiles/mate3.demo";
@@ -24,6 +28,9 @@ public class MateNotRecognizedTest extends TestClassAbstract {
 	String finalMove = "e7e4";
 	Move checkMate;
 
+	/**
+	 * Performs the prepare for each operation.
+	 */
 	@Override
 	@Before
 	public void prepareForEach() throws Exception {
@@ -36,6 +43,9 @@ public class MateNotRecognizedTest extends TestClassAbstract {
 		}
 	}
 
+	/**
+	 * Performs the test mate operation.
+	 */
 	@Test
 	public void testMate() throws NoMoveFoundException, IOException {
 		getLogger().debug("Sequence {} completed", getChessGame().getMoveList().toString());

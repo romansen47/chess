@@ -8,11 +8,18 @@ import demo.chess.definitions.states.State;
 
 public class MateTest extends TestClassAbstract {
 
+	/**
+	 * Returns the path.
+	 * @return the path
+	 */
 	@Override
 	public String getPath() {
 		return "src/test/resources/testfiles/mate1.demo";
 	}
 
+	/**
+	 * Performs the test mate operation.
+	 */
 	@Test
 	public void testMate() {
 		getLogger().debug("Sequence {} completed", getChessGame().getMoveList().toString());
