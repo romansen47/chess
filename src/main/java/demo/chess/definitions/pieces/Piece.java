@@ -16,72 +16,62 @@ import demo.chess.definitions.moves.Move;
 public interface Piece {
 
 	/**
-	 * Returns the logger for the piece.
-	 *
+	 * Returns the logger.
 	 * @return the logger
 	 */
 	Logger getLogger();
 
 	/**
-	 * Returns the type of the piece.
-	 *
-	 * @return the piece type
+	 * Returns the type.
+	 * @return the type
 	 */
 	PieceType getType();
 
 	/**
-	 * Returns the color of the piece.
-	 *
-	 * @return the color of the piece
+	 * Returns the color.
+	 * @return the color
 	 */
 	Color getColor();
 
 	/**
-	 * Returns a list of possible unvalidated moves for the piece.
-	 *
-	 * @return the list of possible unvalidated moves
+	 * Returns the possible unvalidated moves.
+	 * @return the possible unvalidated moves
 	 */
 	List<Move> getPossibleUnvalidatedMoves();
 
 	/**
-	 * Returns a list of simple unvalidated moves for the piece.
-	 *
-	 * @return the list of simple unvalidated moves
+	 * Returns the simple unvalidated moves.
+	 * @return the simple unvalidated moves
 	 */
 	List<Move> getSimpleUnvalidatedMoves();
 
 	/**
-	 * Returns the field the piece is currently on.
-	 *
+	 * Returns the field.
 	 * @return the field
 	 */
 	Field getField();
 
 	/**
-	 * Sets the field the piece is on.
-	 *
-	 * @param target the target field
+	 * Sets the field.
+	 * @param target the target
 	 */
 	void setField(Field target);
 
 	/**
-	 * Returns the chessboard the piece belongs to.
-	 *
-	 * @return the chessboard
+	 * Returns the chess board.
+	 * @return the chess board
 	 */
 	Board getChessBoard();
 
 	/**
-	 * Returns the move list for the piece.
-	 *
+	 * Returns the move list.
 	 * @return the move list
 	 */
 	List<Move> getMoveList();
 
 	/**
-	 * Sets the move list for the piece.
-	 *
-	 * @param moveList the move list to set
+	 * Sets the move list.
+	 * @param moveList the move list
 	 */
 	void setMoveList(List<Move> moveList);
 }

@@ -15,7 +15,7 @@ public class ChessBoard implements Board {
 	final Map<Integer, Map<Integer, Field>> fields;
 
 	/**
-	 * Constructs a ChessBoard with an 8x8 grid of ChessField objects.
+	 * Creates a new ChessBoard instance.
 	 */
 	public ChessBoard() {
 		this.fields = new HashMap<>();
@@ -28,6 +28,12 @@ public class ChessBoard implements Board {
 		}
 	}
 
+	/**
+	 * Returns the field.
+	 * @param i the i
+	 * @param j the j
+	 * @return the field
+	 */
 	@Override
 	public Field getField(int i, int j) {
 		return fields.get(i).get(j);

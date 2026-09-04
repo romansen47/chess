@@ -44,15 +44,13 @@ public class ChessGame extends ChessGameTemplate {
 	protected final List<Long> moveHashes = new ArrayList<>();
 
 	/**
-	 * Constructs a ChessGame instance with the given chessboard, white player,
-	 * black player, and move list.
-	 *
-	 * @param chessBoard  the chess board
+	 * Creates a new ChessGame instance.
+	 * @param chessBoard the chess board
 	 * @param whitePlayer the white player
 	 * @param blackPlayer the black player
-	 * @param moveList    the list of moves
-	 * @param chessAdmin
-	 * @throws Exception
+	 * @param moveList the move list
+	 * @param chessAdmin the chess admin
+	 * @param timeForEachPlayer the time for each player
 	 */
 	public ChessGame(Board chessBoard, WhitePlayer whitePlayer, BlackPlayer blackPlayer, MoveList moveList,
 			Admin chessAdmin, int timeForEachPlayer){
@@ -62,16 +60,24 @@ public class ChessGame extends ChessGameTemplate {
 		moveHashes.add(0l);
 	}
 
+	/**
+	 * Returns the admin.
+	 * @return the admin
+	 */
 	public Admin getAdmin() {
 		return admin;
 	}
 
+	/**
+	 * Sets the admin.
+	 * @param admin the admin
+	 */
 	public void setAdmin(Admin admin) {
 		this.admin = admin;
 	}
 
 	/**
-	 * Switches the current player to the other player.
+	 * Performs the switch player operation.
 	 */
 	@Override
 	public void switchPlayer() {
@@ -94,6 +100,10 @@ public class ChessGame extends ChessGameTemplate {
 	}
 
 
+	/**
+	 * Checks the for game end.
+	 * @return the result of the operation
+	 */
 	protected boolean checkForGameEnd() throws NoMoveFoundException, IOException {
 		boolean gameEnd = false;
 		if (getPlayer().getValidMoves(this).isEmpty()) {
@@ -109,6 +119,10 @@ public class ChessGame extends ChessGameTemplate {
 		return gameEnd;
 	}
 
+	/**
+	 * Checks the for50 moves rule.
+	 * @return the result of the operation
+	 */
 	protected boolean checkFor50MovesRule() {
 		boolean gameEnd = false;
 		List<Move> reducedMoveList = getMoveList().subList(getMoveList().size() - 100, getMoveList().size());
@@ -121,6 +135,11 @@ public class ChessGame extends ChessGameTemplate {
 		return gameEnd;
 	}
 
+	/**
+	 * Checks the for threefold repetition.
+	 * @param movesBeforeRule the moves before rule
+	 * @return the result of the operation
+	 */
 	protected boolean checkForThreefoldRepetition(int movesBeforeRule) {
 		boolean gameEnd = false;
 		List<Long> reducedMoveList = moveHashes.subList(movesBeforeRule, getMoveList().size());
@@ -140,48 +159,72 @@ public class ChessGame extends ChessGameTemplate {
 		return gameEnd;
 	}
 
+	/**
+	 * Returns the time for each player.
+	 * @return the time for each player
+	 */
 	@Override
 	public int getTimeForEachPlayer() {
 		return timeForEachPlayer;
 	}
 
+	/**
+	 * Returns the increment for white.
+	 * @return the increment for white
+	 */
 	@Override
 	public int getIncrementForWhite() {
 		return incrementForWhite;
 	}
 
+	/**
+	 * Sets the increment for white.
+	 * @param incrementForWhite the increment for white
+	 */
 	@Override
 	public void setIncrementForWhite(int incrementForWhite) {
 		this.incrementForWhite = incrementForWhite;
 	}
 
+	/**
+	 * Returns the increment for black.
+	 * @return the increment for black
+	 */
 	@Override
 	public int getIncrementForBlack() {
 		return incrementForBlack;
 	}
 
+	/**
+	 * Sets the increment for black.
+	 * @param incrementForBlack the increment for black
+	 */
 	@Override
 	public void setIncrementForBlack(int incrementForBlack) {
 		this.incrementForBlack = incrementForBlack;
 	}
 
+	/**
+	 * Returns the san move list.
+	 * @return the san move list
+	 */
 	@Override
 	public List<String> getSanMoveList() {
 		return sanMoveList;
 	}
 
+	/**
+	 * Sets the san move list.
+	 * @param sanMoveList the san move list
+	 */
 	@Override
 	public void setSanMoveList(List<String> sanMoveList) {
 		this.sanMoveList = sanMoveList;
 	}
 
 	/**
-	 * Applies the given move to the chess game and computes actual uciEngine
-	 * evaluation.
-	 *
-	 * @param move the move to apply
-	 * @throws IOException
-	 * @throws NoMoveFoundException
+	 * Performs the apply operation.
+	 * @param move the move
 	 */
 	@Override
 	public void apply(Move move) throws NoMoveFoundException, IOException {
@@ -197,6 +240,11 @@ public class ChessGame extends ChessGameTemplate {
 		checkForGameEnd();
 	}
 
+	/**
+	 * Returns whether this object has the h of.
+	 * @param piece the piece
+	 * @return true when the condition is satisfied; otherwise false
+	 */
 	protected long hashOf(Piece piece) {
 		final long primeBiggerThanProductOfAll = 11;
 		final long color = piece.getColor().equals(Color.WHITE) ? 1 : 2;
@@ -205,6 +253,10 @@ public class ChessGame extends ChessGameTemplate {
 						+ Math.pow(primeBiggerThanProductOfAll, 3) * (piece.getField().getRank()));
 	}
 
+	/**
+	 * Performs the position hash operation.
+	 * @return the result of the operation
+	 */
 	protected Long positionHash() {
 		long hash = 1;
 		for (Piece piece : getWhitePlayer().getPieces()) {
@@ -216,6 +268,12 @@ public class ChessGame extends ChessGameTemplate {
 		return hash * getWhitePlayer().getPieces().size() * getBlackPlayer().getPieces().size();
 	}
 
+	/**
+	 * Returns the unicode symbol.
+	 * @param s the s
+	 * @param color the color
+	 * @return the unicode symbol
+	 */
 	public String getUnicodeSymbol(String s, Color color) {
 			switch (color) {
 			case WHITE:
@@ -249,6 +307,11 @@ public class ChessGame extends ChessGameTemplate {
 			}
 	}
 
+	/**
+	 * Returns the short algebraic notated move.
+	 * @param moveToExecute the move to execute
+	 * @return the short algebraic notated move
+	 */
 	public String getShortAlgebraicNotatedMove(Move moveToExecute) throws NoMoveFoundException, IOException {
 		
 		DummyGame simulation = Simulation.forkDummyFrom(getMoveList());
@@ -302,6 +365,12 @@ public class ChessGame extends ChessGameTemplate {
 		return convertedMove;
 	}
 
+	/**
+	 * Returns the source disambiguation for move.
+	 * @param validMoves the valid moves
+	 * @param moveInSimulation the move in simulation
+	 * @return the source disambiguation for move
+	 */
 	private String getSourceDisambiguationForMove(List<Move> validMoves, Move moveInSimulation) {
 		if (moveInSimulation == null
 				|| moveInSimulation.getPiece() == null
@@ -351,6 +420,11 @@ public class ChessGame extends ChessGameTemplate {
 		return moveInSimulation.getSource().toString().substring(0, 1);
 	}
 
+	/**
+	 * Returns the piece prefix.
+	 * @param piece the piece
+	 * @return the piece prefix
+	 */
 	String getPiecePrefix(Piece piece) {
 		if (piece.getType().equals(PieceType.PAWN)) {
 			return StringUtils.EMPTY;

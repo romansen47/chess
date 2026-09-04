@@ -21,13 +21,9 @@ import demo.chess.game.impl.ChessGame;
 public class ChessAdmin implements Admin {
 
 	/**
-	 * Returns the chess game instance managed by the admin.
-	 * <p>
-	 * This method is marked as a Spring bean, so it will be managed by the Spring
-	 * container.
-	 * </p>
-	 *
-	 * @return a new instance of {@link ChessGame}
+	 * Performs the chess game operation.
+	 * @param time the time
+	 * @return the result of the operation
 	 */
 	@Override
 	@Bean

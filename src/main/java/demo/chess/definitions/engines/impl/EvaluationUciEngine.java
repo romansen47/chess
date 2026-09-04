@@ -24,16 +24,29 @@ public class EvaluationUciEngine extends ConsoleUciEngine implements EvaluationE
 	private String lastPositionHash = "";
 	private Thread evaluationThread;
 
+	/**
+	 * Creates a new EvaluationUciEngine instance.
+	 * @param path the path
+	 */
 	public EvaluationUciEngine(String path) throws Exception {
 		super(path);
 		logger.info("Creating new evaluation engine: {}", path);
 	}
 
+	/**
+	 * Clears the chached lines.
+	 */
 	@Override
 	public void clearChachedLines() {
 		getCachedBestLines().clear();
 	}
 
+	/**
+	 * Returns the best lines.
+	 * @param chessGame the chess game
+	 * @param config the config
+	 * @return the best lines
+	 */
 	@Override
 	public synchronized List<EngineLine> getBestLines(Game chessGame, EngineConfig config)
 			throws IOException, InterruptedException, ExecutionException {
@@ -51,6 +64,12 @@ public class EvaluationUciEngine extends ConsoleUciEngine implements EvaluationE
 		return getCachedBestLines().get(movelist);
 	}
 
+	/**
+	 * Returns the command line options.
+	 * @param command the command
+	 * @param config the config
+	 * @return the command line options
+	 */
 	@Override
 	protected StringBuilder getCommandLineOptions(StringBuilder command, EngineConfig config) {
 		StringBuilder positionCommand = new StringBuilder();
@@ -59,6 +78,11 @@ public class EvaluationUciEngine extends ConsoleUciEngine implements EvaluationE
 		return positionCommand;
 	}
 
+	/**
+	 * Returns whether the position new.
+	 * @param chessGame the chess game
+	 * @return true when the condition is satisfied; otherwise false
+	 */
 	protected boolean isPositionNew(Game chessGame) {
 		String currentPositionHash = chessGame.getMoveList().toString();
 		if (!currentPositionHash.equals(lastPositionHash)) {
@@ -68,16 +92,23 @@ public class EvaluationUciEngine extends ConsoleUciEngine implements EvaluationE
 		return false;
 	}
 
+	/**
+	 * Parses the best lines.
+	 * @param color the color
+	 * @param bestLines the best lines
+	 * @param config the config
+	 * @return the result of the operation
+	 */
 	protected List<EngineLine> parseBestLines(Color color, List<String> bestLines, EngineConfig config) {
 		return parseBestLines(color, bestLines, config, Math.max(0, config.getDepth()));
 	}
 
 	/**
-	 * Parses only the highest depth reached by a finite analysis.
-	 *
-	 * We deliberately do not fall back to an older, complete MultiPV depth.
-	 * If one variant of the highest depth is unusable (for example a transient
-	 * "score mate 0"), that variant is simply omitted from the result.
+	 * Parses the best lines at highest depth.
+	 * @param color the color
+	 * @param bestLines the best lines
+	 * @param config the config
+	 * @return the result of the operation
 	 */
 	protected List<EngineLine> parseBestLinesAtHighestDepth(
 			Color color,
@@ -101,6 +132,14 @@ public class EvaluationUciEngine extends ConsoleUciEngine implements EvaluationE
 		return parseBestLines(color, highestDepthLines, config, 0);
 	}
 
+	/**
+	 * Parses the best lines.
+	 * @param color the color
+	 * @param bestLines the best lines
+	 * @param config the config
+	 * @param minimumDepth the minimum depth
+	 * @return the result of the operation
+	 */
 	private List<EngineLine> parseBestLines(
 			Color color,
 			List<String> bestLines,
@@ -192,6 +231,12 @@ public class EvaluationUciEngine extends ConsoleUciEngine implements EvaluationE
 		return selectHighestCompleteDepth(linesByDepth, largestCompletedVariantCount);
 	}
 
+	/**
+	 * Performs the select highest complete depth operation.
+	 * @param linesByDepth the lines by depth
+	 * @param expectedVariants the expected variants
+	 * @return the result of the operation
+	 */
 	private List<EngineLine> selectHighestCompleteDepth(
 			TreeMap<Integer, Map<Integer, EngineLine>> linesByDepth,
 			int expectedVariants) {
@@ -211,6 +256,12 @@ public class EvaluationUciEngine extends ConsoleUciEngine implements EvaluationE
 		return new ArrayList<>();
 	}
 
+	/**
+	 * Performs the count contiguous variants operation.
+	 * @param depthLines the depth lines
+	 * @param maxVariants the max variants
+	 * @return the result of the operation
+	 */
 	private int countContiguousVariants(Map<Integer, EngineLine> depthLines, int maxVariants) {
 		int count = 0;
 		for (int multipv = 1; multipv <= maxVariants; multipv++) {
@@ -222,6 +273,12 @@ public class EvaluationUciEngine extends ConsoleUciEngine implements EvaluationE
 		return count;
 	}
 
+	/**
+	 * Starts the evaluation engine.
+	 * @param chessGame the chess game
+	 * @param moveListAsString the move list as string
+	 * @param config the config
+	 */
 	public synchronized void startEvaluationEngine(Game chessGame, String moveListAsString, EngineConfig config) throws IOException {
 	    if (evaluationThread != null) {
 	        stopEvaluation();
@@ -299,6 +356,9 @@ public class EvaluationUciEngine extends ConsoleUciEngine implements EvaluationE
 	    }
 	}
 
+	/**
+	 * Stops the evaluation.
+	 */
 	@Override
 	public void stopEvaluation() {
 		logger.info("{} stopping actual infinite analysis", this);
@@ -309,6 +369,12 @@ public class EvaluationUciEngine extends ConsoleUciEngine implements EvaluationE
 		}
 	}
 
+	/**
+	 * Performs the sort lines by color operation.
+	 * @param color the color
+	 * @param moves the moves
+	 * @return the result of the operation
+	 */
 	protected List<EngineLine> sortLinesByColor(Color color, List<EngineLine> moves) {
 		List<EngineLine> tmpLines = new ArrayList<>(moves);
 		if (color.equals(Color.WHITE)) {
@@ -320,7 +386,8 @@ public class EvaluationUciEngine extends ConsoleUciEngine implements EvaluationE
 	}
 
 	/**
-	 * @return the cachedBestLines
+	 * Returns the cached best lines.
+	 * @return the cached best lines
 	 */
 	@Override
 	public Map<String, List<EngineLine>> getCachedBestLines() {

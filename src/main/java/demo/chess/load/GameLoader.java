@@ -28,15 +28,20 @@ public class GameLoader {
     private static final Pattern PGN_NAG_PATTERN = Pattern.compile("\\$\\d+");
     private static final Pattern MOVE_NUMBER_PREFIX_PATTERN = Pattern.compile("^\\d+\\.(?:\\.\\.)?");
 
+    /**
+     * Loads the game.
+     * @param location the location
+     * @param game the game
+     */
     public void loadGame(String location, Game game) throws IOException, NoMoveFoundException {
         String content = Files.readString(Path.of(location), StandardCharsets.UTF_8);
         loadGame(parseMoveList(content), game);
     }
 
     /**
-     * Replays a list of UCI moves on the supplied game. The move is always resolved
-     * against the legal moves of the current position so castling, en passant and
-     * promotion keep using the normal chess rules.
+     * Loads the game.
+     * @param uciMoves the uci moves
+     * @param game the game
      */
     public void loadGame(List<String> uciMoves, Game game) throws IOException, NoMoveFoundException {
         if (game == null) {
@@ -77,8 +82,9 @@ public class GameLoader {
     }
 
     /**
-     * Parses either a plain whitespace-separated UCI move list or the UCI command
-     * form "position startpos moves ...".
+     * Parses the move list.
+     * @param content the content
+     * @return the result of the operation
      */
     public List<String> parseMoveList(String content) throws NoMoveFoundException {
         List<String> moveList = new ArrayList<>();
@@ -126,9 +132,9 @@ public class GameLoader {
     }
 
     /**
-     * Parses the first PGN game in the supplied content and returns its move list as
-     * UCI coordinates. SAN-to-move conversion is performed exclusively on a
-     * {@link DummyGame}.
+     * Parses the pgn move list.
+     * @param content the content
+     * @return the result of the operation
      */
     public List<String> parsePgnMoveList(String content) throws NoMoveFoundException, IOException {
         List<String> moveList = new ArrayList<>();
@@ -168,6 +174,11 @@ public class GameLoader {
         return moveList;
     }
 
+    /**
+     * Parses the pgn tags.
+     * @param content the content
+     * @return the result of the operation
+     */
     public Map<String, String> parsePgnTags(String content) {
         Map<String, String> tags = new LinkedHashMap<>();
         if (content == null || content.isBlank()) {
@@ -191,6 +202,11 @@ public class GameLoader {
         return tags;
     }
 
+    /**
+     * Loads the move list.
+     * @param location the location
+     * @return the result of the operation
+     */
     public List<String> loadMoveList(String location) throws IOException {
         String content = Files.readString(Path.of(location), StandardCharsets.UTF_8);
         try {
@@ -200,6 +216,11 @@ public class GameLoader {
         }
     }
 
+    /**
+     * Performs the strip bom operation.
+     * @param content the content
+     * @return the result of the operation
+     */
     private String stripBom(String content) {
         if (content != null && content.startsWith("\uFEFF")) {
             return content.substring(1);
@@ -207,6 +228,11 @@ public class GameLoader {
         return content;
     }
 
+    /**
+     * Performs the strip move number prefix operation.
+     * @param token the token
+     * @return the result of the operation
+     */
     private String stripMoveNumberPrefix(String token) {
         String result = token;
         Matcher matcher = MOVE_NUMBER_PREFIX_PATTERN.matcher(result);
@@ -217,6 +243,11 @@ public class GameLoader {
         return result;
     }
 
+    /**
+     * Returns whether the result token.
+     * @param token the token
+     * @return true when the condition is satisfied; otherwise false
+     */
     private boolean isResultToken(String token) {
         return "1-0".equals(token)
                 || "0-1".equals(token)
@@ -224,6 +255,11 @@ public class GameLoader {
                 || "*".equals(token);
     }
 
+    /**
+     * Removes the variations.
+     * @param value the value
+     * @return the result of the operation
+     */
     private String removeVariations(String value) {
         StringBuilder result = new StringBuilder(value.length());
         int depth = 0;
@@ -248,6 +284,11 @@ public class GameLoader {
         return result.toString();
     }
 
+    /**
+     * Performs the unescape pgn tag value operation.
+     * @param value the value
+     * @return the result of the operation
+     */
     private String unescapePgnTagValue(String value) {
         StringBuilder result = new StringBuilder();
         boolean escaped = false;

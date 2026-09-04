@@ -21,6 +21,13 @@ public final class UciEngineDefinition {
     private final String engineAuthor;
     private final LinkedHashMap<String, UciOption> options;
 
+    /**
+     * Creates a new UciEngineDefinition instance.
+     * @param engine the engine
+     * @param engineName the engine name
+     * @param engineAuthor the engine author
+     * @param options the options
+     */
     public UciEngineDefinition(
             String engine,
             String engineName,
@@ -37,6 +44,10 @@ public final class UciEngineDefinition {
         this.options = copyOptions(options);
     }
 
+    /**
+     * Creates a new UciEngineDefinition instance.
+     * @param source the source
+     */
     public UciEngineDefinition(UciEngineDefinition source) {
         this(
                 Objects.requireNonNull(source, "source").engine,
@@ -45,22 +56,43 @@ public final class UciEngineDefinition {
                 source.options);
     }
 
+    /**
+     * Returns the engine.
+     * @return the engine
+     */
     public String getEngine() {
         return engine;
     }
 
+    /**
+     * Returns the engine name.
+     * @return the engine name
+     */
     public String getEngineName() {
         return engineName;
     }
 
+    /**
+     * Returns the engine author.
+     * @return the engine author
+     */
     public String getEngineAuthor() {
         return engineAuthor;
     }
 
+    /**
+     * Returns the options.
+     * @return the options
+     */
     public Map<String, UciOption> getOptions() {
         return Collections.unmodifiableMap(options);
     }
 
+    /**
+     * Returns the option.
+     * @param name the name
+     * @return the option
+     */
     public UciOption getOption(String name) {
         if (name == null) {
             return null;
@@ -79,13 +111,20 @@ public final class UciEngineDefinition {
         return null;
     }
 
+    /**
+     * Performs the copy operation.
+     * @return the result of the operation
+     */
     public UciEngineDefinition copy() {
         return new UciEngineDefinition(this);
     }
 
     /**
-     * Resolves this engine definition together with profile values to the
-     * runtime configuration consumed by the existing UCI engine classes.
+     * Creates the runtime config.
+     * @param depth the depth
+     * @param moveTimeSeconds the move time seconds
+     * @param optionValues the option values
+     * @return the result of the operation
      */
     public UciEngineConfig createRuntimeConfig(
             int depth,
@@ -116,6 +155,11 @@ public final class UciEngineDefinition {
         return result;
     }
 
+    /**
+     * Performs the copy options operation.
+     * @param source the source
+     * @return the result of the operation
+     */
     private static LinkedHashMap<String, UciOption> copyOptions(Map<String, UciOption> source) {
         LinkedHashMap<String, UciOption> result = new LinkedHashMap<>();
         if (source == null) {

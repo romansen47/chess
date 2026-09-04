@@ -21,33 +21,39 @@ public class Knight extends PieceImpl {
 	private static final Logger logger = LogManager.getLogger(Knight.class);
 
 	/**
-	 * Constructs a knight piece with the specified color, field, and chess board.
-	 *
-	 * @param color      the color of the knight
-	 * @param field      the field the knight is placed on
-	 * @param chessBoard the chess board the knight belongs to
+	 * Creates a new Knight instance.
+	 * @param color the color
+	 * @param field the field
+	 * @param chessBoard the chess board
+	 * @param setField the set field
 	 */
 	public Knight(Color color, Field field, Board chessBoard, boolean setField) {
 		super(color, field, chessBoard, setField);
 	}
 
+	/**
+	 * Returns a string representation of this object.
+	 * @return the result of the operation
+	 */
 	@Override
 	public String toString() {
 		return getColor().label + "N" + getField().getName();
 	}
 
+	/**
+	 * Returns the possible unvalidated moves.
+	 * @return the possible unvalidated moves
+	 */
 	@Override
 	public List<Move> getPossibleUnvalidatedMoves() {
 		return getSimpleUnvalidatedMoves();
 	}
 
 	/**
-	 * Adds a move to the move list if it is within the bounds of the board and
-	 * either the target field is empty or contains an opponent's piece.
-	 *
-	 * @param moveList the list of moves to add to
-	 * @param tmpFile  the file of the potential move
-	 * @param tmpRank  the rank of the potential move
+	 * Processes the move.
+	 * @param moveList the move list
+	 * @param tmpFile the tmp file
+	 * @param tmpRank the tmp rank
 	 */
 	private void processMove(List<Move> moveList, int tmpFile, int tmpRank) {
 		if (tmpFile > 0 && tmpFile < 9 && tmpRank > 0 && tmpRank < 9) {
@@ -59,16 +65,28 @@ public class Knight extends PieceImpl {
 		}
 	}
 
+	/**
+	 * Returns the logger.
+	 * @return the logger
+	 */
 	@Override
 	public Logger getLogger() {
 		return logger;
 	}
 
+	/**
+	 * Returns the type.
+	 * @return the type
+	 */
 	@Override
 	public PieceType getType() {
 		return PieceType.KNIGHT;
 	}
 
+	/**
+	 * Returns the simple unvalidated moves.
+	 * @return the simple unvalidated moves
+	 */
 	@Override
 	public List<Move> getSimpleUnvalidatedMoves() {
 		List<Move> moveList = new ArrayList<>();

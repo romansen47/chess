@@ -8,8 +8,7 @@ import demo.chess.definitions.pieces.impl.Rook;
 public interface Castling extends Move {
 
 	/**
-	 * Returns the rook involved in the castling move.
-	 *
+	 * Returns the rook.
 	 * @return the rook
 	 */
 	Rook getRook();

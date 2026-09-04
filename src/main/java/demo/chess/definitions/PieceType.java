@@ -28,15 +28,19 @@ public enum PieceType {
 
 	public final long hash;
 	/**
-	 * Constructs a PieceType enum with the specified label.
-	 *
-	 * @param label the label representing the PieceType
+	 * Creates a new PieceType instance.
+	 * @param label the label
+	 * @param hash the hash
 	 */
 	private PieceType(String label, long hash) {
 		this.label = label;
 		this.hash = hash;
 	}
 
+	/**
+	 * Returns whether this object has the h.
+	 * @return true when the condition is satisfied; otherwise false
+	 */
 	public long hash() {
 		return hash;
 	}

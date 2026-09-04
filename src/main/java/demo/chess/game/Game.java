@@ -16,81 +16,108 @@ import demo.chess.definitions.states.State;
 public interface Game {
 
 	/**
-	 * Returns the chessboard.
-	 *
-	 * @return the chessboard
+	 * Returns the chess board.
+	 * @return the chess board
 	 */
 	Board getChessBoard();
 
 	/**
-	 * Returns the list of moves.
-	 *
-	 * @return the list of moves
+	 * Returns the move list.
+	 * @return the move list
 	 */
 	MoveList getMoveList();
 
 	/**
 	 * Returns the white player.
-	 *
 	 * @return the white player
 	 */
 	Player getWhitePlayer();
 
 	/**
 	 * Returns the black player.
-	 *
 	 * @return the black player
 	 */
 	Player getBlackPlayer();
 
 	/**
-	 * Returns the current player.
-	 *
-	 * @return the current player
+	 * Returns the player.
+	 * @return the player
 	 */
 	Player getPlayer();
 
 	/**
-	 * Sets the current player.
-	 *
-	 * @param player the player to set as the current player
+	 * Sets the player.
+	 * @param player the player
 	 */
 	void setPlayer(Player player);
 
 	/**
-	 * Creates and initializes the chess pieces for both players.
+	 * Creates the pieces.
 	 */
 	void createPieces();
 
 	/**
-	 * Switches the current player to the other player.
+	 * Performs the switch player operation.
 	 */
 	void switchPlayer();
 
 	/**
-	 * Applies the given move to the chess game.
-	 *
-	 * @param move the move to apply
-	 * @throws IOException
-	 * @throws NoMoveFoundException
+	 * Performs the apply operation.
+	 * @param move the move
 	 */
 	void apply(Move move) throws NoMoveFoundException, IOException;
 
+	/**
+	 * Sets the state.
+	 * @param stalemate the stalemate
+	 */
 	void setState(State stalemate);
 
+	/**
+	 * Returns the state.
+	 * @return the state
+	 */
 	State getState();
 
+	/**
+	 * Returns the time for each player.
+	 * @return the time for each player
+	 */
 	int getTimeForEachPlayer();
 
+	/**
+	 * Returns the increment for white.
+	 * @return the increment for white
+	 */
 	int getIncrementForWhite();
 
+	/**
+	 * Sets the increment for white.
+	 * @param incrementForWhite the increment for white
+	 */
 	void setIncrementForWhite(int incrementForWhite);
 
+	/**
+	 * Returns the increment for black.
+	 * @return the increment for black
+	 */
 	int getIncrementForBlack();
 
+	/**
+	 * Sets the increment for black.
+	 * @param incrementForBlack the increment for black
+	 */
 	void setIncrementForBlack(int incrementForBlack);
 
+	/**
+	 * Returns the san move list.
+	 * @return the san move list
+	 */
 	List<String> getSanMoveList();
 
+	/**
+	 * Sets the san move list.
+	 * @param sanMoveList the san move list
+	 */
 	void setSanMoveList(List<String> sanMoveList);
 }

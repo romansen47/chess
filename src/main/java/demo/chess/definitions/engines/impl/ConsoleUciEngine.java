@@ -32,34 +32,51 @@ public abstract class ConsoleUciEngine implements ChessEngine {
     private final String enginePath;
     private final String managementId;
 
+    /**
+     * Creates a new ConsoleUciEngine instance.
+     * @param path the path
+     */
     public ConsoleUciEngine(String path) throws Exception {
         this.enginePath = path;
         this.managementId = UciEngineProcessManager.register(getClass().getSimpleName(), path);
         startProcess();
     }
 
+    /**
+     * Returns the management id.
+     * @return the management id
+     */
     public final String getManagementId() {
         return managementId;
     }
 
+    /**
+     * Sets the management label.
+     * @param label the label
+     */
     public final void setManagementLabel(String label) {
         UciEngineProcessManager.setLabel(managementId, label);
     }
 
+    /**
+     * Returns the engine path.
+     * @return the engine path
+     */
     protected final String getEnginePath() {
         return enginePath;
     }
 
+    /**
+     * Performs the restart process operation.
+     */
     protected synchronized void restartProcess() throws Exception {
         destroyCurrentProcess();
         startProcess();
     }
 
     /**
-     * Applies the complete dynamic UCI option map from the config and waits until
-     * the engine confirms that it processed all options. The config is bound to
-     * one immutable engine path; applying it to another executable is therefore
-     * rejected instead of silently sending foreign options.
+     * Applies the config.
+     * @param config the config
      */
     protected synchronized void applyConfig(EngineConfig config) throws IOException, InterruptedException {
         if (config == null) {
@@ -87,6 +104,9 @@ public abstract class ConsoleUciEngine implements ChessEngine {
         }
     }
 
+    /**
+     * Starts the process.
+     */
     private void startProcess() throws Exception {
         uciEngineProcess = new ProcessBuilder(enginePath).redirectErrorStream(true).start();
         UciEngineProcessManager.attachProcess(managementId, uciEngineProcess);
@@ -107,6 +127,11 @@ public abstract class ConsoleUciEngine implements ChessEngine {
         }
     }
 
+    /**
+     * Performs the await line operation.
+     * @param expected the expected
+     * @param timeoutSeconds the timeout seconds
+     */
     private void awaitLine(String expected, long timeoutSeconds) throws Exception {
         ExecutorService executor = Executors.newSingleThreadExecutor(runnable -> {
             Thread thread = new Thread(runnable, "uci-await-" + expected);
@@ -129,6 +154,9 @@ public abstract class ConsoleUciEngine implements ChessEngine {
         }
     }
 
+    /**
+     * Performs the close operation.
+     */
     @Override
     public synchronized void close() {
         try {
@@ -161,6 +189,9 @@ public abstract class ConsoleUciEngine implements ChessEngine {
         }
     }
 
+    /**
+     * Performs the destroy current process operation.
+     */
     private void destroyCurrentProcess() {
         Process process = uciEngineProcess;
         closeStreams();
@@ -179,6 +210,9 @@ public abstract class ConsoleUciEngine implements ChessEngine {
         UciEngineProcessManager.processEnded(managementId, process);
     }
 
+    /**
+     * Closes the streams.
+     */
     private void closeStreams() {
         try {
             if (writer != null) {
@@ -196,8 +230,18 @@ public abstract class ConsoleUciEngine implements ChessEngine {
         }
     }
 
+    /**
+     * Returns the command line options.
+     * @param command the command
+     * @param config the config
+     * @return the command line options
+     */
     protected abstract StringBuilder getCommandLineOptions(StringBuilder command, EngineConfig config);
 
+    /**
+     * Returns the writer.
+     * @return the writer
+     */
     protected PrintWriter getWriter() {
         return writer;
     }
@@ -205,11 +249,20 @@ public abstract class ConsoleUciEngine implements ChessEngine {
     private static final class LoggingPrintWriter extends PrintWriter {
         private final String managementId;
 
+        /**
+         * Creates a new LoggingPrintWriter instance.
+         * @param out the out
+         * @param managementId the management id
+         */
         private LoggingPrintWriter(Writer out, String managementId) {
             super(out, true);
             this.managementId = managementId;
         }
 
+        /**
+         * Performs the println operation.
+         * @param value the value
+         */
         @Override
         public void println(String value) {
             UciEngineProcessManager.logCommand(managementId, value);
@@ -220,11 +273,20 @@ public abstract class ConsoleUciEngine implements ChessEngine {
     private static final class LoggingBufferedReader extends BufferedReader {
         private final String managementId;
 
+        /**
+         * Creates a new LoggingBufferedReader instance.
+         * @param in the in
+         * @param managementId the management id
+         */
         private LoggingBufferedReader(Reader in, String managementId) {
             super(in);
             this.managementId = managementId;
         }
 
+        /**
+         * Reads the line.
+         * @return the result of the operation
+         */
         @Override
         public String readLine() throws java.io.IOException {
             String line = super.readLine();

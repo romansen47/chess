@@ -20,12 +20,19 @@ public class GameSaver {
 
     private static final DateTimeFormatter PGN_DATE_FORMAT = DateTimeFormatter.ofPattern("yyyy.MM.dd");
 
+    /**
+     * Saves the game.
+     * @param moveList the move list
+     * @param location the location
+     */
     public void saveGame(MoveList moveList, String location) throws IOException {
         Files.writeString(Path.of(location), toUci(moveList), StandardCharsets.UTF_8);
     }
 
     /**
-     * Serializes a game as a plain UCI move list, one move per line.
+     * Performs the to uci operation.
+     * @param moveList the move list
+     * @return the result of the operation
      */
     public String toUci(Iterable<Move> moveList) {
         if (moveList == null) {
@@ -43,8 +50,10 @@ public class GameSaver {
     }
 
     /**
-     * Serializes a game as PGN. Move notation is generated exclusively by replaying
-     * the supplied moves on a {@link DummyGame}.
+     * Performs the to pgn operation.
+     * @param moveList the move list
+     * @param suppliedTags the supplied tags
+     * @return the result of the operation
      */
     public String toPgn(Iterable<Move> moveList, Map<String, String> suppliedTags)
             throws NoMoveFoundException, IOException {
@@ -92,6 +101,11 @@ public class GameSaver {
         return pgn.toString();
     }
 
+    /**
+     * Creates the tags.
+     * @param suppliedTags the supplied tags
+     * @return the result of the operation
+     */
     private Map<String, String> createTags(Map<String, String> suppliedTags) {
         Map<String, String> tags = new LinkedHashMap<>();
         tags.put("Event", "?");
@@ -113,6 +127,11 @@ public class GameSaver {
         return tags;
     }
 
+    /**
+     * Performs the append tags operation.
+     * @param pgn the pgn
+     * @param tags the tags
+     */
     private void appendTags(StringBuilder pgn, Map<String, String> tags) {
         for (Map.Entry<String, String> entry : tags.entrySet()) {
             pgn.append('[')
@@ -123,6 +142,11 @@ public class GameSaver {
         }
     }
 
+    /**
+     * Performs the normalize result operation.
+     * @param result the result
+     * @return the result of the operation
+     */
     private String normalizeResult(String result) {
         if ("1-0".equals(result) || "0-1".equals(result) || "1/2-1/2".equals(result)) {
             return result;
@@ -130,6 +154,11 @@ public class GameSaver {
         return "*";
     }
 
+    /**
+     * Performs the escape pgn tag value operation.
+     * @param value the value
+     * @return the result of the operation
+     */
     private String escapePgnTagValue(String value) {
         return value.replace("\\", "\\\\").replace("\"", "\\\"");
     }

@@ -17,13 +17,8 @@ import demo.chess.definitions.moves.impl.ChessMove;
 public interface BishopLike extends Piece {
 
 	/**
-	 * Returns a list of simple unvalidated moves for the piece.
-	 * <p>
-	 * This method calculates moves in the four diagonal directions, stopping at the
-	 * edge of the board or when encountering another piece.
-	 * </p>
-	 *
-	 * @return the list of simple unvalidated moves
+	 * Returns the simple unvalidated moves.
+	 * @return the simple unvalidated moves
 	 */
 	@Override
 	default List<Move> getSimpleUnvalidatedMoves() {
@@ -104,9 +99,8 @@ public interface BishopLike extends Piece {
 	}
 
 	/**
-	 * Returns a list of possible unvalidated bishop-like moves for the piece.
-	 *
-	 * @return the list of possible unvalidated bishop-like moves
+	 * Returns the possible unvalidated bishop like moves.
+	 * @return the possible unvalidated bishop like moves
 	 */
 	default List<Move> getPossibleUnvalidatedBishopLikeMoves() {
 		return getSimpleUnvalidatedMoves();

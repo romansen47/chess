@@ -17,24 +17,30 @@ public class EnPassantImpl extends ChessMove implements EnPassant {
 	private final Pawn slayedPawn;
 
 	/**
-	 * Constructs an EnPassantImpl with the specified piece, source field, target
-	 * field, and the slayed pawn.
-	 *
-	 * @param piece      the pawn performing the en passant
-	 * @param source     the source field of the pawn
-	 * @param target     the target field of the pawn
-	 * @param slayedPawn the pawn that is captured by the en passant move
+	 * Creates a new EnPassantImpl instance.
+	 * @param piece the piece
+	 * @param source the source
+	 * @param target the target
+	 * @param slayedPawn the slayed pawn
 	 */
 	public EnPassantImpl(Piece piece, Field source, Field target, Pawn slayedPawn) {
 		super(piece, source, target);
 		this.slayedPawn = slayedPawn;
 	}
 
+	/**
+	 * Returns the slayed piece.
+	 * @return the slayed piece
+	 */
 	@Override
 	public Pawn getSlayedPiece() {
 		return slayedPawn;
 	}
 
+	/**
+	 * Returns the hash code for this object.
+	 * @return true when the condition is satisfied; otherwise false
+	 */
 	@Override
 	public int hashCode() {
 		final int prime = 31;
@@ -43,6 +49,11 @@ public class EnPassantImpl extends ChessMove implements EnPassant {
 		return result;
 	}
 
+	/**
+	 * Compares this object with another object for equality.
+	 * @param obj the obj
+	 * @return the result of the operation
+	 */
 	@Override
 	public boolean equals(Object obj) {
 		if (obj instanceof Move) {
@@ -53,6 +64,10 @@ public class EnPassantImpl extends ChessMove implements EnPassant {
 		return Objects.equals(obj, this);
 	}
 
+	/**
+	 * Returns the move type.
+	 * @return the move type
+	 */
 	@Override
 	public MoveType getMoveType() {
 		return MoveType.EN_PASSANT;

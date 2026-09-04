@@ -24,9 +24,18 @@ public final class UciEngineProcessManager {
     private static final int MAX_LOG_ENTRIES = 2000;
     private static final Map<String, ManagedEngine> ENGINES = new ConcurrentHashMap<>();
 
+    /**
+     * Creates a new UciEngineProcessManager instance.
+     */
     private UciEngineProcessManager() {
     }
 
+    /**
+     * Performs the register operation.
+     * @param engineType the engine type
+     * @param enginePath the engine path
+     * @return the result of the operation
+     */
     public static String register(String engineType, String enginePath) {
         String id = UUID.randomUUID().toString();
         ManagedEngine engine = new ManagedEngine(id, engineType, enginePath);
@@ -35,6 +44,11 @@ public final class UciEngineProcessManager {
         return id;
     }
 
+    /**
+     * Sets the label.
+     * @param id the id
+     * @param label the label
+     */
     public static void setLabel(String id, String label) {
         ManagedEngine engine = ENGINES.get(id);
         if (engine != null && label != null && !label.isBlank()) {
@@ -43,6 +57,11 @@ public final class UciEngineProcessManager {
         }
     }
 
+    /**
+     * Performs the attach process operation.
+     * @param id the id
+     * @param process the process
+     */
     public static void attachProcess(String id, Process process) {
         ManagedEngine engine = ENGINES.get(id);
         if (engine == null) {
@@ -55,6 +74,11 @@ public final class UciEngineProcessManager {
         engine.addLog("SYSTEM", "Process started with PID " + safePid(process));
     }
 
+    /**
+     * Processes the ended.
+     * @param id the id
+     * @param process the process
+     */
     public static void processEnded(String id, Process process) {
         ManagedEngine engine = ENGINES.get(id);
         if (engine == null || engine.process != process) {
@@ -64,6 +88,10 @@ public final class UciEngineProcessManager {
         engine.addLog("SYSTEM", "Process ended" + formatExitCode(engine.exitCode));
     }
 
+    /**
+     * Performs the mark closed operation.
+     * @param id the id
+     */
     public static void markClosed(String id) {
         ManagedEngine engine = ENGINES.get(id);
         if (engine != null) {
@@ -72,10 +100,20 @@ public final class UciEngineProcessManager {
         }
     }
 
+    /**
+     * Performs the log command operation.
+     * @param id the id
+     * @param commandBlock the command block
+     */
     public static void logCommand(String id, String commandBlock) {
         logBlock(id, "COMMAND", commandBlock);
     }
 
+    /**
+     * Performs the log response operation.
+     * @param id the id
+     * @param response the response
+     */
     public static void logResponse(String id, String response) {
         ManagedEngine engine = ENGINES.get(id);
         if (engine != null && response != null) {
@@ -83,6 +121,10 @@ public final class UciEngineProcessManager {
         }
     }
 
+    /**
+     * Performs the list operation.
+     * @return the result of the operation
+     */
     public static List<UciEngineProcessInfo> list() {
         return ENGINES.values().stream()
                 .sorted(Comparator.comparing((ManagedEngine engine) -> engine.createdAt).reversed())
@@ -90,11 +132,21 @@ public final class UciEngineProcessManager {
                 .toList();
     }
 
+    /**
+     * Performs the log operation.
+     * @param id the id
+     * @return the result of the operation
+     */
     public static List<UciEngineLogEntry> log(String id) {
         ManagedEngine engine = ENGINES.get(id);
         return engine == null ? List.of() : engine.logSnapshot();
     }
 
+    /**
+     * Performs the terminate operation.
+     * @param id the id
+     * @return the result of the operation
+     */
     public static boolean terminate(String id) {
         ManagedEngine engine = ENGINES.get(id);
         if (engine == null) {
@@ -125,6 +177,12 @@ public final class UciEngineProcessManager {
         return true;
     }
 
+    /**
+     * Performs the log block operation.
+     * @param id the id
+     * @param direction the direction
+     * @param block the block
+     */
     private static void logBlock(String id, String direction, String block) {
         ManagedEngine engine = ENGINES.get(id);
         if (engine == null || block == null) {
@@ -138,6 +196,11 @@ public final class UciEngineProcessManager {
         }
     }
 
+    /**
+     * Performs the to info operation.
+     * @param engine the engine
+     * @return the result of the operation
+     */
     private static UciEngineProcessInfo toInfo(ManagedEngine engine) {
         Process process = engine.process;
         boolean alive = process != null && process.isAlive();
@@ -158,6 +221,11 @@ public final class UciEngineProcessManager {
                 engine.logCount.get());
     }
 
+    /**
+     * Performs the safe pid operation.
+     * @param process the process
+     * @return the result of the operation
+     */
     private static Long safePid(Process process) {
         if (process == null) {
             return null;
@@ -169,6 +237,11 @@ public final class UciEngineProcessManager {
         }
     }
 
+    /**
+     * Performs the exit code operation.
+     * @param process the process
+     * @return the result of the operation
+     */
     private static Integer exitCode(Process process) {
         if (process == null || process.isAlive()) {
             return null;
@@ -180,6 +253,11 @@ public final class UciEngineProcessManager {
         }
     }
 
+    /**
+     * Formats the exit code.
+     * @param exitCode the exit code
+     * @return the result of the operation
+     */
     private static String formatExitCode(Integer exitCode) {
         return exitCode == null ? "" : " (exit code " + exitCode + ")";
     }
@@ -200,6 +278,12 @@ public final class UciEngineProcessManager {
         private volatile Integer exitCode;
         private volatile boolean closed;
 
+        /**
+         * Creates a new ManagedEngine instance.
+         * @param id the id
+         * @param engineType the engine type
+         * @param enginePath the engine path
+         */
         private ManagedEngine(String id, String engineType, String enginePath) {
             this.id = id;
             this.engineType = engineType;
@@ -207,6 +291,11 @@ public final class UciEngineProcessManager {
             this.label = engineType;
         }
 
+        /**
+         * Adds the log.
+         * @param direction the direction
+         * @param message the message
+         */
         private synchronized void addLog(String direction, String message) {
             Instant now = Instant.now();
             lastActivityAt = now;
@@ -218,10 +307,17 @@ public final class UciEngineProcessManager {
             }
         }
 
+        /**
+         * Performs the log snapshot operation.
+         * @return the result of the operation
+         */
         private synchronized List<UciEngineLogEntry> logSnapshot() {
             return new ArrayList<>(log);
         }
 
+        /**
+         * Performs the touch operation.
+         */
         private void touch() {
             lastActivityAt = Instant.now();
         }

@@ -46,11 +46,10 @@ public abstract class PlayerImpl implements Player {
 	private int additionalTime;
 
 	/**
-	 * Constructs a PlayerImpl instance with the specified color and move list.
-	 *
-	 * @param color    the color of the player
-	 * @param moveList the move list associated with the player
-	 * @param string
+	 * Creates a new PlayerImpl instance.
+	 * @param color the color
+	 * @param moveList the move list
+	 * @param string the string
 	 */
 	public PlayerImpl(Color color, MoveList moveList, String string) {
 		this.pieces = new ArrayList<>();
@@ -60,6 +59,12 @@ public abstract class PlayerImpl implements Player {
 		this.chessClock = new ChessClock();
 	}
 
+	/**
+	 * Sets the up clock.
+	 * @param timeForEachPlayer the time for each player
+	 * @param incrementForWhite the increment for white
+	 * @param runnable the runnable
+	 */
 	@Override
 	public void setupClock(int timeForEachPlayer, int incrementForWhite, Runnable runnable) {
 		this.chessClock.setIncrementMillis(incrementForWhite * SECOND_IN_MILLIS);
@@ -67,6 +72,10 @@ public abstract class PlayerImpl implements Player {
 		this.chessClock.setTimeUpAction(runnable);
 	}
 
+	/**
+	 * Returns the simple moves.
+	 * @return the simple moves
+	 */
 	@Override
 	public List<Move> getSimpleMoves() {
 		List<Move> possibleValidMoves = new ArrayList<>();
@@ -76,6 +85,11 @@ public abstract class PlayerImpl implements Player {
 		return possibleValidMoves;
 	}
 
+	/**
+	 * Returns the valid moves.
+	 * @param chessGame the chess game
+	 * @return the valid moves
+	 */
 	@Override
 	public List<Move> getValidMoves(Game chessGame) throws NoMoveFoundException, IOException {
 		List<Move> possibleUnvalidetMoves = new ArrayList<>();
@@ -93,6 +107,10 @@ public abstract class PlayerImpl implements Player {
 		return possibleValidMoves;
 	}
 
+	/**
+	 * Performs the resign or stale mate operation.
+	 * @param chessGame the chess game
+	 */
 	@Override
 	public void resignOrStaleMate(Game chessGame) {
 		Player opponent = getColor().equals(Color.WHITE) ? chessGame.getBlackPlayer() : chessGame.getWhitePlayer();
@@ -115,6 +133,12 @@ public abstract class PlayerImpl implements Player {
 		}
 	}
 
+	/**
+	 * Performs the replace by valid move operation.
+	 * @param chessGame the chess game
+	 * @param move the move
+	 * @return the result of the operation
+	 */
 	@Override
 	public Move replaceByValidMove(Game chessGame, Move move) throws NoMoveFoundException, IOException {
 		List<Move> validMoves = getValidMoves(chessGame);
@@ -128,11 +152,10 @@ public abstract class PlayerImpl implements Player {
 	}
 
 	/**
-	 * Validates a castling move.
-	 *
-	 * @param chessGame the game context
-	 * @param move      the move to validate
-	 * @return true if the castling move is valid, false otherwise
+	 * Validates the castling.
+	 * @param chessGame the chess game
+	 * @param move the move
+	 * @return the result of the operation
 	 */
 	private boolean validateCastling(Game chessGame, Move move) {
 		if (!(move instanceof Castling)) {
@@ -203,15 +226,10 @@ public abstract class PlayerImpl implements Player {
 	}
 
 	/**
-	 * Simulates the chess game to check for validity of the moves. In detail, this
-	 * creates a new chess game where the move is applied and looks if king would be
-	 * in check then.
-	 *
-	 * @param chessGame the game context
-	 * @param move      the move to simulate
-	 * @return true if the move is valid, false otherwise
-	 * @throws IOException
-	 * @throws NoMoveFoundException
+	 * Performs the simulate operation.
+	 * @param chessGame the chess game
+	 * @param move the move
+	 * @return the result of the operation
 	 */
 	protected boolean simulate(Game chessGame, Move move) throws NoMoveFoundException, IOException {
 		if (move instanceof Castling && !validateCastling(chessGame, move)) {
@@ -232,11 +250,10 @@ public abstract class PlayerImpl implements Player {
 	}
 
 	/**
-	 * Gets the corresponding move in the simulation.
-	 *
-	 * @param simulation the game simulation
-	 * @param m          the move to process in the simulation
-	 * @return the corresponding move in the simulation
+	 * Returns the move in simulation.
+	 * @param simulation the simulation
+	 * @param m the m
+	 * @return the move in simulation
 	 */
 	@Override
 	public Move getMoveInSimulation(Game simulation, Move m) {
@@ -278,37 +295,52 @@ public abstract class PlayerImpl implements Player {
 		return new ChessMove(piece, source, target);
 	}
 
+	/**
+	 * Performs the reset operation.
+	 */
 	@Override
 	public void reset() {
 		pieces.clear();
 	}
 
+	/**
+	 * Returns the king.
+	 * @return the king
+	 */
 	@Override
 	public Piece getKing() {
 		return king;
 	}
 
+	/**
+	 * Sets the king.
+	 * @param king the king
+	 */
 	@Override
 	public void setKing(Piece king) {
 		this.king = king;
 	}
 
+	/**
+	 * Returns the move list.
+	 * @return the move list
+	 */
 	@Override
 	public MoveList getMoveList() {
 		return moveList;
 	}
 
 	/**
-	 * Sets the move list for the player.
-	 *
-	 * @param moveList the move list to set
+	 * Sets the move list.
+	 * @param moveList the move list
 	 */
 	public void setMoveList(MoveList moveList) {
 		this.moveList = moveList;
 	}
 
 	/**
-	 * @return the stopWatch
+	 * Returns the chess clock.
+	 * @return the chess clock
 	 */
 	@Override
 	public ChessClock getChessClock() {
@@ -316,38 +348,63 @@ public abstract class PlayerImpl implements Player {
 	}
 
 	/**
-	 * @param stopWatch the stopWatch to set
+	 * Sets the chess clock.
+	 * @param chessClock the chess clock
 	 */
 	@Override
 	public void setChessClock(ChessClock chessClock) {
 		this.chessClock = chessClock;
 	}
 
+	/**
+	 * Returns the color.
+	 * @return the color
+	 */
 	@Override
 	public Color getColor() {
 		return color;
 	}
 
+	/**
+	 * Returns the name.
+	 * @return the name
+	 */
 	@Override
 	public String getName() {
 		return name;
 	}
 
+	/**
+	 * Returns the pieces.
+	 * @return the pieces
+	 */
 	@Override
 	public List<Piece> getPieces() {
 		return pieces;
 	}
 
+	/**
+	 * Returns the additional time.
+	 * @return the additional time
+	 */
 	@Override
 	public int getAdditionalTime() {
 		return additionalTime;
 	}
 
+	/**
+	 * Sets the additional time.
+	 * @param additionalTime the additional time
+	 */
 	@Override
 	public void setAdditionalTime(int additionalTime) {
 		this.additionalTime = additionalTime;
 	}
 
+	/**
+	 * Returns a string representation of this object.
+	 * @return the result of the operation
+	 */
 	@Override
 	public String toString() {
 		return " PLAYER: created for " + name;

@@ -28,13 +28,27 @@ public final class UciEngineInspector {
             "\\s+type\\s+(check|spin|combo|button|string)(?:\\s+|$)",
             Pattern.CASE_INSENSITIVE);
 
+    /**
+     * Creates a new UciEngineInspector instance.
+     */
     private UciEngineInspector() {
     }
 
+    /**
+     * Performs the inspect operation.
+     * @param enginePath the engine path
+     * @return the result of the operation
+     */
     public static UciEngineDefinition inspect(String enginePath) throws Exception {
         return inspect(enginePath, DEFAULT_TIMEOUT);
     }
 
+    /**
+     * Performs the inspect operation.
+     * @param enginePath the engine path
+     * @param timeout the timeout
+     * @return the result of the operation
+     */
     public static UciEngineDefinition inspect(String enginePath, Duration timeout) throws Exception {
         if (enginePath == null || enginePath.isBlank()) {
             throw new IllegalArgumentException("enginePath must not be blank");
@@ -92,14 +106,22 @@ public final class UciEngineInspector {
     }
 
     /**
-     * Compatibility helper for callers that still need a fully resolved runtime
-     * configuration directly after inspection. New code should persist the
-     * returned engine definition and create profiles separately.
+     * Performs the inspect operation.
+     * @param enginePath the engine path
+     * @param type the type
+     * @return the result of the operation
      */
     public static UciEngineConfig inspect(String enginePath, EngineConfigType type) throws Exception {
         return inspect(enginePath).createRuntimeConfig(0, 0, Map.of());
     }
 
+    /**
+     * Performs the inspect operation.
+     * @param enginePath the engine path
+     * @param type the type
+     * @param timeout the timeout
+     * @return the result of the operation
+     */
     public static UciEngineConfig inspect(
             String enginePath,
             EngineConfigType type,
@@ -107,6 +129,11 @@ public final class UciEngineInspector {
         return inspect(enginePath, timeout).createRuntimeConfig(0, 0, Map.of());
     }
 
+    /**
+     * Parses the option line.
+     * @param line the line
+     * @return the result of the operation
+     */
     static Map.Entry<String, UciOption> parseOptionLine(String line) {
         if (line == null || !line.startsWith("option name ")) {
             throw new IllegalArgumentException("Not a UCI option line: " + line);
@@ -146,6 +173,11 @@ public final class UciEngineInspector {
         return Map.entry(name, option);
     }
 
+    /**
+     * Reads the handshake.
+     * @param reader the reader
+     * @return the result of the operation
+     */
     private static UciHandshake readHandshake(BufferedReader reader) throws Exception {
         String engineName = null;
         String engineAuthor = "";
@@ -174,6 +206,12 @@ public final class UciEngineInspector {
         throw new IllegalStateException("Engine closed its output before uciok");
     }
 
+    /**
+     * Parses the metadata.
+     * @param type the type
+     * @param metadata the metadata
+     * @return the result of the operation
+     */
     private static ParsedMetadata parseMetadata(UciOptionType type, String metadata) {
         ParsedMetadata result = new ParsedMetadata();
         String text = metadata == null ? "" : metadata.trim();
@@ -233,6 +271,12 @@ public final class UciEngineInspector {
         return result;
     }
 
+    /**
+     * Parses the integer.
+     * @param value the value
+     * @param label the label
+     * @return the result of the operation
+     */
     private static Integer parseInteger(String value, String label) {
         if (value == null || value.isBlank()) {
             return null;
@@ -244,6 +288,12 @@ public final class UciEngineInspector {
         }
     }
 
+    /**
+     * Performs the fallback name operation.
+     * @param engineName the engine name
+     * @param path the path
+     * @return the result of the operation
+     */
     private static String fallbackName(String engineName, String path) {
         if (engineName != null && !engineName.isBlank()) {
             return engineName.trim();
@@ -257,6 +307,12 @@ public final class UciEngineInspector {
         private final String engineAuthor;
         private final Map<String, UciOption> options;
 
+        /**
+         * Creates a new UciHandshake instance.
+         * @param engineName the engine name
+         * @param engineAuthor the engine author
+         * @param options the options
+         */
         private UciHandshake(String engineName, String engineAuthor, Map<String, UciOption> options) {
             this.engineName = engineName;
             this.engineAuthor = engineAuthor == null ? "" : engineAuthor;

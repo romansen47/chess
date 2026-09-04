@@ -20,31 +20,47 @@ public class Bishop extends PieceImpl implements BishopLike {
 	private static final Logger logger = LogManager.getLogger(Bishop.class);
 
 	/**
-	 * Constructs a bishop piece with the specified color, field, and chess board.
-	 *
-	 * @param color      the color of the bishop
-	 * @param field      the field the bishop is placed on
-	 * @param chessBoard the chess board the bishop belongs to
+	 * Creates a new Bishop instance.
+	 * @param color the color
+	 * @param field the field
+	 * @param chessBoard the chess board
+	 * @param setField the set field
 	 */
 	public Bishop(Color color, Field field, Board chessBoard, boolean setField) {
 		super(color, field, chessBoard, setField);
 	}
 
+	/**
+	 * Returns a string representation of this object.
+	 * @return the result of the operation
+	 */
 	@Override
 	public String toString() {
 		return getColor().label + "B" + getField().getName();
 	}
 
+	/**
+	 * Returns the logger.
+	 * @return the logger
+	 */
 	@Override
 	public Logger getLogger() {
 		return logger;
 	}
 
+	/**
+	 * Returns the possible unvalidated moves.
+	 * @return the possible unvalidated moves
+	 */
 	@Override
 	public List<Move> getPossibleUnvalidatedMoves() {
 		return getPossibleUnvalidatedBishopLikeMoves();
 	}
 
+	/**
+	 * Returns the type.
+	 * @return the type
+	 */
 	@Override
 	public PieceType getType() {
 		return PieceType.BISHOP;

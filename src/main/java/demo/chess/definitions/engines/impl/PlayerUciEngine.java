@@ -11,11 +11,21 @@ import demo.chess.game.Game;
 
 public class PlayerUciEngine extends ConsoleUciEngine implements PlayerEngine {
 
+    /**
+     * Creates a new PlayerUciEngine instance.
+     * @param path the path
+     */
     public PlayerUciEngine(String path) throws Exception {
         super(path);
         logger.info("Creating new player engine from path {}", path);
     }
 
+    /**
+     * Returns the best move.
+     * @param chessGame the chess game
+     * @param config the config
+     * @return the best move
+     */
     @Override
     public Move getBestMove(Game chessGame, EngineConfig config)
             throws NoMoveFoundException, IOException, InterruptedException {
@@ -69,11 +79,27 @@ public class PlayerUciEngine extends ConsoleUciEngine implements PlayerEngine {
         throw new NoMoveFoundException("No valid move found");
     }
 
+    /**
+     * Returns the command line options.
+     * @param command the command
+     * @param config the config
+     * @return the command line options
+     */
     @Override
     protected StringBuilder getCommandLineOptions(StringBuilder command, EngineConfig config) {
         return getPlayerCommandLineOptions(command, config, 0L, 0L, 0L, 0L);
     }
 
+    /**
+     * Returns the player command line options.
+     * @param command the command
+     * @param config the config
+     * @param whiteTimeMillis the white time millis
+     * @param blackTimeMillis the black time millis
+     * @param whiteIncrementMillis the white increment millis
+     * @param blackIncrementMillis the black increment millis
+     * @return the player command line options
+     */
     private StringBuilder getPlayerCommandLineOptions(
             StringBuilder command,
             EngineConfig config,
@@ -97,6 +123,9 @@ public class PlayerUciEngine extends ConsoleUciEngine implements PlayerEngine {
         return positionCommand;
     }
 
+    /**
+     * Stops the evaluation.
+     */
     @Override
     public void stopEvaluation() {
         logger.info("{} stopping actual player evaluation", this);

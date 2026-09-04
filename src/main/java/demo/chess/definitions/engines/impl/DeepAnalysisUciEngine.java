@@ -14,10 +14,20 @@ import demo.chess.game.Game;
 
 public class DeepAnalysisUciEngine extends EvaluationUciEngine implements DeepAnalysisEngine {
 
+    /**
+     * Creates a new DeepAnalysisUciEngine instance.
+     * @param path the path
+     */
     public DeepAnalysisUciEngine(String path) throws Exception {
         super(path);
     }
 
+    /**
+     * Returns the best lines.
+     * @param chessGame the chess game
+     * @param config the config
+     * @return the best lines
+     */
     @Override
     public synchronized List<EngineLine> getBestLines(Game chessGame, EngineConfig config)
             throws IOException, InterruptedException, ExecutionException {
@@ -54,6 +64,12 @@ public class DeepAnalysisUciEngine extends EvaluationUciEngine implements DeepAn
         return parsedLines;
     }
 
+    /**
+     * Builds the deep analysis command.
+     * @param moveList the move list
+     * @param config the config
+     * @return the result of the operation
+     */
     private String buildDeepAnalysisCommand(List<Move> moveList, EngineConfig config) {
         StringBuilder command = new StringBuilder();
         command.append("ucinewgame\n");
@@ -76,11 +92,20 @@ public class DeepAnalysisUciEngine extends EvaluationUciEngine implements DeepAn
         return command.toString();
     }
 
+    /**
+     * Returns the command line options.
+     * @param command the command
+     * @param config the config
+     * @return the command line options
+     */
     @Override
     protected StringBuilder getCommandLineOptions(StringBuilder command, EngineConfig config) {
         return new StringBuilder(buildDeepAnalysisCommand(List.of(), config));
     }
 
+    /**
+     * Stops the evaluation.
+     */
     @Override
     public synchronized void stopEvaluation() {
         try {

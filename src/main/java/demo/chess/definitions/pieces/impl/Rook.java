@@ -20,31 +20,47 @@ public class Rook extends PieceImpl implements RookLike {
 	private static final Logger logger = LogManager.getLogger(Rook.class);
 
 	/**
-	 * Constructs a rook piece with the specified color, field, and chess board.
-	 *
-	 * @param color      the color of the rook
-	 * @param field      the field the rook is placed on
-	 * @param chessBoard the chess board the rook belongs to
+	 * Creates a new Rook instance.
+	 * @param color the color
+	 * @param field the field
+	 * @param chessBoard the chess board
+	 * @param setField the set field
 	 */
 	public Rook(Color color, Field field, Board chessBoard, boolean setField) {
 		super(color, field, chessBoard, setField);
 	}
 
+	/**
+	 * Returns a string representation of this object.
+	 * @return the result of the operation
+	 */
 	@Override
 	public String toString() {
 		return getColor().label + "R" + getField().getName();
 	}
 
+	/**
+	 * Returns the logger.
+	 * @return the logger
+	 */
 	@Override
 	public Logger getLogger() {
 		return logger;
 	}
 
+	/**
+	 * Returns the possible unvalidated moves.
+	 * @return the possible unvalidated moves
+	 */
 	@Override
 	public List<Move> getPossibleUnvalidatedMoves() {
 		return getPossibleUnvalidatedRookLikeMoves();
 	}
 
+	/**
+	 * Returns the type.
+	 * @return the type
+	 */
 	@Override
 	public PieceType getType() {
 		return PieceType.ROOK;

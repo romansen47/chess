@@ -25,21 +25,29 @@ public class Pawn extends PieceImpl {
 	private static final Logger logger = LogManager.getLogger(Pawn.class);
 
 	/**
-	 * Constructs a pawn piece with the specified color, field, and chess board.
-	 *
-	 * @param color      the color of the pawn
-	 * @param field      the field the pawn is placed on
-	 * @param chessBoard the chess board the pawn belongs to
+	 * Creates a new Pawn instance.
+	 * @param color the color
+	 * @param field the field
+	 * @param chessBoard the chess board
+	 * @param setField the set field
 	 */
 	public Pawn(Color color, Field field, Board chessBoard, boolean setField) {
 		super(color, field, chessBoard, setField);
 	}
 
+	/**
+	 * Returns a string representation of this object.
+	 * @return the result of the operation
+	 */
 	@Override
 	public String toString() {
 		return getColor().label + "p" + getField().getName();
 	}
 
+	/**
+	 * Returns the possible unvalidated moves.
+	 * @return the possible unvalidated moves
+	 */
 	@Override
 	public List<Move> getPossibleUnvalidatedMoves() {
 		List<Move> moveList = new ArrayList<>();
@@ -50,6 +58,10 @@ public class Pawn extends PieceImpl {
 		return new ArrayList<>(new HashSet<>(moveList));
 	}
 
+	/**
+	 * Returns the simple unvalidated moves.
+	 * @return the simple unvalidated moves
+	 */
 	@Override
 	public List<Move> getSimpleUnvalidatedMoves() {
 		List<Move> moveList = new ArrayList<>();
@@ -99,17 +111,20 @@ public class Pawn extends PieceImpl {
 		return new ArrayList<>(new HashSet<>(moveList));
 	}
 
+	/**
+	 * Returns the logger.
+	 * @return the logger
+	 */
 	@Override
 	public Logger getLogger() {
 		return logger;
 	}
 
 	/**
-	 * Adds simple moves for the pawn based on its current position.
-	 *
-	 * @param originFile the file the pawn is currently on
-	 * @param originRank the rank the pawn is currently on
-	 * @return the list of simple moves
+	 * Adds the simple moves.
+	 * @param originFile the origin file
+	 * @param originRank the origin rank
+	 * @return the result of the operation
 	 */
 	private List<Move> addSimpleMoves(int originFile, int originRank) {
 		List<Move> moveList = new ArrayList<>();
@@ -122,11 +137,10 @@ public class Pawn extends PieceImpl {
 	}
 
 	/**
-	 * Adds simple moves for a white pawn based on its current position.
-	 *
-	 * @param originFile the file the pawn is currently on
-	 * @param originRank the rank the pawn is currently on
-	 * @return the list of simple moves for a white pawn
+	 * Adds the simple moves for white pawn.
+	 * @param originFile the origin file
+	 * @param originRank the origin rank
+	 * @return the result of the operation
 	 */
 	private List<Move> addSimpleMovesForWhitePawn(int originFile, int originRank) {
 		List<Move> moveList = new ArrayList<>();
@@ -150,11 +164,10 @@ public class Pawn extends PieceImpl {
 	}
 
 	/**
-	 * Adds simple moves for a black pawn based on its current position.
-	 *
-	 * @param originFile the file the pawn is currently on
-	 * @param originRank the rank the pawn is currently on
-	 * @return the list of simple moves for a black pawn
+	 * Adds the simple moves for black pawn.
+	 * @param originFile the origin file
+	 * @param originRank the origin rank
+	 * @return the result of the operation
 	 */
 	private List<Move> addSimpleMovesForBlackPawn(int originFile, int originRank) {
 		List<Move> moveList = new ArrayList<>();
@@ -178,11 +191,10 @@ public class Pawn extends PieceImpl {
 	}
 
 	/**
-	 * Adds special moves for the pawn based on its current position.
-	 *
-	 * @param originFile the file the pawn is currently on
-	 * @param originRank the rank the pawn is currently on
-	 * @return the list of special moves
+	 * Adds the special moves.
+	 * @param originFile the origin file
+	 * @param originRank the origin rank
+	 * @return the result of the operation
 	 */
 	private List<Move> addSpecialMoves(int originFile, int originRank) {
 		List<Move> moveList = new ArrayList<>();
@@ -195,11 +207,10 @@ public class Pawn extends PieceImpl {
 	}
 
 	/**
-	 * Adds special moves for a white pawn based on its current position.
-	 *
-	 * @param originFile the file the pawn is currently on
-	 * @param originRank the rank the pawn is currently on
-	 * @return the list of special moves for a white pawn
+	 * Adds the special moves for white.
+	 * @param originFile the origin file
+	 * @param originRank the origin rank
+	 * @return the result of the operation
 	 */
 	private List<Move> addSpecialMovesForWhite(int originFile, int originRank) {
 		List<Move> moveList = new ArrayList<>();
@@ -210,11 +221,10 @@ public class Pawn extends PieceImpl {
 	}
 
 	/**
-	 * Adds promotion moves for a white pawn based on its current position.
-	 *
-	 * @param originFile the file the pawn is currently on
-	 * @param originRank the rank the pawn is currently on
-	 * @return the list of promotion moves for a white pawn
+	 * Adds the promotion moves for white.
+	 * @param originFile the origin file
+	 * @param originRank the origin rank
+	 * @return the result of the operation
 	 */
 	private List<Move> addPromotionMovesForWhite(int originFile, int originRank) {
 		List<Move> moveList = new ArrayList<>();
@@ -263,11 +273,10 @@ public class Pawn extends PieceImpl {
 	}
 
 	/**
-	 * Adds en passant moves for a white pawn based on its current position.
-	 *
-	 * @param originFile the file the pawn is currently on
-	 * @param originRank the rank the pawn is currently on
-	 * @return the list of en passant moves for a white pawn
+	 * Adds the en passant moves for white.
+	 * @param originFile the origin file
+	 * @param originRank the origin rank
+	 * @return the result of the operation
 	 */
 	private List<Move> addEnPassantMovesForWhite(int originFile, int originRank) {
 		List<Move> moveList = new ArrayList<>();
@@ -301,11 +310,10 @@ public class Pawn extends PieceImpl {
 	}
 
 	/**
-	 * Adds castling moves for a white pawn based on its current position.
-	 *
-	 * @param originFile the file the pawn is currently on
-	 * @param originRank the rank the pawn is currently on
-	 * @return the list of castling moves for a white pawn
+	 * Adds the castling moves for white.
+	 * @param originFile the origin file
+	 * @param originRank the origin rank
+	 * @return the result of the operation
 	 */
 	private List<Move> addCastlingMovesForWhite(int originFile, int originRank) {
 		// Pawns cannot perform castling moves; returning an empty list
@@ -313,11 +321,10 @@ public class Pawn extends PieceImpl {
 	}
 
 	/**
-	 * Adds special moves for a black pawn based on its current position.
-	 *
-	 * @param originFile the file the pawn is currently on
-	 * @param originRank the rank the pawn is currently on
-	 * @return the list of special moves for a black pawn
+	 * Adds the special moves for black.
+	 * @param originFile the origin file
+	 * @param originRank the origin rank
+	 * @return the result of the operation
 	 */
 	private List<Move> addSpecialMovesForBlack(int originFile, int originRank) {
 		List<Move> moveList = new ArrayList<>();
@@ -328,11 +335,10 @@ public class Pawn extends PieceImpl {
 	}
 
 	/**
-	 * Adds promotion moves for a black pawn based on its current position.
-	 *
-	 * @param originFile the file the pawn is currently on
-	 * @param originRank the rank the pawn is currently on
-	 * @return the list of promotion moves for a black pawn
+	 * Adds the promotion moves for black.
+	 * @param originFile the origin file
+	 * @param originRank the origin rank
+	 * @return the result of the operation
 	 */
 	private List<Move> addPromotionMovesForBlack(int originFile, int originRank) {
 		List<Move> moveList = new ArrayList<>();
@@ -381,11 +387,10 @@ public class Pawn extends PieceImpl {
 	}
 
 	/**
-	 * Adds castling moves for a black pawn based on its current position.
-	 *
-	 * @param originFile the file the pawn is currently on
-	 * @param originRank the rank the pawn is currently on
-	 * @return the list of castling moves for a black pawn
+	 * Adds the castling moves for black.
+	 * @param originFile the origin file
+	 * @param originRank the origin rank
+	 * @return the result of the operation
 	 */
 	private List<Move> addCastlingMovesForBlack(int originFile, int originRank) {
 		// Pawns cannot perform castling moves; returning an empty list
@@ -393,11 +398,10 @@ public class Pawn extends PieceImpl {
 	}
 
 	/**
-	 * Adds en passant moves for a black pawn based on its current position.
-	 *
-	 * @param originFile the file the pawn is currently on
-	 * @param originRank the rank the pawn is currently on
-	 * @return the list of en passant moves for a black pawn
+	 * Adds the en passant moves for black.
+	 * @param originFile the origin file
+	 * @param originRank the origin rank
+	 * @return the result of the operation
 	 */
 	private List<Move> addEnPassantMovesForBlack(int originFile, int originRank) {
 		List<Move> moveList = new ArrayList<>();
@@ -430,6 +434,10 @@ public class Pawn extends PieceImpl {
 		return moveList;
 	}
 
+	/**
+	 * Returns the type.
+	 * @return the type
+	 */
 	@Override
 	public PieceType getType() {
 		return PieceType.PAWN;

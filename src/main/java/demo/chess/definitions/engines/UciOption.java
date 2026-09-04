@@ -14,6 +14,15 @@ public class UciOption {
     private final List<String> vars;
     private String value;
 
+    /**
+     * Creates a new UciOption instance.
+     * @param type the type
+     * @param defaultValue the default value
+     * @param value the value
+     * @param min the min
+     * @param max the max
+     * @param vars the vars
+     */
     public UciOption(
             UciOptionType type,
             String defaultValue,
@@ -32,6 +41,10 @@ public class UciOption {
         validateValue(this.value);
     }
 
+    /**
+     * Creates a new UciOption instance.
+     * @param source the source
+     */
     public UciOption(UciOption source) {
         this(
                 source.type,
@@ -42,44 +55,85 @@ public class UciOption {
                 source.vars);
     }
 
+    /**
+     * Returns the type.
+     * @return the type
+     */
     public UciOptionType getType() {
         return type;
     }
 
+    /**
+     * Returns the default value.
+     * @return the default value
+     */
     public String getDefaultValue() {
         return defaultValue;
     }
 
+    /**
+     * Returns the value.
+     * @return the value
+     */
     public String getValue() {
         return value;
     }
 
+    /**
+     * Sets the value.
+     * @param value the value
+     */
     public void setValue(String value) {
         String normalized = normalizeValue(type, value);
         validateValue(normalized);
         this.value = normalized;
     }
 
+    /**
+     * Returns the min.
+     * @return the min
+     */
     public Integer getMin() {
         return min;
     }
 
+    /**
+     * Returns the max.
+     * @return the max
+     */
     public Integer getMax() {
         return max;
     }
 
+    /**
+     * Returns the vars.
+     * @return the vars
+     */
     public List<String> getVars() {
         return vars;
     }
 
+    /**
+     * Returns whether the configurable.
+     * @return true when the condition is satisfied; otherwise false
+     */
     public boolean isConfigurable() {
         return type != UciOptionType.BUTTON;
     }
 
+    /**
+     * Performs the copy operation.
+     * @return the result of the operation
+     */
     public UciOption copy() {
         return new UciOption(this);
     }
 
+    /**
+     * Performs the to set option command operation.
+     * @param name the name
+     * @return the result of the operation
+     */
     public String toSetOptionCommand(String name) {
         if (!isConfigurable()) {
             return "";
@@ -95,6 +149,10 @@ public class UciOption {
         return command.toString();
     }
 
+    /**
+     * Validates the value.
+     * @param candidate the candidate
+     */
     private void validateValue(String candidate) {
         if (type == UciOptionType.BUTTON) {
             return;
@@ -139,6 +197,12 @@ public class UciOption {
         }
     }
 
+    /**
+     * Performs the normalize default operation.
+     * @param type the type
+     * @param value the value
+     * @return the result of the operation
+     */
     private static String normalizeDefault(UciOptionType type, String value) {
         if (type == UciOptionType.BUTTON) {
             return null;
@@ -152,6 +216,12 @@ public class UciOption {
         return normalizeValue(type, value);
     }
 
+    /**
+     * Performs the normalize value operation.
+     * @param type the type
+     * @param value the value
+     * @return the result of the operation
+     */
     private static String normalizeValue(UciOptionType type, String value) {
         if (type == UciOptionType.BUTTON) {
             return null;

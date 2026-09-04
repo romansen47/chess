@@ -25,9 +25,18 @@ import demo.chess.game.DummyGame;
  */
 public final class PgnNotation {
 
+    /**
+     * Creates a new PgnNotation instance.
+     */
     private PgnNotation() {
     }
 
+    /**
+     * Performs the to san operation.
+     * @param game the game
+     * @param move the move
+     * @return the result of the operation
+     */
     public static String toSan(DummyGame game, Move move) throws NoMoveFoundException, IOException {
         if (game == null) {
             throw new NoMoveFoundException("game must not be null");
@@ -69,9 +78,10 @@ public final class PgnNotation {
     }
 
     /**
-     * Formats a move for the GUI move list using the historic Unicode piece
-     * symbols while keeping the actual conversion on a {@link DummyGame}.
-     * PGN export must continue to use {@link #toSan(DummyGame, Move)}.
+     * Performs the to display notation operation.
+     * @param game the game
+     * @param move the move
+     * @return the result of the operation
      */
     public static String toDisplayNotation(DummyGame game, Move move)
             throws NoMoveFoundException, IOException {
@@ -93,6 +103,12 @@ public final class PgnNotation {
         return notation;
     }
 
+    /**
+     * Resolves the san.
+     * @param game the game
+     * @param rawSan the raw san
+     * @return the result of the operation
+     */
     public static Move resolveSan(DummyGame game, String rawSan) throws NoMoveFoundException, IOException {
         if (game == null) {
             throw new NoMoveFoundException("game must not be null");
@@ -120,6 +136,11 @@ public final class PgnNotation {
         throw new NoMoveFoundException("Ambiguous SAN move: " + rawSan);
     }
 
+    /**
+     * Performs the normalize for comparison operation.
+     * @param san the san
+     * @return the result of the operation
+     */
     public static String normalizeForComparison(String san) {
         if (san == null) {
             return "";
@@ -145,6 +166,12 @@ public final class PgnNotation {
         return normalized;
     }
 
+    /**
+     * Performs the source disambiguation operation.
+     * @param game the game
+     * @param move the move
+     * @return the result of the operation
+     */
     private static String sourceDisambiguation(DummyGame game, Move move)
             throws NoMoveFoundException, IOException {
         List<Move> competingMoves = new ArrayList<>();
@@ -186,6 +213,12 @@ public final class PgnNotation {
         return move.getSource().getName().substring(0, 1);
     }
 
+    /**
+     * Performs the unicode piece operation.
+     * @param pieceType the piece type
+     * @param color the color
+     * @return the result of the operation
+     */
     private static String unicodePiece(PieceType pieceType, Color color) {
         if (pieceType == null || color == null) {
             return "";
@@ -227,6 +260,11 @@ public final class PgnNotation {
         }
     }
 
+    /**
+     * Performs the piece letter operation.
+     * @param pieceType the piece type
+     * @return the result of the operation
+     */
     private static char pieceLetter(PieceType pieceType) {
         if (pieceType == null) {
             return '?';

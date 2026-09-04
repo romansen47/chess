@@ -8,11 +8,14 @@ import demo.chess.definitions.pieces.Piece;
 public interface Promotion extends Move {
 
 	/**
-	 * Returns the piece that the pawn is promoted to.
-	 *
+	 * Returns the promoted piece.
 	 * @return the promoted piece
 	 */
 	Piece getPromotedPiece();
 
+	/**
+	 * Sets the promoted piece.
+	 * @param piece the piece
+	 */
 	void setPromotedPiece(Piece piece);
 }

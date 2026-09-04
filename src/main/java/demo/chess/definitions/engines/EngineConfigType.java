@@ -5,6 +5,11 @@ public enum EngineConfigType {
     EVALUATION,
     DEEP_ANALYSIS;
 
+    /**
+     * Performs the from value operation.
+     * @param value the value
+     * @return the result of the operation
+     */
     public static EngineConfigType fromValue(String value) {
         if (value == null || value.isBlank()) {
             throw new IllegalArgumentException("Engine config type must not be blank");

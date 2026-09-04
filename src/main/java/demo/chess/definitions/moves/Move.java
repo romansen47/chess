@@ -10,29 +10,25 @@ import demo.chess.definitions.pieces.Piece;
 public interface Move {
 
 	/**
-	 * Returns the source field of the move.
-	 *
-	 * @return the source field
+	 * Returns the source.
+	 * @return the source
 	 */
 	Field getSource();
 
 	/**
-	 * Returns the target field of the move.
-	 *
-	 * @return the target field
+	 * Returns the target.
+	 * @return the target
 	 */
 	Field getTarget();
 
 	/**
-	 * Returns the piece that is being moved.
-	 *
-	 * @return the piece being moved
+	 * Returns the piece.
+	 * @return the piece
 	 */
 	Piece getPiece();
 
 	/**
-	 * Returns the type of the move.
-	 *
+	 * Returns the move type.
 	 * @return the move type
 	 */
 	MoveType getMoveType();

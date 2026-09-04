@@ -38,13 +38,11 @@ public abstract class ChessGameTemplate implements Game {
 	private State state = null;
 
 	/**
-	 * Constructs a ChessGameTemplate instance with the given chessboard, white
-	 * player, black player, and move list.
-	 *
-	 * @param chessBoard  the chess board
+	 * Creates a new ChessGameTemplate instance.
+	 * @param chessBoard the chess board
 	 * @param whitePlayer the white player
 	 * @param blackPlayer the black player
-	 * @param moveList    the list of moves
+	 * @param moveList the move list
 	 */
 	public ChessGameTemplate(Board chessBoard, WhitePlayer whitePlayer, BlackPlayer blackPlayer, MoveList moveList) {
 		this.player = whitePlayer;
@@ -56,7 +54,7 @@ public abstract class ChessGameTemplate implements Game {
 	}
 
 	/**
-	 * Creates and initializes the chess pieces for both players.
+	 * Creates the pieces.
 	 */
 	@Override
 	public void createPieces() {
@@ -103,9 +101,8 @@ public abstract class ChessGameTemplate implements Game {
 	}
 
 	/**
-	 * Returns the chessboard.
-	 *
-	 * @return the chessboard
+	 * Returns the chess board.
+	 * @return the chess board
 	 */
 	@Override
 	public Board getChessBoard() {
@@ -114,7 +111,6 @@ public abstract class ChessGameTemplate implements Game {
 
 	/**
 	 * Returns the white player.
-	 *
 	 * @return the white player
 	 */
 	@Override
@@ -124,7 +120,6 @@ public abstract class ChessGameTemplate implements Game {
 
 	/**
 	 * Returns the black player.
-	 *
 	 * @return the black player
 	 */
 	@Override
@@ -133,9 +128,8 @@ public abstract class ChessGameTemplate implements Game {
 	}
 
 	/**
-	 * Returns the current player.
-	 *
-	 * @return the current player
+	 * Returns the player.
+	 * @return the player
 	 */
 	@Override
 	public Player getPlayer() {
@@ -143,9 +137,8 @@ public abstract class ChessGameTemplate implements Game {
 	}
 
 	/**
-	 * Sets the current player.
-	 *
-	 * @param player the player to set as the current player
+	 * Sets the player.
+	 * @param player the player
 	 */
 	@Override
 	public void setPlayer(Player player) {
@@ -154,7 +147,6 @@ public abstract class ChessGameTemplate implements Game {
 
 	/**
 	 * Returns the move list.
-	 *
 	 * @return the move list
 	 */
 	@Override
@@ -162,11 +154,19 @@ public abstract class ChessGameTemplate implements Game {
 		return moveList;
 	}
 
+	/**
+	 * Returns the state.
+	 * @return the state
+	 */
 	@Override
 	public State getState() {
 		return state;
 	}
 
+	/**
+	 * Sets the state.
+	 * @param state the state
+	 */
 	@Override
 	public void setState(State state) {
 		if (this.getWhitePlayer().getChessClock().isStarted()) {
@@ -179,7 +179,7 @@ public abstract class ChessGameTemplate implements Game {
 	}
 
 	/**
-	 * Switches the current player to the other player.
+	 * Performs the switch player operation.
 	 */
 	@Override
 	public void switchPlayer() {
@@ -191,11 +191,8 @@ public abstract class ChessGameTemplate implements Game {
 	}
 
 	/**
-	 * Applies the given move to the chess game.
-	 *
-	 * @param move the move to apply
-	 * @throws IOException
-	 * @throws NoMoveFoundException
+	 * Performs the apply operation.
+	 * @param move the move
 	 */
 	@Override
 	public void apply(Move move) throws NoMoveFoundException, IOException {
@@ -218,9 +215,8 @@ public abstract class ChessGameTemplate implements Game {
 	}
 
 	/**
-	 * Applies a castling move.
-	 *
-	 * @param move the castling move
+	 * Applies the castling.
+	 * @param move the move
 	 */
 	private void applyCastling(Castling move) {
 		King king = (King) move.getPiece();
@@ -262,9 +258,8 @@ public abstract class ChessGameTemplate implements Game {
 	}
 
 	/**
-	 * Applies a promotion move.
-	 *
-	 * @param move the promotion move
+	 * Applies the promotion.
+	 * @param move the move
 	 */
 	private void applyPromotion(Promotion move) {
 		Field source = move.getSource();
@@ -290,9 +285,8 @@ public abstract class ChessGameTemplate implements Game {
 	}
 
 	/**
-	 * Applies a regular move.
-	 *
-	 * @param move the regular move
+	 * Applies the regular move.
+	 * @param move the move
 	 */
 	private void applyRegularMove(Move move) {
 		Field source = move.getSource();
@@ -312,9 +306,8 @@ public abstract class ChessGameTemplate implements Game {
 	}
 
 	/**
-	 * Applies an en passant move.
-	 *
-	 * @param move the en passant move
+	 * Applies the en passant.
+	 * @param move the move
 	 */
 	private void applyEnPassant(Move move) {
 		EnPassant enPassant = (EnPassant) move;

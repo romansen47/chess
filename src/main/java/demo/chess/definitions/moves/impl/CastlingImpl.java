@@ -16,10 +16,9 @@ public class CastlingImpl extends ChessMove implements Castling {
 	private final String name;
 
 	/**
-	 * Constructs a CastlingImpl with the specified king and rook pieces.
-	 *
-	 * @param piece the king involved in the castling move
-	 * @param rook  the rook involved in the castling move
+	 * Creates a new CastlingImpl instance.
+	 * @param piece the piece
+	 * @param rook the rook
 	 */
 	public CastlingImpl(Piece piece, Rook rook) {
 		super(piece, piece.getField(), rook.getField());
@@ -32,16 +31,28 @@ public class CastlingImpl extends ChessMove implements Castling {
 		}
 	}
 
+	/**
+	 * Returns the rook.
+	 * @return the rook
+	 */
 	@Override
 	public Rook getRook() {
 		return rook;
 	}
 
+	/**
+	 * Returns a string representation of this object.
+	 * @return the result of the operation
+	 */
 	@Override
 	public String toString() {
 		return name;
 	}
 
+	/**
+	 * Returns the hash code for this object.
+	 * @return true when the condition is satisfied; otherwise false
+	 */
 	@Override
 	public int hashCode() {
 		final int prime = 31;
@@ -50,6 +61,11 @@ public class CastlingImpl extends ChessMove implements Castling {
 		return result;
 	}
 
+	/**
+	 * Compares this object with another object for equality.
+	 * @param obj the obj
+	 * @return the result of the operation
+	 */
 	@Override
 	public boolean equals(Object obj) {
 		if (this == obj) {

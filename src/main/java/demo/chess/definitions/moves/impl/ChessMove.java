@@ -17,12 +17,10 @@ public class ChessMove implements Move {
 	private final Piece piece;
 
 	/**
-	 * Constructs a ChessMove with the specified piece, source field, and target
-	 * field.
-	 *
-	 * @param piece  the piece being moved
-	 * @param source the source field of the piece
-	 * @param target the target field of the piece
+	 * Creates a new ChessMove instance.
+	 * @param piece the piece
+	 * @param source the source
+	 * @param target the target
 	 */
 	public ChessMove(Piece piece, Field source, Field target) {
 		this.piece = piece;
@@ -30,23 +28,36 @@ public class ChessMove implements Move {
 		this.target = target;
 	}
 
+	/**
+	 * Returns the source.
+	 * @return the source
+	 */
 	@Override
 	public Field getSource() {
 		return source;
 	}
 
+	/**
+	 * Returns the target.
+	 * @return the target
+	 */
 	@Override
 	public Field getTarget() {
 		return target;
 	}
 
+	/**
+	 * Returns the piece.
+	 * @return the piece
+	 */
 	@Override
 	public Piece getPiece() {
 		return piece;
 	}
 
 	/**
-	 * Fuer die website ist das notwendig - nicht entfernen
+	 * Returns the hash code for this object.
+	 * @return true when the condition is satisfied; otherwise false
 	 */
 	@Override
 	public int hashCode() {
@@ -54,7 +65,9 @@ public class ChessMove implements Move {
 	}
 
 	/**
-	 * Fuer die website ist das notwendig - nicht entfernen
+	 * Compares this object with another object for equality.
+	 * @param obj the obj
+	 * @return the result of the operation
 	 */
 	@Override
 	public boolean equals(Object obj) {
@@ -66,11 +79,19 @@ public class ChessMove implements Move {
 		return Objects.equals(obj, this);
 	}
 
+	/**
+	 * Returns a string representation of this object.
+	 * @return the result of the operation
+	 */
 	@Override
 	public String toString() {
 		return source.toString() + target.toString();
 	}
 
+	/**
+	 * Returns the move type.
+	 * @return the move type
+	 */
 	@Override
 	public MoveType getMoveType() {
 		return MoveType.REGULAR;

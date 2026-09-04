@@ -20,11 +20,11 @@ public abstract class PieceImpl implements Piece {
 	private final Board chessBoard;
 
 	/**
-	 * Constructs a PieceImpl with the specified color, field, and chess board.
-	 *
-	 * @param color      the color of the piece
-	 * @param field      the field the piece is placed on
-	 * @param chessBoard the chess board the piece belongs to
+	 * Creates a new PieceImpl instance.
+	 * @param color the color
+	 * @param field the field
+	 * @param chessBoard the chess board
+	 * @param setField the set field
 	 */
 	public PieceImpl(Color color, Field field, Board chessBoard, Boolean setField) {
 		this.color = color;
@@ -35,41 +35,74 @@ public abstract class PieceImpl implements Piece {
 		this.field = field;
 	}
 
+	/**
+	 * Returns the field.
+	 * @return the field
+	 */
 	@Override
 	public Field getField() {
 		return field;
 	}
 
+	/**
+	 * Sets the field.
+	 * @param field the field
+	 */
 	@Override
 	public void setField(Field field) {
 		this.field = field;
 	}
 
+	/**
+	 * Returns the color.
+	 * @return the color
+	 */
 	@Override
 	public Color getColor() {
 		return color;
 	}
 
+	/**
+	 * Returns the chess board.
+	 * @return the chess board
+	 */
 	@Override
 	public Board getChessBoard() {
 		return chessBoard;
 	}
 
+	/**
+	 * Returns the move list.
+	 * @return the move list
+	 */
 	@Override
 	public List<Move> getMoveList() {
 		return moveList;
 	}
 
+	/**
+	 * Sets the move list.
+	 * @param moveList the move list
+	 */
 	@Override
 	public void setMoveList(List<Move> moveList) {
 		this.moveList = moveList;
 	}
 
+	/**
+	 * Returns the hash code for this object.
+	 * @return true when the condition is satisfied; otherwise false
+	 */
 	@Override
 	public int hashCode() {
 		return Objects.hash(color, field);
 	}
 
+	/**
+	 * Compares this object with another object for equality.
+	 * @param obj the obj
+	 * @return the result of the operation
+	 */
 	@Override
 	public boolean equals(Object obj) {
 		if (this == obj) {

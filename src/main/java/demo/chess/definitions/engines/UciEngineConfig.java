@@ -21,6 +21,13 @@ public class UciEngineConfig implements EngineConfig {
     private int depth;
     private int moveTimeSeconds;
 
+    /**
+     * Creates a new UciEngineConfig instance.
+     * @param engine the engine
+     * @param engineName the engine name
+     * @param engineAuthor the engine author
+     * @param options the options
+     */
     public UciEngineConfig(
             String engine,
             String engineName,
@@ -35,6 +42,10 @@ public class UciEngineConfig implements EngineConfig {
         this.options = copyOptions(options);
     }
 
+    /**
+     * Creates a new UciEngineConfig instance.
+     * @param source the source
+     */
     public UciEngineConfig(UciEngineConfig source) {
         this(
                 source.engine,
@@ -45,44 +56,81 @@ public class UciEngineConfig implements EngineConfig {
         this.moveTimeSeconds = source.moveTimeSeconds;
     }
 
+    /**
+     * Returns the engine.
+     * @return the engine
+     */
     @Override
     public String getEngine() {
         return engine;
     }
 
+    /**
+     * Returns the engine name.
+     * @return the engine name
+     */
     public String getEngineName() {
         return engineName;
     }
 
+    /**
+     * Returns the engine author.
+     * @return the engine author
+     */
     public String getEngineAuthor() {
         return engineAuthor;
     }
 
+    /**
+     * Returns the depth.
+     * @return the depth
+     */
     @Override
     public int getDepth() {
         return depth;
     }
 
+    /**
+     * Sets the depth.
+     * @param depth the depth
+     */
     @Override
     public void setDepth(int depth) {
         this.depth = Math.max(0, depth);
     }
 
+    /**
+     * Returns the move time seconds.
+     * @return the move time seconds
+     */
     @Override
     public int getMoveTimeSeconds() {
         return moveTimeSeconds;
     }
 
+    /**
+     * Sets the move time seconds.
+     * @param moveTimeSeconds the move time seconds
+     */
     @Override
     public void setMoveTimeSeconds(int moveTimeSeconds) {
         this.moveTimeSeconds = Math.max(0, moveTimeSeconds);
     }
 
+    /**
+     * Returns the options.
+     * @return the options
+     */
     @Override
     public Map<String, UciOption> getOptions() {
         return Collections.unmodifiableMap(options);
     }
 
+    /**
+     * Sets the option value.
+     * @param name the name
+     * @param value the value
+     */
     public void setOptionValue(String name, String value) {
         UciOption option = getOption(name);
         if (option == null) {
@@ -91,10 +139,18 @@ public class UciEngineConfig implements EngineConfig {
         option.setValue(value);
     }
 
+    /**
+     * Performs the copy operation.
+     * @return the result of the operation
+     */
     public UciEngineConfig copy() {
         return new UciEngineConfig(this);
     }
 
+    /**
+     * Performs the to uci set option commands operation.
+     * @return the result of the operation
+     */
     @Override
     public String toUciSetOptionCommands() {
         StringBuilder result = new StringBuilder();
@@ -115,6 +171,11 @@ public class UciEngineConfig implements EngineConfig {
         return result.toString();
     }
 
+    /**
+     * Performs the copy options operation.
+     * @param source the source
+     * @return the result of the operation
+     */
     private static LinkedHashMap<String, UciOption> copyOptions(Map<String, UciOption> source) {
         LinkedHashMap<String, UciOption> result = new LinkedHashMap<>();
         if (source == null) {

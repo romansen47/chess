@@ -8,15 +8,28 @@ public enum Engine {
 	private final String path;
 	private final String comment;
 
+	/**
+	 * Creates a new Engine instance.
+	 * @param path the path
+	 * @param comment the comment
+	 */
 	Engine(String path, String comment) {
 		this.path = path;
 		this.comment = comment;
 	}
 
+	/**
+	 * Performs the path operation.
+	 * @return the result of the operation
+	 */
 	public String path() {
 		return path;
 	}
 
+	/**
+	 * Performs the comment operation.
+	 * @return the result of the operation
+	 */
 	public String comment() {
 		return comment;
 	}

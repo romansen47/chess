@@ -16,6 +16,13 @@ public class EngineLine {
     private final Integer mateDistance;
     private final String moves;
 
+    /**
+     * Creates a new EngineLine instance.
+     * @param evaluation the evaluation
+     * @param depth the depth
+     * @param mateDistance the mate distance
+     * @param moves the moves
+     */
     public EngineLine(double evaluation, int depth, Integer mateDistance, String moves) {
         this.evaluation = evaluation;
         this.depth = depth;
@@ -23,18 +30,34 @@ public class EngineLine {
         this.moves = moves;
     }
 
+    /**
+     * Returns the evaluation.
+     * @return the evaluation
+     */
     public double getEvaluation() {
         return evaluation;
     }
 
+    /**
+     * Returns the depth.
+     * @return the depth
+     */
     public int getDepth() {
         return depth;
     }
 
+    /**
+     * Returns the mate distance.
+     * @return the mate distance
+     */
     public Integer getMateDistance() {
         return mateDistance;
     }
 
+    /**
+     * Returns the moves.
+     * @return the moves
+     */
     public String getMoves() {
         return moves;
     }

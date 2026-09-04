@@ -12,9 +12,8 @@ public enum State {
 	DRAW_BY_THREEFOLD_REPETITION("Draw by threefold repetition");
 
 	/**
-	 * Constructs a State enum with the specified label.
-	 *
-	 * @param label the label representing the state
+	 * Creates a new State instance.
+	 * @param label the label
 	 */
 	private State(String label) {
 		this.label = label;
@@ -23,6 +22,10 @@ public enum State {
 	/** The label representing the state. */
 	private final String label;
 
+	/**
+	 * Returns the label.
+	 * @return the label
+	 */
 	public String getLabel() {
 		return label;
 	}

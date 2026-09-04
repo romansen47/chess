@@ -8,11 +8,10 @@ import demo.chess.definitions.fields.Field;
 public interface Board {
 
 	/**
-	 * Returns the field at the specified file and rank.
-	 *
-	 * @param i the file (column) of the field
-	 * @param j the rank (row) of the field
-	 * @return the field at the specified coordinates
+	 * Returns the field.
+	 * @param i the i
+	 * @param j the j
+	 * @return the field
 	 */
 	Field getField(int i, int j);
 }

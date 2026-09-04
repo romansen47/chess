@@ -17,103 +17,110 @@ import demo.chess.game.Game;
 public interface Player {
 
 	/**
-	 * Returns the color of the player.
-	 *
-	 * @return the color of the player
+	 * Returns the color.
+	 * @return the color
 	 */
 	Color getColor();
 
 	/**
-	 * Returns the display name of the player.
-	 *
-	 * @return the player name
+	 * Returns the name.
+	 * @return the name
 	 */
 	String getName();
 
 	/**
-	 * Returns the list of pieces owned by the player.
-	 *
-	 * @return the list of pieces
+	 * Returns the pieces.
+	 * @return the pieces
 	 */
 	List<Piece> getPieces();
 
 	/**
-	 * Returns the list of valid moves the player can make.
-	 *
-	 * @return the list of valid moves
-	 * @throws IOException
-	 * @throws NoMoveFoundException
+	 * Returns the valid moves.
+	 * @param chessGame the chess game
+	 * @return the valid moves
 	 */
 	List<Move> getValidMoves(Game chessGame) throws NoMoveFoundException, IOException;
 
 	/**
-	 * Validates the given move in the context of the specified game.
-	 *
-	 * @param game the game context
-	 * @param move the move to validate
-	 * @return the validated move, or null if the move is invalid
-	 * @throws IOException
-	 * @throws NoMoveFoundException
+	 * Performs the replace by valid move operation.
+	 * @param game the game
+	 * @param move the move
+	 * @return the result of the operation
 	 */
 	Move replaceByValidMove(Game game, Move move) throws NoMoveFoundException, IOException;
 
 	/**
-	 * Resets the player's state to the initial configuration.
+	 * Performs the reset operation.
 	 */
 	void reset();
 
 	/**
-	 * Returns the move list associated with the player.
-	 *
+	 * Returns the move list.
 	 * @return the move list
 	 */
 	MoveList getMoveList();
 
 	/**
-	 * Returns a simple list of moves the player can make.
-	 *
-	 * @return the list of simple moves
+	 * Returns the simple moves.
+	 * @return the simple moves
 	 */
 	List<Move> getSimpleMoves();
 
 	/**
-	 * Returns the king piece owned by the player.
-	 *
-	 * @return the king piece
+	 * Returns the king.
+	 * @return the king
 	 */
 	Piece getKing();
 
 	/**
-	 * Sets the king piece for the player.
-	 *
-	 * @param king the king piece to set
+	 * Sets the king.
+	 * @param king the king
 	 */
 	void setKing(Piece king);
 
+	/**
+	 * Performs the resign or stale mate operation.
+	 * @param chessGame the chess game
+	 */
 	void resignOrStaleMate(Game chessGame);
 
 	/**
-	 * @return the stopWatch
+	 * Returns the chess clock.
+	 * @return the chess clock
 	 */
 	ChessClock getChessClock();
 
 	/**
-	 * @param stopWatch the stopWatch to set
+	 * Sets the chess clock.
+	 * @param stopWatch the stop watch
 	 */
 	void setChessClock(ChessClock stopWatch);
 
+	/**
+	 * Sets the up clock.
+	 * @param timeForEachPlayer the time for each player
+	 * @param incrementForWhite the increment for white
+	 * @param runnable the runnable
+	 */
 	void setupClock(int timeForEachPlayer, int incrementForWhite, Runnable runnable);
 
 	/**
-	 * Gets the corresponding move in the simulation.
-	 *
-	 * @param simulation the game simulation
-	 * @param m          the move to process in the simulation
-	 * @return the corresponding move in the simulation
+	 * Returns the move in simulation.
+	 * @param simulation the simulation
+	 * @param m the m
+	 * @return the move in simulation
 	 */
 	Move getMoveInSimulation(Game simulation, Move m);
 
+	/**
+	 * Sets the additional time.
+	 * @param additionalTime the additional time
+	 */
 	void setAdditionalTime(int additionalTime);
 
+	/**
+	 * Returns the additional time.
+	 * @return the additional time
+	 */
 	int getAdditionalTime();
 }

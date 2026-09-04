@@ -8,9 +8,8 @@ import demo.chess.definitions.pieces.impl.Pawn;
 public interface EnPassant extends Move {
 
 	/**
-	 * Returns the pawn that is captured by the en passant move.
-	 *
-	 * @return the slayed pawn
+	 * Returns the slayed piece.
+	 * @return the slayed piece
 	 */
 	Pawn getSlayedPiece();
 }

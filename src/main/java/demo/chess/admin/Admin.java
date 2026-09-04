@@ -8,9 +8,9 @@ import demo.chess.game.Game;
 public interface Admin {
 
 	/**
-	 * Returns the chess game instance managed by the admin.
-	 *
-	 * @return the chess game instance
+	 * Performs the chess game operation.
+	 * @param time the time
+	 * @return the result of the operation
 	 */
 	Game chessGame(int time);
 }

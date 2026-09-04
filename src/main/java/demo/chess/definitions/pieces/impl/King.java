@@ -24,21 +24,29 @@ public class King extends PieceImpl {
 	private static final Logger logger = LogManager.getLogger(King.class);
 
 	/**
-	 * Constructs a king piece with the specified color, field, and chess board.
-	 *
-	 * @param color      the color of the king
-	 * @param field      the field the king is placed on
-	 * @param chessBoard the chess board the king belongs to
+	 * Creates a new King instance.
+	 * @param color the color
+	 * @param field the field
+	 * @param chessBoard the chess board
+	 * @param setField the set field
 	 */
 	public King(Color color, Field field, Board chessBoard, boolean setField) {
 		super(color, field, chessBoard, setField);
 	}
 
+	/**
+	 * Returns a string representation of this object.
+	 * @return the result of the operation
+	 */
 	@Override
 	public String toString() {
 		return getColor().label + "K" + getField().getName();
 	}
 
+	/**
+	 * Returns the simple unvalidated moves.
+	 * @return the simple unvalidated moves
+	 */
 	@Override
 	public List<Move> getSimpleUnvalidatedMoves() {
 		List<Move> moveList = new ArrayList<>();
@@ -56,6 +64,10 @@ public class King extends PieceImpl {
 		return moveList;
 	}
 
+	/**
+	 * Returns the possible unvalidated moves.
+	 * @return the possible unvalidated moves
+	 */
 	@Override
 	public List<Move> getPossibleUnvalidatedMoves() {
 		List<Move> moveList = getSimpleUnvalidatedMoves();
@@ -64,9 +76,8 @@ public class King extends PieceImpl {
 	}
 
 	/**
-	 * Adds castling moves to the move list if they are valid.
-	 *
-	 * @return the list of castling moves
+	 * Adds the castling moves.
+	 * @return the result of the operation
 	 */
 	private List<Move> addCastlingMoves() {
 		List<Move> moveList = new ArrayList<>();
@@ -99,12 +110,10 @@ public class King extends PieceImpl {
 	}
 
 	/**
-	 * Adds a move to the move list if it is within the bounds of the board and
-	 * either the target field is empty or contains an opponent's piece.
-	 *
-	 * @param i        the file of the potential move
-	 * @param j        the rank of the potential move
-	 * @param moveList the list of moves to add to
+	 * Adds the move.
+	 * @param i the i
+	 * @param j the j
+	 * @param moveList the move list
 	 */
 	private void addMove(int i, int j, List<Move> moveList) {
 		if (i > 0 && j > 0 && i < 9 && j < 9) {
@@ -117,11 +126,19 @@ public class King extends PieceImpl {
 		}
 	}
 
+	/**
+	 * Returns the logger.
+	 * @return the logger
+	 */
 	@Override
 	public Logger getLogger() {
 		return logger;
 	}
 
+	/**
+	 * Returns the type.
+	 * @return the type
+	 */
 	@Override
 	public PieceType getType() {
 		return PieceType.KING;

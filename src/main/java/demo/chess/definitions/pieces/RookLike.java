@@ -17,23 +17,16 @@ import demo.chess.definitions.moves.impl.ChessMove;
 public interface RookLike extends Piece {
 
 	/**
-	 * Returns a list of possible unvalidated rook-like moves for the piece.
-	 *
-	 * @return the list of possible unvalidated rook-like moves
+	 * Returns the possible unvalidated rook like moves.
+	 * @return the possible unvalidated rook like moves
 	 */
 	default List<Move> getPossibleUnvalidatedRookLikeMoves() {
 		return getSimpleUnvalidatedMoves();
 	}
 
 	/**
-	 * Returns a list of simple unvalidated moves for the piece.
-	 * <p>
-	 * This method calculates moves in the four cardinal directions: up, down, left,
-	 * and right, stopping at the edge of the board or when encountering another
-	 * piece.
-	 * </p>
-	 *
-	 * @return the list of simple unvalidated moves
+	 * Returns the simple unvalidated moves.
+	 * @return the simple unvalidated moves
 	 */
 	@Override
 	default List<Move> getSimpleUnvalidatedMoves() {

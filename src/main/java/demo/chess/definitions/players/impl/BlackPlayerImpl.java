@@ -11,10 +11,9 @@ import demo.chess.definitions.players.BlackPlayer;
 public class BlackPlayerImpl extends PlayerImpl implements BlackPlayer {
 
 	/**
-	 * Constructs a BlackPlayerImpl instance with the specified move list.
-	 *
-	 * @param moveList the move list associated with the player
-	 * @param string
+	 * Creates a new BlackPlayerImpl instance.
+	 * @param moveList the move list
+	 * @param string the string
 	 */
 	public BlackPlayerImpl(MoveList moveList, String string) {
 		super(Color.BLACK, moveList, string);

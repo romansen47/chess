@@ -30,9 +30,8 @@ public enum Color {
 	public final String label;
 
 	/**
-	 * Constructs a Color enum with the specified label.
-	 *
-	 * @param label the label representing the color
+	 * Creates a new Color instance.
+	 * @param label the label
 	 */
 	private Color(String label) {
 		this.label = label;

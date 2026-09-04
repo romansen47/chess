@@ -9,44 +9,38 @@ import demo.chess.definitions.pieces.Piece;
 public interface Field {
 
 	/**
-	 * Returns the file (column) of the field.
-	 *
-	 * @return the file of the field
+	 * Returns the file.
+	 * @return the file
 	 */
 	int getFile();
 
 	/**
-	 * Returns the rank (row) of the field.
-	 *
-	 * @return the rank of the field
+	 * Returns the rank.
+	 * @return the rank
 	 */
 	int getRank();
 
 	/**
-	 * Returns the name of the field in standard chess notation.
-	 *
-	 * @return the name of the field
+	 * Returns the name.
+	 * @return the name
 	 */
 	String getName();
 
 	/**
-	 * Returns the color of the field.
-	 *
-	 * @return the color of the field
+	 * Returns the color.
+	 * @return the color
 	 */
 	Color getColor();
 
 	/**
-	 * Returns the piece currently on the field.
-	 *
-	 * @return the piece on the field, or null if the field is empty
+	 * Returns the piece.
+	 * @return the piece
 	 */
 	Piece getPiece();
 
 	/**
-	 * Sets the piece on the field.
-	 *
-	 * @param piece the piece to place on the field
+	 * Sets the piece.
+	 * @param piece the piece
 	 */
 	void setPiece(Piece piece);
 }

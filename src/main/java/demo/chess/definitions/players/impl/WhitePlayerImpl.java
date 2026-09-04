@@ -10,9 +10,9 @@ import demo.chess.definitions.players.WhitePlayer;
 public class WhitePlayerImpl extends PlayerImpl implements WhitePlayer {
 
 	/**
-	 * Constructs a WhitePlayerImpl with the specified move list.
-	 *
-	 * @param moveList the move list to be used by the player
+	 * Creates a new WhitePlayerImpl instance.
+	 * @param moveList the move list
+	 * @param string the string
 	 */
 	public WhitePlayerImpl(MoveList moveList, String string) {
 		super(Color.WHITE, moveList, string);
