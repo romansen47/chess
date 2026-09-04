@@ -17,6 +17,8 @@ import demo.chess.game.Game;
 
 public class EvaluationUciEngine extends ConsoleUciEngine implements EvaluationEngine {
 
+	private static final int MIN_LIVE_EVALUATION_DEPTH = 3;
+
 	String bestMove;
 	private Map<String, List<EngineLine>> cachedBestLines = new HashMap<>();
 	private String lastPositionHash = "";
@@ -255,7 +257,7 @@ public class EvaluationUciEngine extends ConsoleUciEngine implements EvaluationE
 	            processWriter.flush();
 
 	            List<String> bestLines = new ArrayList<>();
-	            int currentMaxDepth = 10;
+	            int currentMaxDepth = MIN_LIVE_EVALUATION_DEPTH;
 	            String line;
 	            while ((line = processReader.readLine()) != null) {
 	                if (chessGame.getState() != null) {
