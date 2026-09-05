@@ -315,20 +315,40 @@ public final class PgnNotation {
     }
 
     /**
-     * Returns exactly one move or reports a normal SAN resolution error.
+     * Returns exactly one semantically distinct move or reports a normal SAN
+     * resolution error. The engine move generator can expose the same legal move
+     * more than once as separate objects, so equivalent UCI moves are collapsed
+     * before ambiguity is evaluated.
      *
      * @param matches candidate matches
      * @param rawSan source SAN token
      * @return unique move
      */
     private static Move requireSingleMatch(List<Move> matches, String rawSan) throws NoMoveFoundException {
-        if (matches.size() == 1) {
-            return matches.get(0);
+        Move uniqueMove = null;
+        String uniqueUci = null;
+
+        for (Move candidate : matches) {
+            if (candidate == null) {
+                continue;
+            }
+
+            String candidateUci = candidate.toString().toLowerCase(Locale.ROOT);
+            if (uniqueMove == null) {
+                uniqueMove = candidate;
+                uniqueUci = candidateUci;
+                continue;
+            }
+
+            if (!candidateUci.equals(uniqueUci)) {
+                throw new NoMoveFoundException("Ambiguous SAN move: " + rawSan);
+            }
         }
-        if (matches.isEmpty()) {
+
+        if (uniqueMove == null) {
             throw new NoMoveFoundException("No matching SAN move: " + rawSan);
         }
-        throw new NoMoveFoundException("Ambiguous SAN move: " + rawSan);
+        return uniqueMove;
     }
 
     /**
