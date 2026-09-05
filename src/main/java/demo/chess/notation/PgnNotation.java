@@ -2,10 +2,8 @@ package demo.chess.notation;
 
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Locale;
-import java.util.Map;
 
 import demo.chess.definitions.Color;
 import demo.chess.definitions.PieceType;
@@ -104,10 +102,17 @@ public final class PgnNotation {
     }
 
     /**
-     * Resolves the san.
+     * Resolves SAN to one legal move.
+     *
+     * <p>This parser intentionally matches the SAN token against the already
+     * generated legal move list instead of formatting every legal candidate back
+     * to SAN. Besides avoiding unnecessary string work, this is important for
+     * bulk PGN imports because SAN formatting may itself need legal-move
+     * generation for source disambiguation.</p>
+     *
      * @param game the game
-     * @param rawSan the raw san
-     * @return the result of the operation
+     * @param rawSan the raw SAN token
+     * @return the matching legal move
      */
     public static Move resolveSan(DummyGame game, String rawSan) throws NoMoveFoundException, IOException {
         if (game == null) {
@@ -119,27 +124,38 @@ public final class PgnNotation {
             throw new NoMoveFoundException("SAN move must not be empty");
         }
 
-        Map<String, Move> matches = new LinkedHashMap<>();
-        for (Move candidate : game.getPlayer().getValidMoves(game)) {
-            String candidateSan = normalizeForComparison(toSan(game, candidate));
-            if (candidateSan.equals(wanted)) {
-                matches.putIfAbsent(candidate.toString().toLowerCase(Locale.ROOT), candidate);
+        List<Move> validMoves = game.getPlayer().getValidMoves(game);
+
+        if ("O-O".equals(wanted) || "O-O-O".equals(wanted)) {
+            List<Move> matches = new ArrayList<>();
+            boolean queenSide = "O-O-O".equals(wanted);
+            for (Move candidate : validMoves) {
+                if (!(candidate instanceof Castling)) {
+                    continue;
+                }
+                String uci = candidate.toString().toLowerCase(Locale.ROOT);
+                boolean candidateQueenSide = uci.endsWith("c1") || uci.endsWith("c8");
+                if (candidateQueenSide == queenSide) {
+                    matches.add(candidate);
+                }
             }
+            return requireSingleMatch(matches, rawSan);
         }
 
-        if (matches.size() == 1) {
-            return matches.values().iterator().next();
+        SanDescriptor descriptor = parseSanDescriptor(wanted, rawSan);
+        List<Move> matches = new ArrayList<>();
+        for (Move candidate : validMoves) {
+            if (matchesDescriptor(candidate, descriptor)) {
+                matches.add(candidate);
+            }
         }
-        if (matches.isEmpty()) {
-            throw new NoMoveFoundException("No matching SAN move: " + rawSan);
-        }
-        throw new NoMoveFoundException("Ambiguous SAN move: " + rawSan);
+        return requireSingleMatch(matches, rawSan);
     }
 
     /**
-     * Performs the normalize for comparison operation.
-     * @param san the san
-     * @return the result of the operation
+     * Normalizes SAN for comparison and parsing.
+     * @param san SAN text
+     * @return normalized SAN
      */
     public static String normalizeForComparison(String san) {
         if (san == null) {
@@ -164,6 +180,217 @@ public final class PgnNotation {
         normalized = normalized.replaceAll("[+#]+$", "");
         normalized = normalized.replaceAll("[!?]+$", "");
         return normalized;
+    }
+
+    /**
+     * Parses the structural parts of one non-castling SAN token.
+     *
+     * @param wanted normalized SAN token
+     * @param rawSan original token used for error reporting
+     * @return parsed descriptor
+     * @throws NoMoveFoundException when the token is structurally invalid
+     */
+    private static SanDescriptor parseSanDescriptor(String wanted, String rawSan)
+            throws NoMoveFoundException {
+        String san = wanted;
+        PieceType promotionType = null;
+
+        int promotionSeparator = san.lastIndexOf('=');
+        if (promotionSeparator >= 0) {
+            if (promotionSeparator != san.length() - 2) {
+                throw new NoMoveFoundException("Invalid SAN move: " + rawSan);
+            }
+            promotionType = pieceTypeFromLetter(san.charAt(san.length() - 1));
+            if (promotionType == PieceType.KING || promotionType == PieceType.PAWN) {
+                throw new NoMoveFoundException("Invalid SAN promotion: " + rawSan);
+            }
+            san = san.substring(0, promotionSeparator);
+        } else if (san.length() >= 3
+                && isPromotionLetter(san.charAt(san.length() - 1))
+                && isSquare(san.substring(san.length() - 3, san.length() - 1))) {
+            promotionType = pieceTypeFromLetter(san.charAt(san.length() - 1));
+            san = san.substring(0, san.length() - 1);
+        }
+
+        if (san.length() < 2) {
+            throw new NoMoveFoundException("Invalid SAN move: " + rawSan);
+        }
+
+        String targetSquare = san.substring(san.length() - 2).toLowerCase(Locale.ROOT);
+        if (!isSquare(targetSquare)) {
+            throw new NoMoveFoundException("Invalid SAN target square: " + rawSan);
+        }
+
+        String prefix = san.substring(0, san.length() - 2);
+        boolean capture = prefix.indexOf('x') >= 0 || prefix.indexOf('X') >= 0;
+        prefix = prefix.replace("x", "").replace("X", "");
+
+        PieceType pieceType = PieceType.PAWN;
+        if (!prefix.isEmpty() && isPieceLetter(prefix.charAt(0))) {
+            pieceType = pieceTypeFromLetter(prefix.charAt(0));
+            prefix = prefix.substring(1);
+        }
+
+        Character sourceFile = null;
+        Integer sourceRank = null;
+        if (!prefix.isEmpty()) {
+            if (prefix.length() > 2) {
+                throw new NoMoveFoundException("Invalid SAN source disambiguation: " + rawSan);
+            }
+            for (int index = 0; index < prefix.length(); index++) {
+                char value = Character.toLowerCase(prefix.charAt(index));
+                if (value >= 'a' && value <= 'h') {
+                    if (sourceFile != null) {
+                        throw new NoMoveFoundException("Invalid SAN source file: " + rawSan);
+                    }
+                    sourceFile = value;
+                } else if (value >= '1' && value <= '8') {
+                    if (sourceRank != null) {
+                        throw new NoMoveFoundException("Invalid SAN source rank: " + rawSan);
+                    }
+                    sourceRank = value - '0';
+                } else {
+                    throw new NoMoveFoundException("Invalid SAN source disambiguation: " + rawSan);
+                }
+            }
+        }
+
+        if (pieceType == PieceType.PAWN && !capture && (sourceFile != null || sourceRank != null)) {
+            throw new NoMoveFoundException("Invalid pawn SAN move: " + rawSan);
+        }
+
+        return new SanDescriptor(
+                pieceType,
+                targetSquare,
+                capture,
+                sourceFile,
+                sourceRank,
+                promotionType);
+    }
+
+    /**
+     * Returns whether a legal move matches a parsed SAN descriptor.
+     *
+     * @param candidate legal candidate
+     * @param descriptor parsed SAN
+     * @return true when the candidate matches
+     */
+    private static boolean matchesDescriptor(Move candidate, SanDescriptor descriptor) {
+        if (candidate == null
+                || candidate.getPiece() == null
+                || candidate.getSource() == null
+                || candidate.getTarget() == null
+                || candidate instanceof Castling) {
+            return false;
+        }
+
+        if (candidate.getPiece().getType() != descriptor.pieceType()) {
+            return false;
+        }
+        if (!candidate.getTarget().getName().equalsIgnoreCase(descriptor.targetSquare())) {
+            return false;
+        }
+
+        boolean candidateCapture = candidate instanceof EnPassant || candidate.getTarget().getPiece() != null;
+        if (candidateCapture != descriptor.capture()) {
+            return false;
+        }
+
+        if (descriptor.sourceFile() != null
+                && Character.toLowerCase(candidate.getSource().getName().charAt(0)) != descriptor.sourceFile()) {
+            return false;
+        }
+        if (descriptor.sourceRank() != null
+                && candidate.getSource().getRank() != descriptor.sourceRank()) {
+            return false;
+        }
+
+        if (descriptor.promotionType() == null) {
+            return !(candidate instanceof Promotion);
+        }
+        if (!(candidate instanceof Promotion promotion)) {
+            return false;
+        }
+        return promotion.getPromotedPiece().getType() == descriptor.promotionType();
+    }
+
+    /**
+     * Returns exactly one move or reports a normal SAN resolution error.
+     *
+     * @param matches candidate matches
+     * @param rawSan source SAN token
+     * @return unique move
+     */
+    private static Move requireSingleMatch(List<Move> matches, String rawSan) throws NoMoveFoundException {
+        if (matches.size() == 1) {
+            return matches.get(0);
+        }
+        if (matches.isEmpty()) {
+            throw new NoMoveFoundException("No matching SAN move: " + rawSan);
+        }
+        throw new NoMoveFoundException("Ambiguous SAN move: " + rawSan);
+    }
+
+    /**
+     * Returns whether a string is a chess square.
+     *
+     * @param value candidate square
+     * @return true for a1 through h8
+     */
+    private static boolean isSquare(String value) {
+        return value != null
+                && value.length() == 2
+                && Character.toLowerCase(value.charAt(0)) >= 'a'
+                && Character.toLowerCase(value.charAt(0)) <= 'h'
+                && value.charAt(1) >= '1'
+                && value.charAt(1) <= '8';
+    }
+
+    /**
+     * Returns whether the character names a normal non-pawn piece.
+     *
+     * @param value piece letter
+     * @return true for K, Q, R, B or N
+     */
+    private static boolean isPieceLetter(char value) {
+        char normalized = Character.toUpperCase(value);
+        return normalized == 'K'
+                || normalized == 'Q'
+                || normalized == 'R'
+                || normalized == 'B'
+                || normalized == 'N';
+    }
+
+    /**
+     * Returns whether the character can name a promotion piece.
+     *
+     * @param value piece letter
+     * @return true for Q, R, B or N
+     */
+    private static boolean isPromotionLetter(char value) {
+        char normalized = Character.toUpperCase(value);
+        return normalized == 'Q'
+                || normalized == 'R'
+                || normalized == 'B'
+                || normalized == 'N';
+    }
+
+    /**
+     * Maps a SAN piece letter to a piece type.
+     *
+     * @param value SAN piece letter
+     * @return piece type
+     * @throws NoMoveFoundException for unsupported letters
+     */
+    private static PieceType pieceTypeFromLetter(char value) throws NoMoveFoundException {
+        return switch (Character.toUpperCase(value)) {
+            case 'K' -> PieceType.KING;
+            case 'Q' -> PieceType.QUEEN;
+            case 'R' -> PieceType.ROOK;
+            case 'B' -> PieceType.BISHOP;
+            case 'N' -> PieceType.KNIGHT;
+            default -> throw new NoMoveFoundException("Invalid SAN piece: " + value);
+        };
     }
 
     /**
@@ -284,5 +511,24 @@ public final class PgnNotation {
             default:
                 return '?';
         }
+    }
+
+    /**
+     * Parsed structural parts of one non-castling SAN token.
+     *
+     * @param pieceType moving piece type
+     * @param targetSquare target square
+     * @param capture whether SAN contains a capture marker
+     * @param sourceFile optional source-file disambiguation
+     * @param sourceRank optional source-rank disambiguation
+     * @param promotionType optional promotion type
+     */
+    private record SanDescriptor(
+            PieceType pieceType,
+            String targetSquare,
+            boolean capture,
+            Character sourceFile,
+            Integer sourceRank,
+            PieceType promotionType) {
     }
 }
