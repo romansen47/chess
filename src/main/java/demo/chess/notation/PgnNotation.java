@@ -369,16 +369,19 @@ public final class PgnNotation {
     /**
      * Returns whether the character names a normal non-pawn piece.
      *
+     * <p>SAN piece designators are uppercase. Lowercase letters must stay
+     * available for pawn source files; in particular {@code bxc5} is a b-pawn
+     * capture, not a bishop move.</p>
+     *
      * @param value piece letter
      * @return true for K, Q, R, B or N
      */
     private static boolean isPieceLetter(char value) {
-        char normalized = Character.toUpperCase(value);
-        return normalized == 'K'
-                || normalized == 'Q'
-                || normalized == 'R'
-                || normalized == 'B'
-                || normalized == 'N';
+        return value == 'K'
+                || value == 'Q'
+                || value == 'R'
+                || value == 'B'
+                || value == 'N';
     }
 
     /**
