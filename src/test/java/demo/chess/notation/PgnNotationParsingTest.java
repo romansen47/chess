@@ -80,4 +80,29 @@ public class PgnNotationParsingTest {
                         "c8d7"),
                 loader.parsePgnMoveList(pgn));
     }
+
+    /**
+     * Verifies that a lowercase b-file prefix remains a pawn source file and is
+     * not mistaken for the uppercase SAN bishop designator.
+     */
+    @Test
+    public void parsesBFilePawnCapture() throws Exception {
+        GameLoader loader = new GameLoader();
+
+        String pgn = """
+                [Event "B-file Pawn Capture"]
+                [Site "?"]
+                [Date "2026.09.06"]
+                [Round "3"]
+                [White "White"]
+                [Black "Black"]
+                [Result "*"]
+
+                1. b4 c5 2. bxc5 *
+                """;
+
+        assertEquals(
+                List.of("b2b4", "c7c5", "b4c5"),
+                loader.parsePgnMoveList(pgn));
+    }
 }
