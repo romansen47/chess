@@ -132,6 +132,49 @@ public class GameLoader {
     }
 
     /**
+     * Splits PGN content into individual games.
+     *
+     * <p>Game boundaries are detected without interpreting result tokens from tag
+     * values, comments or variations. A new tag block after movetext starts a new
+     * game. Result-terminated tagless games are also separated when additional
+     * movetext follows on a later line.</p>
+     *
+     * @param content complete PGN content
+     * @return individual PGN games in source order
+     */
+    public List<String> splitPgnGames(String content) {
+        List<String> games = new ArrayList<>();
+        if (content == null || content.isBlank()) {
+            return games;
+        }
+
+        String normalized = stripBom(content)
+                .replace("\r\n", "\n")
+                .replace('\r', '\n');
+        StringBuilder current = new StringBuilder();
+        boolean currentFinished = false;
+
+        for (String line : normalized.split("\n", -1)) {
+            boolean tagLine = PGN_TAG_PATTERN.matcher(line).matches();
+            boolean currentHasMovetext = containsPgnMovetext(current.toString());
+
+            if (tagLine && currentHasMovetext) {
+                addPgnGame(games, current);
+                currentFinished = false;
+            } else if (currentFinished && isMeaningfulPgnMovetext(line)) {
+                addPgnGame(games, current);
+                currentFinished = false;
+            }
+
+            current.append(line).append('\n');
+            currentFinished = endsWithPgnResult(current.toString());
+        }
+
+        addPgnGame(games, current);
+        return games;
+    }
+
+    /**
      * Parses the pgn move list.
      * @param content the content
      * @return the result of the operation
@@ -142,12 +185,7 @@ public class GameLoader {
             return moveList;
         }
 
-        String movetext = stripBom(content);
-        movetext = PGN_TAG_PATTERN.matcher(movetext).replaceAll(" ");
-        movetext = PGN_BRACE_COMMENT_PATTERN.matcher(movetext).replaceAll(" ");
-        movetext = PGN_LINE_COMMENT_PATTERN.matcher(movetext).replaceAll(" ");
-        movetext = removeVariations(movetext);
-        movetext = PGN_NAG_PATTERN.matcher(movetext).replaceAll(" ");
+        String movetext = sanitizePgnMovetext(stripBom(content));
 
         DummyGame dummyGame = Simulation.createDummySimulation();
         int ply = 0;
@@ -214,6 +252,69 @@ public class GameLoader {
         } catch (NoMoveFoundException e) {
             throw new IOException(e.getMessage(), e);
         }
+    }
+
+    private void addPgnGame(List<String> games, StringBuilder current) {
+        if (!containsPgnMovetext(current.toString())) {
+            current.setLength(0);
+            return;
+        }
+
+        String game = current.toString().trim();
+        if (!game.isEmpty()) {
+            games.add(game);
+        }
+        current.setLength(0);
+    }
+
+    private boolean containsPgnMovetext(String value) {
+        String movetext = sanitizePgnMovetext(value).trim();
+        if (movetext.isEmpty()) {
+            return false;
+        }
+
+        for (String rawToken : movetext.split("\\s+")) {
+            String token = stripMoveNumberPrefix(rawToken.trim());
+            if (token.isEmpty()
+                    || "e.p.".equalsIgnoreCase(token)
+                    || "ep".equalsIgnoreCase(token)
+                    || isResultToken(token)) {
+                continue;
+            }
+            return true;
+        }
+        return false;
+    }
+
+    private boolean isMeaningfulPgnMovetext(String line) {
+        return containsPgnMovetext(line);
+    }
+
+    private boolean endsWithPgnResult(String value) {
+        String movetext = sanitizePgnMovetext(value).trim();
+        if (movetext.isEmpty()) {
+            return false;
+        }
+
+        String[] tokens = movetext.split("\\s+");
+        for (int index = tokens.length - 1; index >= 0; index--) {
+            String token = stripMoveNumberPrefix(tokens[index].trim());
+            if (token.isEmpty() || "e.p.".equalsIgnoreCase(token) || "ep".equalsIgnoreCase(token)) {
+                continue;
+            }
+            return isResultToken(token);
+        }
+        return false;
+    }
+
+    private String sanitizePgnMovetext(String content) {
+        String movetext = content == null ? "" : content;
+        movetext = PGN_TAG_PATTERN.matcher(movetext).replaceAll(" ");
+        movetext = PGN_BRACE_COMMENT_PATTERN.matcher(movetext).replaceAll(" ");
+        movetext = PGN_LINE_COMMENT_PATTERN.matcher(movetext).replaceAll(" ");
+        movetext = removeVariations(movetext);
+        movetext = PGN_NAG_PATTERN.matcher(movetext).replaceAll(" ");
+        return movetext;
     }
 
     /**
