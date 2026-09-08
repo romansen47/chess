@@ -17,7 +17,7 @@ import demo.chess.game.Game;
 
 public class EvaluationUciEngine extends ConsoleUciEngine implements EvaluationEngine {
 
-	private static final int MIN_LIVE_EVALUATION_DEPTH = 3;
+	private static final int MIN_LIVE_EVALUATION_DEPTH = 0;
 
 	String bestMove;
 	private Map<String, List<EngineLine>> cachedBestLines = new HashMap<>();
