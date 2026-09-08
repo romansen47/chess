@@ -7,6 +7,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.TreeMap;
 import java.util.concurrent.ExecutionException;
+import java.util.function.BiConsumer;
 
 import demo.chess.definitions.Color;
 import demo.chess.definitions.engines.EngineConfig;
@@ -23,6 +24,9 @@ public class EvaluationUciEngine extends ConsoleUciEngine implements EvaluationE
 	private Map<String, List<EngineLine>> cachedBestLines = new HashMap<>();
 	private String lastPositionHash = "";
 	private Thread evaluationThread;
+	private volatile BiConsumer<String, List<EngineLine>> evaluationUpdateListener;
+	private volatile long evaluationGeneration;
+	private int lastNotifiedDepth = -1;
 
 	/**
 	 * Creates a new EvaluationUciEngine instance.
@@ -31,6 +35,16 @@ public class EvaluationUciEngine extends ConsoleUciEngine implements EvaluationE
 	public EvaluationUciEngine(String path) throws Exception {
 		super(path);
 		logger.info("Creating new evaluation engine: {}", path);
+	}
+
+	/**
+	 * Registers a listener that is called once for every newly completed search depth.
+	 * The listener runs on the engine reader thread and therefore must return quickly.
+	 *
+	 * @param listener position key plus immutable engine-line snapshot
+	 */
+	public void setEvaluationUpdateListener(BiConsumer<String, List<EngineLine>> listener) {
+		evaluationUpdateListener = listener;
 	}
 
 	/**
@@ -290,6 +304,8 @@ public class EvaluationUciEngine extends ConsoleUciEngine implements EvaluationE
 
 	    List<Move> moveList = new ArrayList<>(chessGame.getMoveList());
 	    logger.info("{} is starting new infinite analysis for move list {}", this, moveList);
+	    long generation = ++evaluationGeneration;
+	    lastNotifiedDepth = -1;
 
 	    if (evaluationThread != null && !evaluationThread.isInterrupted()) {
 	    	evaluationThread.interrupt();
@@ -317,7 +333,7 @@ public class EvaluationUciEngine extends ConsoleUciEngine implements EvaluationE
 	            int currentMaxDepth = MIN_LIVE_EVALUATION_DEPTH;
 	            String line;
 	            while ((line = processReader.readLine()) != null) {
-	                if (chessGame.getState() != null) {
+	                if (generation != evaluationGeneration || chessGame.getState() != null) {
 	                    return;
 	                }
 
@@ -337,6 +353,7 @@ public class EvaluationUciEngine extends ConsoleUciEngine implements EvaluationE
 	                            synchronized (getCachedBestLines()) {
 	                                getCachedBestLines().put(moveListAsString, newLines);
 	                            }
+	                            notifyEvaluationUpdate(generation, moveListAsString, newLines);
 
 	                            bestLines.clear(); // Leere die Liste nach Verarbeitung
 	                        }
@@ -357,11 +374,44 @@ public class EvaluationUciEngine extends ConsoleUciEngine implements EvaluationE
 	}
 
 	/**
+	 * Notifies the registered listener once for each increasing completed depth.
+	 * @param generation search generation
+	 * @param positionKey move-list position key
+	 * @param lines parsed lines for one completed depth
+	 */
+	private void notifyEvaluationUpdate(long generation, String positionKey, List<EngineLine> lines) {
+		if (generation != evaluationGeneration || lines == null || lines.isEmpty()) {
+			return;
+		}
+
+		BiConsumer<String, List<EngineLine>> listener;
+		int depth = lines.get(0).getDepth();
+		synchronized (this) {
+			if (generation != evaluationGeneration || depth <= lastNotifiedDepth) {
+				return;
+			}
+			lastNotifiedDepth = depth;
+			listener = evaluationUpdateListener;
+		}
+
+		if (listener == null) {
+			return;
+		}
+
+		try {
+			listener.accept(positionKey, List.copyOf(lines));
+		} catch (RuntimeException e) {
+			logger.debug("Evaluation update listener failed at depth {}: {}", depth, e.getMessage());
+		}
+	}
+
+	/**
 	 * Stops the evaluation.
 	 */
 	@Override
 	public void stopEvaluation() {
 		logger.info("{} stopping actual infinite analysis", this);
+		evaluationGeneration++;
 		if (evaluationThread != null && evaluationThread.isAlive()) {
 			getWriter().println("stop");
 			getWriter().flush();
