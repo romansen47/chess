@@ -69,8 +69,17 @@ public class Simulation extends ChessGameTemplate {
 	 * @return the result of the operation
 	 */
 	public static DummyChessGame forkDummyFrom(MoveList ml) throws NoMoveFoundException, IOException {
+		return forkDummyFrom((List<Move>) ml);
+	}
+
+	/**
+	 * Creates a dummy simulation from a detached move snapshot.
+	 * @param moves the moves to replay
+	 * @return the forked dummy game
+	 */
+	public static DummyChessGame forkDummyFrom(List<Move> moves) throws NoMoveFoundException, IOException {
 		DummyChessGame fork = createDummySimulation();
-		for (Move move : ml) {
+		for (Move move : moves) {
 			fork.apply(fork.getPlayer().getMoveInSimulation(fork, move));
 		}
 		return fork;
