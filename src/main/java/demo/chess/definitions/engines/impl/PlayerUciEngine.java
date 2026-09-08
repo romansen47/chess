@@ -33,14 +33,10 @@ public class PlayerUciEngine extends ConsoleUciEngine implements PlayerEngine {
         logger.debug("{} computing next move for movelist {}", this, chessGame.getMoveList());
         applyConfig(config);
 
-        StringBuilder command = new StringBuilder("");
+        StringBuilder command = new StringBuilder();
         MoveList moveList = chessGame.getMoveList();
-        if (moveList.isEmpty()) {
-            command.append(" []");
-        } else {
-            for (Move move : moveList) {
-                command.append(move.toString()).append(" ");
-            }
+        for (Move move : moveList) {
+            command.append(move.toString()).append(" ");
         }
 
         long whiteTimeMillis = Math.max(0L, chessGame.getTimeForEachPlayer() * 1000L
@@ -108,7 +104,7 @@ public class PlayerUciEngine extends ConsoleUciEngine implements PlayerEngine {
             long whiteIncrementMillis,
             long blackIncrementMillis) {
         StringBuilder positionCommand = new StringBuilder();
-        positionCommand.append("position startpos moves ").append(command.toString()).append("\n");
+        positionCommand.append(UciPositionCommand.build(command)).append("\n");
         if (config.getDepth() > 0) {
             positionCommand.append("go depth ").append(config.getDepth());
         } else if (config.getMoveTimeSeconds() > 0) {
