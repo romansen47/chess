@@ -73,7 +73,7 @@ public class EvaluationUciEngine extends ConsoleUciEngine implements EvaluationE
 	@Override
 	protected StringBuilder getCommandLineOptions(StringBuilder command, EngineConfig config) {
 		StringBuilder positionCommand = new StringBuilder();
-		positionCommand.append("position startpos moves ").append(command.toString());
+		positionCommand.append(UciPositionCommand.build(command));
 		positionCommand.append("\ngo infinite ");
 		return positionCommand;
 	}
