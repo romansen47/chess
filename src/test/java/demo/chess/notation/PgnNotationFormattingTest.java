@@ -57,11 +57,14 @@ public class PgnNotationFormattingTest {
                 "e5f6",
                 "exf6",
                 "exf6 e.p.");
+
+        // The rook promotion on h8 is mate: the rook attacks e8 through g8/f8,
+        // while the black king is boxed in by its own pieces and cannot block or capture.
         assertNotation(
                 List.of("h2h4", "g7g5", "h4g5", "g8h6", "g5h6", "f8g7", "h6g7", "b8c6"),
                 "g7h8r",
-                "gxh8=R+",
-                "gxh8=R+");
+                "gxh8=R#",
+                "gxh8=R#");
     }
 
     /**
