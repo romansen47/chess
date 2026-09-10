@@ -12,14 +12,24 @@ import demo.chess.definitions.moves.Castling;
 import demo.chess.definitions.moves.EnPassant;
 import demo.chess.definitions.moves.Move;
 import demo.chess.definitions.moves.Promotion;
+import demo.chess.definitions.players.Player;
 import demo.chess.game.DummyGame;
+import demo.chess.game.Game;
+import demo.chess.game.impl.Simulation;
 
 /**
  * Converts moves to and from standard PGN short algebraic notation (SAN).
  *
- * <p>The conversion deliberately operates on {@link DummyGame} only. This keeps
- * notation parsing/formatting independent from live-game clocks and other
- * {@code ChessGame} side effects.</p>
+ * <p>SAN formatting is centralized here for live games, simulations and trusted
+ * dummy replays. {@link DummyGame} deliberately skips the expensive king-safety
+ * validation performed by normal players. Formatting therefore uses the dummy
+ * state as a fast path and escalates to a normal {@link Simulation} only when a
+ * SAN decision actually depends on full move legality, namely source
+ * disambiguation conflicts and checkmate detection.</p>
+ *
+ * <p>SAN parsing keeps its dedicated {@link DummyGame} fast path because bulk
+ * PGN imports intentionally resolve trusted historical moves without validating
+ * every candidate through a complete simulation.</p>
  */
 public final class PgnNotation {
 
@@ -30,89 +40,83 @@ public final class PgnNotation {
     }
 
     /**
-     * Performs the to san operation.
-     * @param game the game
-     * @param move the move
-     * @return the result of the operation
+     * Formats one move as SAN without changing the supplied game.
+     *
+     * <p>A replay copy is created because check and checkmate are properties of
+     * the position after the move. Replay-oriented callers that already own a
+     * disposable simulation should prefer {@link #toSanAndApply(Game, Move)} to
+     * avoid rebuilding the current position for every move.</p>
+     *
+     * @param game position before the move
+     * @param move move to format
+     * @return standard SAN
      */
-    public static String toSan(DummyGame game, Move move) throws NoMoveFoundException, IOException {
-        if (game == null) {
-            throw new NoMoveFoundException("game must not be null");
+    public static String toSan(Game game, Move move) throws NoMoveFoundException, IOException {
+        validateFormattingInput(game, move);
+        Game replay = createReplayCopy(game);
+        Move replayMove = replay.getPlayer().getMoveInSimulation(replay, move);
+        if (replayMove == null) {
+            throw new NoMoveFoundException("Could not map move to notation replay: " + move);
         }
-        if (move == null || move.getPiece() == null || move.getSource() == null || move.getTarget() == null) {
-            throw new NoMoveFoundException("move must not be null");
-        }
-
-        if (move instanceof Castling) {
-            String uci = move.toString().toLowerCase(Locale.ROOT);
-            return uci.endsWith("c1") || uci.endsWith("c8") ? "O-O-O" : "O-O";
-        }
-
-        PieceType pieceType = move.getPiece().getType();
-        boolean capture = move instanceof EnPassant || move.getTarget().getPiece() != null;
-        StringBuilder san = new StringBuilder();
-
-        if (pieceType == PieceType.PAWN) {
-            if (capture) {
-                san.append(move.getSource().getName().charAt(0));
-            }
-        } else {
-            san.append(pieceLetter(pieceType));
-            san.append(sourceDisambiguation(game, move));
-        }
-
-        if (capture) {
-            san.append('x');
-        }
-
-        san.append(move.getTarget().getName());
-
-        if (move instanceof Promotion) {
-            PieceType promotedType = ((Promotion) move).getPromotedPiece().getType();
-            san.append('=').append(pieceLetter(promotedType));
-        }
-
-        return san.toString();
+        return toSanAndApply(replay, replayMove);
     }
 
     /**
-     * Performs the to display notation operation.
-     * @param game the game
-     * @param move the move
-     * @return the result of the operation
+     * Formats one move for the UI without changing the supplied game.
+     *
+     * @param game position before the move
+     * @param move move to format
+     * @return display notation with Unicode pieces and zero-based castling
      */
-    public static String toDisplayNotation(DummyGame game, Move move)
+    public static String toDisplayNotation(Game game, Move move)
             throws NoMoveFoundException, IOException {
-        String notation = toSan(game, move);
-
-        if (move instanceof Castling) {
-            return notation.replace('O', '0');
-        }
-
-        if (move.getPiece().getType() != PieceType.PAWN && !notation.isEmpty()) {
-            notation = unicodePiece(move.getPiece().getType(), move.getPiece().getColor())
-                    + notation.substring(1);
-        }
-
-        if (move instanceof EnPassant) {
-            notation += " e.p.";
-        }
-
-        return notation;
+        return toDisplayNotation(move, toSan(game, move));
     }
 
     /**
-     * Resolves SAN to one legal move.
+     * Formats one move as SAN and applies it to the supplied replay game.
      *
-     * <p>This parser intentionally matches the SAN token against the already
-     * generated legal move list instead of formatting every legal candidate back
-     * to SAN. Besides avoiding unnecessary string work, this is important for
-     * bulk PGN imports because SAN formatting may itself need legal-move
-     * generation for source disambiguation.</p>
+     * <p>This method is intended for disposable simulations and trusted replay
+     * contexts such as PGN export and engine principal variations. It performs
+     * exactly one application of the supplied move.</p>
      *
-     * @param game the game
+     * @param game mutable replay position before the move
+     * @param move move belonging to the supplied game
+     * @return standard SAN
+     */
+    public static String toSanAndApply(Game game, Move move) throws NoMoveFoundException, IOException {
+        validateFormattingInput(game, move);
+        String baseSan = buildBaseSan(game, move);
+        game.apply(move);
+        return baseSan + checkSuffixAfterMove(game);
+    }
+
+    /**
+     * Formats one move for the UI and applies it to the supplied replay game.
+     *
+     * @param game mutable replay position before the move
+     * @param move move belonging to the supplied game
+     * @return display notation with Unicode pieces and zero-based castling
+     */
+    public static String toDisplayNotationAndApply(Game game, Move move)
+            throws NoMoveFoundException, IOException {
+        validateFormattingInput(game, move);
+        String san = toSanAndApply(game, move);
+        return toDisplayNotation(move, san);
+    }
+
+    /**
+     * Resolves SAN to one move in a trusted dummy replay.
+     *
+     * <p>This parser intentionally matches the SAN token against the cheaply
+     * generated dummy move list instead of formatting every candidate back to
+     * SAN. This is important for bulk PGN imports, where the source data is
+     * replayed as trusted historical game data and full validation would be
+     * prohibitively expensive.</p>
+     *
+     * @param game the trusted dummy replay
      * @param rawSan the raw SAN token
-     * @return the matching legal move
+     * @return the matching move
      */
     public static Move resolveSan(DummyGame game, String rawSan) throws NoMoveFoundException, IOException {
         if (game == null) {
@@ -180,6 +184,174 @@ public final class PgnNotation {
         normalized = normalized.replaceAll("[+#]+$", "");
         normalized = normalized.replaceAll("[!?]+$", "");
         return normalized;
+    }
+
+    private static void validateFormattingInput(Game game, Move move) throws NoMoveFoundException {
+        if (game == null) {
+            throw new NoMoveFoundException("game must not be null");
+        }
+        if (move == null || move.getPiece() == null || move.getSource() == null || move.getTarget() == null) {
+            throw new NoMoveFoundException("move must not be null");
+        }
+    }
+
+    private static Game createReplayCopy(Game game) throws NoMoveFoundException, IOException {
+        if (game instanceof DummyGame) {
+            return Simulation.forkDummyFrom(game.getMoveList());
+        }
+        return Simulation.forkSimulationFrom(game.getMoveList());
+    }
+
+    private static String buildBaseSan(Game game, Move move) throws NoMoveFoundException, IOException {
+        if (move instanceof Castling) {
+            String uci = move.toString().toLowerCase(Locale.ROOT);
+            return uci.endsWith("c1") || uci.endsWith("c8") ? "O-O-O" : "O-O";
+        }
+
+        PieceType pieceType = move.getPiece().getType();
+        boolean capture = move instanceof EnPassant || move.getTarget().getPiece() != null;
+        StringBuilder san = new StringBuilder();
+
+        if (pieceType == PieceType.PAWN) {
+            if (capture) {
+                san.append(move.getSource().getName().charAt(0));
+            }
+        } else {
+            san.append(pieceLetter(pieceType));
+            san.append(sourceDisambiguation(game, move));
+        }
+
+        if (capture) {
+            san.append('x');
+        }
+
+        san.append(move.getTarget().getName());
+
+        if (move instanceof Promotion) {
+            PieceType promotedType = ((Promotion) move).getPromotedPiece().getType();
+            san.append('=').append(pieceLetter(promotedType));
+        }
+
+        return san.toString();
+    }
+
+    private static String toDisplayNotation(Move move, String san) {
+        String notation = san;
+
+        if (move instanceof Castling) {
+            return notation.replace('O', '0');
+        }
+
+        if (move.getPiece().getType() != PieceType.PAWN && !notation.isEmpty()) {
+            notation = unicodePiece(move.getPiece().getType(), move.getPiece().getColor())
+                    + notation.substring(1);
+        }
+
+        if (move instanceof EnPassant) {
+            notation = insertBeforeCheckSuffix(notation, " e.p.");
+        }
+
+        return notation;
+    }
+
+    private static String insertBeforeCheckSuffix(String notation, String insertion) {
+        if (notation.endsWith("+") || notation.endsWith("#")) {
+            return notation.substring(0, notation.length() - 1)
+                    + insertion
+                    + notation.substring(notation.length() - 1);
+        }
+        return notation + insertion;
+    }
+
+    private static String checkSuffixAfterMove(Game game) throws NoMoveFoundException, IOException {
+        Player checkedPlayer = game.getPlayer();
+        if (checkedPlayer == null || checkedPlayer.getKing() == null || checkedPlayer.getKing().getField() == null) {
+            return "";
+        }
+
+        Player attackingPlayer = checkedPlayer.getColor().equals(Color.WHITE)
+                ? game.getBlackPlayer()
+                : game.getWhitePlayer();
+
+        boolean kingIsAttacked = attackingPlayer.getSimpleMoves().stream()
+                .map(Move::getTarget)
+                .filter(target -> target != null)
+                .anyMatch(checkedPlayer.getKing().getField()::equals);
+        if (!kingIsAttacked) {
+            return "";
+        }
+
+        if (game instanceof DummyGame) {
+            Simulation validationGame = Simulation.forkSimulationFrom(game.getMoveList());
+            return validationGame.getPlayer().getValidMoves(validationGame).isEmpty() ? "#" : "+";
+        }
+
+        return checkedPlayer.getValidMoves(game).isEmpty() ? "#" : "+";
+    }
+
+    private static String sourceDisambiguation(Game game, Move move)
+            throws NoMoveFoundException, IOException {
+        List<Move> competingMoves = findCompetingMoves(game.getPlayer().getValidMoves(game), move);
+
+        if (competingMoves.isEmpty()) {
+            return "";
+        }
+
+        Move moveForDisambiguation = move;
+        if (game instanceof DummyGame) {
+            Simulation validationGame = Simulation.forkSimulationFrom(game.getMoveList());
+            Move validationMove = validationGame.getPlayer().getMoveInSimulation(validationGame, move);
+            if (validationMove == null) {
+                throw new NoMoveFoundException("Could not map move to validation simulation: " + move);
+            }
+            competingMoves = findCompetingMoves(
+                    validationGame.getPlayer().getValidMoves(validationGame),
+                    validationMove);
+            if (competingMoves.isEmpty()) {
+                return "";
+            }
+            moveForDisambiguation = validationMove;
+        }
+
+        boolean sameFileExists = competingMoves.stream()
+                .anyMatch(candidate -> candidate.getSource().getFile() == moveForDisambiguation.getSource().getFile());
+        boolean sameRankExists = competingMoves.stream()
+                .anyMatch(candidate -> candidate.getSource().getRank() == moveForDisambiguation.getSource().getRank());
+
+        if (sameFileExists && sameRankExists) {
+            return moveForDisambiguation.getSource().getName();
+        }
+        if (sameFileExists) {
+            return Integer.toString(moveForDisambiguation.getSource().getRank());
+        }
+        return moveForDisambiguation.getSource().getName().substring(0, 1);
+    }
+
+    private static List<Move> findCompetingMoves(List<Move> candidates, Move move) {
+        List<Move> competingMoves = new ArrayList<>();
+        if (candidates == null) {
+            return competingMoves;
+        }
+
+        for (Move candidate : candidates) {
+            if (candidate == null
+                    || candidate.getPiece() == null
+                    || candidate.getSource() == null
+                    || candidate.getTarget() == null
+                    || candidate instanceof Castling) {
+                continue;
+            }
+
+            if (candidate.getSource().equals(move.getSource())) {
+                continue;
+            }
+
+            if (candidate.getTarget().equals(move.getTarget())
+                    && candidate.getPiece().getType() == move.getPiece().getType()) {
+                competingMoves.add(candidate);
+            }
+        }
+        return competingMoves;
     }
 
     /**
@@ -269,9 +441,9 @@ public final class PgnNotation {
     }
 
     /**
-     * Returns whether a legal move matches a parsed SAN descriptor.
+     * Returns whether a candidate move matches a parsed SAN descriptor.
      *
-     * @param candidate legal candidate
+     * @param candidate candidate move
      * @param descriptor parsed SAN
      * @return true when the candidate matches
      */
@@ -316,9 +488,8 @@ public final class PgnNotation {
 
     /**
      * Returns exactly one semantically distinct move or reports a normal SAN
-     * resolution error. The engine move generator can expose the same legal move
-     * more than once as separate objects, so equivalent UCI moves are collapsed
-     * before ambiguity is evaluated.
+     * resolution error. Equivalent duplicate UCI candidates are collapsed before
+     * ambiguity is evaluated.
      *
      * @param matches candidate matches
      * @param rawSan source SAN token
@@ -351,12 +522,6 @@ public final class PgnNotation {
         return uniqueMove;
     }
 
-    /**
-     * Returns whether a string is a chess square.
-     *
-     * @param value candidate square
-     * @return true for a1 through h8
-     */
     private static boolean isSquare(String value) {
         return value != null
                 && value.length() == 2
@@ -366,16 +531,6 @@ public final class PgnNotation {
                 && value.charAt(1) <= '8';
     }
 
-    /**
-     * Returns whether the character names a normal non-pawn piece.
-     *
-     * <p>SAN piece designators are uppercase. Lowercase letters must stay
-     * available for pawn source files; in particular {@code bxc5} is a b-pawn
-     * capture, not a bishop move.</p>
-     *
-     * @param value piece letter
-     * @return true for K, Q, R, B or N
-     */
     private static boolean isPieceLetter(char value) {
         return value == 'K'
                 || value == 'Q'
@@ -384,12 +539,6 @@ public final class PgnNotation {
                 || value == 'N';
     }
 
-    /**
-     * Returns whether the character can name a promotion piece.
-     *
-     * @param value piece letter
-     * @return true for Q, R, B or N
-     */
     private static boolean isPromotionLetter(char value) {
         char normalized = Character.toUpperCase(value);
         return normalized == 'Q'
@@ -398,13 +547,6 @@ public final class PgnNotation {
                 || normalized == 'N';
     }
 
-    /**
-     * Maps a SAN piece letter to a piece type.
-     *
-     * @param value SAN piece letter
-     * @return piece type
-     * @throws NoMoveFoundException for unsupported letters
-     */
     private static PieceType pieceTypeFromLetter(char value) throws NoMoveFoundException {
         return switch (Character.toUpperCase(value)) {
             case 'K' -> PieceType.KING;
@@ -416,59 +558,6 @@ public final class PgnNotation {
         };
     }
 
-    /**
-     * Performs the source disambiguation operation.
-     * @param game the game
-     * @param move the move
-     * @return the result of the operation
-     */
-    private static String sourceDisambiguation(DummyGame game, Move move)
-            throws NoMoveFoundException, IOException {
-        List<Move> competingMoves = new ArrayList<>();
-
-        for (Move candidate : game.getPlayer().getValidMoves(game)) {
-            if (candidate == null
-                    || candidate.getPiece() == null
-                    || candidate.getSource() == null
-                    || candidate.getTarget() == null
-                    || candidate instanceof Castling) {
-                continue;
-            }
-
-            if (candidate.getSource().equals(move.getSource())) {
-                continue;
-            }
-
-            if (candidate.getTarget().equals(move.getTarget())
-                    && candidate.getPiece().getType() == move.getPiece().getType()) {
-                competingMoves.add(candidate);
-            }
-        }
-
-        if (competingMoves.isEmpty()) {
-            return "";
-        }
-
-        boolean sameFileExists = competingMoves.stream()
-                .anyMatch(candidate -> candidate.getSource().getFile() == move.getSource().getFile());
-        boolean sameRankExists = competingMoves.stream()
-                .anyMatch(candidate -> candidate.getSource().getRank() == move.getSource().getRank());
-
-        if (sameFileExists && sameRankExists) {
-            return move.getSource().getName();
-        }
-        if (sameFileExists) {
-            return Integer.toString(move.getSource().getRank());
-        }
-        return move.getSource().getName().substring(0, 1);
-    }
-
-    /**
-     * Performs the unicode piece operation.
-     * @param pieceType the piece type
-     * @param color the color
-     * @return the result of the operation
-     */
     private static String unicodePiece(PieceType pieceType, Color color) {
         if (pieceType == null || color == null) {
             return "";
@@ -510,11 +599,6 @@ public final class PgnNotation {
         }
     }
 
-    /**
-     * Performs the piece letter operation.
-     * @param pieceType the piece type
-     * @return the result of the operation
-     */
     private static char pieceLetter(PieceType pieceType) {
         if (pieceType == null) {
             return '?';
@@ -536,16 +620,6 @@ public final class PgnNotation {
         }
     }
 
-    /**
-     * Parsed structural parts of one non-castling SAN token.
-     *
-     * @param pieceType moving piece type
-     * @param targetSquare target square
-     * @param capture whether SAN contains a capture marker
-     * @param sourceFile optional source-file disambiguation
-     * @param sourceRank optional source-rank disambiguation
-     * @param promotionType optional promotion type
-     */
     private record SanDescriptor(
             PieceType pieceType,
             String targetSquare,
