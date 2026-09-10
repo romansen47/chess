@@ -3,6 +3,7 @@ package demo.chess.game;
 import java.io.IOException;
 import java.util.List;
 
+import demo.chess.definitions.Color;
 import demo.chess.definitions.board.Board;
 import demo.chess.definitions.engines.impl.NoMoveFoundException;
 import demo.chess.definitions.moves.Move;
@@ -108,6 +109,35 @@ public interface Game {
 	 * @param incrementForBlack the increment for black
 	 */
 	void setIncrementForBlack(int incrementForBlack);
+
+
+	/**
+	 * Configures the time control owned by the chess core.
+	 *
+	 * @param whiteIncrementSeconds increment for White in seconds
+	 * @param blackIncrementSeconds increment for Black in seconds
+	 * @param additionalTimeAfter40MovesSeconds additional time granted to each player after move 40
+	 */
+	default void configureTimeControl(
+			int whiteIncrementSeconds,
+			int blackIncrementSeconds,
+			int additionalTimeAfter40MovesSeconds) {
+		setIncrementForWhite(Math.max(0, whiteIncrementSeconds));
+		setIncrementForBlack(Math.max(0, blackIncrementSeconds));
+
+		int additionalTimeSeconds = Math.max(0, additionalTimeAfter40MovesSeconds);
+		getWhitePlayer().setAdditionalTime(additionalTimeSeconds);
+		getBlackPlayer().setAdditionalTime(additionalTimeSeconds);
+	}
+
+	/**
+	 * Returns the color that lost on time.
+	 *
+	 * @return timed-out color, or {@code null} when the game did not end on time
+	 */
+	default Color getTimedOutColor() {
+		return null;
+	}
 
 	/**
 	 * Returns the san move list.

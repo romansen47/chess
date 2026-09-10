@@ -13,10 +13,10 @@ public class ChessClock extends StopWatch {
 	private static final Logger logger = LogManager.getLogger(ChessClock.class);
 
 	private final ScheduledExecutorService scheduler = Executors.newSingleThreadScheduledExecutor();
-	private long targetTimeMillis;
-	private Runnable timeUpAction;
-	private long incrementMillis;
-	private long incrementTotal = 0;
+	private volatile long targetTimeMillis;
+	private volatile Runnable timeUpAction;
+	private volatile long incrementMillis;
+	private volatile long incrementTotal = 0;
 
 	/**
 	 * Sets the target time millis.
@@ -98,17 +98,43 @@ public class ChessClock extends StopWatch {
 		return super.getTime(timeUnit) - timeUnit.convert(incrementTotal, TimeUnit.MILLISECONDS);
 	}
 
+
+	/**
+	 * Returns the remaining clock time in milliseconds.
+	 *
+	 * @return remaining milliseconds, never negative
+	 */
+	public long getRemainingTimeMillis() {
+		return Math.max(0L, targetTimeMillis - getTime(TimeUnit.MILLISECONDS));
+	}
+
+	/**
+	 * Returns whether the configured clock time has expired.
+	 *
+	 * @return true when no clock time remains
+	 */
+	public boolean isTimeUp() {
+		return getTime(TimeUnit.MILLISECONDS) >= targetTimeMillis;
+	}
+
 	/**
 	 * Checks the time periodically.
 	 */
 	private void checkTimePeriodically() {
 		scheduler.scheduleAtFixedRate(() -> {
-			if (this.getTime(TimeUnit.MILLISECONDS) >= targetTimeMillis) {
+			if (isTimeUp()) {
 				logger.debug("targetTimeMillis: {}, incrementTotal: {}, this.getTime(): {}, super.getTime(): {}",
 						targetTimeMillis, incrementTotal, this.getTime(TimeUnit.MILLISECONDS),
 						super.getTime(TimeUnit.MILLISECONDS));
-				timeUpAction.run();
-				stop();
+
+				Runnable action = timeUpAction;
+				if (action != null) {
+					action.run();
+				}
+
+				if (this.isStarted() && !this.isStopped()) {
+					stop();
+				}
 			}
 		}, 0, 100, TimeUnit.MILLISECONDS);
 	}
@@ -118,7 +144,9 @@ public class ChessClock extends StopWatch {
 	 */
 	@Override
 	public void stop() {
-		super.stop();
+		if (this.isStarted() && !this.isStopped()) {
+			super.stop();
+		}
 		scheduler.shutdown();
 	}
 
@@ -127,7 +155,7 @@ public class ChessClock extends StopWatch {
 	 * @return true when the condition is satisfied; otherwise false
 	 */
 	public boolean isRunning() {
-		return this.isStarted() && !this.isSuspended();
+		return this.isStarted() && !this.isStopped() && !this.isSuspended();
 	}
 
 }

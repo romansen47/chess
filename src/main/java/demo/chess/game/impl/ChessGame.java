@@ -33,6 +33,8 @@ public class ChessGame extends ChessGameTemplate {
 
 	int incrementForBlack;
 
+	private volatile Color timedOutColor;
+
 	protected List<String> sanMoveList = new ArrayList<>();
 
 	protected final List<Long> moveHashes = new ArrayList<>();
@@ -51,6 +53,8 @@ public class ChessGame extends ChessGameTemplate {
 		super(chessBoard, whitePlayer, blackPlayer, moveList);
 		this.setAdmin(chessAdmin);
 		this.timeForEachPlayer = timeForEachPlayer;
+		configureClock(getWhitePlayer(), Color.WHITE);
+		configureClock(getBlackPlayer(), Color.BLACK);
 		moveHashes.add(0l);
 	}
 
@@ -70,6 +74,65 @@ public class ChessGame extends ChessGameTemplate {
 		this.admin = admin;
 	}
 
+
+	/**
+	 * Returns the player that lost on time.
+	 *
+	 * @return timed-out color, or {@code null} when the game did not end on time
+	 */
+	@Override
+	public Color getTimedOutColor() {
+		return timedOutColor;
+	}
+
+	/**
+	 * Configures one core-owned chess clock and its timeout action.
+	 *
+	 * @param player player whose clock is configured
+	 * @param color player color used when the clock expires
+	 */
+	private void configureClock(Player player, Color color) {
+		player.setupClock(timeForEachPlayer, 0, () -> loseOnTime(color));
+	}
+
+	/**
+	 * Ends the game because one player's clock expired.
+	 *
+	 * @param color player that lost on time
+	 */
+	private synchronized void loseOnTime(Color color) {
+		if (color == null || getState() != null) {
+			return;
+		}
+		timedOutColor = color;
+		setState(State.LOST_ON_TIME);
+	}
+
+	/**
+	 * Returns the color of an expired clock before a move is applied.
+	 *
+	 * @return expired color or {@code null}
+	 */
+	private Color expiredClockColor() {
+		Player playerToMove = getPlayer();
+		if (playerToMove != null
+				&& playerToMove.getChessClock() != null
+				&& playerToMove.getChessClock().isTimeUp()) {
+			return playerToMove.getColor();
+		}
+
+		Player opponent = playerToMove != null && playerToMove.getColor() == Color.WHITE
+				? getBlackPlayer()
+				: getWhitePlayer();
+		if (opponent != null
+				&& opponent.getChessClock() != null
+				&& opponent.getChessClock().isTimeUp()) {
+			return opponent.getColor();
+		}
+
+		return null;
+	}
+
 	/**
 	 * Performs the switch player operation.
 	 */
@@ -80,7 +143,8 @@ public class ChessGame extends ChessGameTemplate {
 		}
 		getPlayer().getChessClock().addIncrement();
 		if (getMoveList().size() == 79 || getMoveList().size() == 80) {
-			getPlayer().getChessClock().addAdditionalTime(getPlayer().getAdditionalTime());
+			getPlayer().getChessClock().addAdditionalTime(
+					TimeUnit.SECONDS.toMillis(getPlayer().getAdditionalTime()));
 		}
 		if (getPlayer().getChessClock().isRunning()) {
 			getPlayer().getChessClock().suspend();
@@ -176,7 +240,9 @@ public class ChessGame extends ChessGameTemplate {
 	 */
 	@Override
 	public void setIncrementForWhite(int incrementForWhite) {
-		this.incrementForWhite = incrementForWhite;
+		this.incrementForWhite = Math.max(0, incrementForWhite);
+		getWhitePlayer().getChessClock().setIncrementMillis(
+				TimeUnit.SECONDS.toMillis(this.incrementForWhite));
 	}
 
 	/**
@@ -194,7 +260,9 @@ public class ChessGame extends ChessGameTemplate {
 	 */
 	@Override
 	public void setIncrementForBlack(int incrementForBlack) {
-		this.incrementForBlack = incrementForBlack;
+		this.incrementForBlack = Math.max(0, incrementForBlack);
+		getBlackPlayer().getChessClock().setIncrementMillis(
+				TimeUnit.SECONDS.toMillis(this.incrementForBlack));
 	}
 
 	/**
@@ -220,14 +288,14 @@ public class ChessGame extends ChessGameTemplate {
 	 * @param move the move
 	 */
 	@Override
-	public void apply(Move move) throws NoMoveFoundException, IOException {
-		sanMoveList.add(getShortAlgebraicNotatedMove(move));
-		Player opponent = getPlayer().getColor().equals(Color.WHITE) ? this.getBlackPlayer() : this.getWhitePlayer();
-		if ((getPlayer().getChessClock().getTime(TimeUnit.MILLISECONDS) / 1000 > getTimeForEachPlayer())
-				|| (opponent.getChessClock().getTime(TimeUnit.MILLISECONDS) / 1000 > getTimeForEachPlayer())) {
-			setState(State.LOST_ON_TIME);
+	public synchronized void apply(Move move) throws NoMoveFoundException, IOException {
+		Color expiredColor = expiredClockColor();
+		if (expiredColor != null) {
+			loseOnTime(expiredColor);
 			return;
 		}
+
+		sanMoveList.add(getShortAlgebraicNotatedMove(move));
 		super.apply(move);
 		moveHashes.add(positionHash());
 		checkForGameEnd();

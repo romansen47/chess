@@ -114,13 +114,13 @@ public interface Player {
 
 	/**
 	 * Sets the additional time.
-	 * @param additionalTime the additional time
+	 * @param additionalTime the additional time in seconds
 	 */
 	void setAdditionalTime(int additionalTime);
 
 	/**
-	 * Returns the additional time.
-	 * @return the additional time
+	 * Returns the additional time in seconds.
+	 * @return the additional time in seconds
 	 */
 	int getAdditionalTime();
 }

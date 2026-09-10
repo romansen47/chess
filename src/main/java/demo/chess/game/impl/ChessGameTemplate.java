@@ -35,7 +35,7 @@ public abstract class ChessGameTemplate implements Game {
 	private final BlackPlayer blackPlayer;
 	private final Board chessBoard;
 	private final MoveList moveList;
-	private State state = null;
+	private volatile State state = null;
 
 	/**
 	 * Creates a new ChessGameTemplate instance.
