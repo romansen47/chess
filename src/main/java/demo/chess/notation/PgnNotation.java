@@ -33,9 +33,6 @@ import demo.chess.game.impl.Simulation;
  */
 public final class PgnNotation {
 
-    /**
-     * Creates a new PgnNotation instance.
-     */
     private PgnNotation() {
     }
 
@@ -128,12 +125,12 @@ public final class PgnNotation {
             throw new NoMoveFoundException("SAN move must not be empty");
         }
 
-        List<Move> validMoves = game.getPlayer().getValidMoves(game);
+        List<Move> moveCandidates = game.getPlayer().getValidMoves(game);
 
         if ("O-O".equals(wanted) || "O-O-O".equals(wanted)) {
             List<Move> matches = new ArrayList<>();
             boolean queenSide = "O-O-O".equals(wanted);
-            for (Move candidate : validMoves) {
+            for (Move candidate : moveCandidates) {
                 if (!(candidate instanceof Castling)) {
                     continue;
                 }
@@ -148,7 +145,7 @@ public final class PgnNotation {
 
         SanDescriptor descriptor = parseSanDescriptor(wanted, rawSan);
         List<Move> matches = new ArrayList<>();
-        for (Move candidate : validMoves) {
+        for (Move candidate : moveCandidates) {
             if (matchesDescriptor(candidate, descriptor)) {
                 matches.add(candidate);
             }
@@ -313,18 +310,22 @@ public final class PgnNotation {
             moveForDisambiguation = validationMove;
         }
 
+        int sourceFile = moveForDisambiguation.getSource().getFile();
+        int sourceRank = moveForDisambiguation.getSource().getRank();
+        String sourceName = moveForDisambiguation.getSource().getName();
+
         boolean sameFileExists = competingMoves.stream()
-                .anyMatch(candidate -> candidate.getSource().getFile() == moveForDisambiguation.getSource().getFile());
+                .anyMatch(candidate -> candidate.getSource().getFile() == sourceFile);
         boolean sameRankExists = competingMoves.stream()
-                .anyMatch(candidate -> candidate.getSource().getRank() == moveForDisambiguation.getSource().getRank());
+                .anyMatch(candidate -> candidate.getSource().getRank() == sourceRank);
 
         if (sameFileExists && sameRankExists) {
-            return moveForDisambiguation.getSource().getName();
+            return sourceName;
         }
         if (sameFileExists) {
-            return Integer.toString(moveForDisambiguation.getSource().getRank());
+            return Integer.toString(sourceRank);
         }
-        return moveForDisambiguation.getSource().getName().substring(0, 1);
+        return sourceName.substring(0, 1);
     }
 
     private static List<Move> findCompetingMoves(List<Move> candidates, Move move) {
@@ -354,14 +355,6 @@ public final class PgnNotation {
         return competingMoves;
     }
 
-    /**
-     * Parses the structural parts of one non-castling SAN token.
-     *
-     * @param wanted normalized SAN token
-     * @param rawSan original token used for error reporting
-     * @return parsed descriptor
-     * @throws NoMoveFoundException when the token is structurally invalid
-     */
     private static SanDescriptor parseSanDescriptor(String wanted, String rawSan)
             throws NoMoveFoundException {
         String san = wanted;
@@ -440,13 +433,6 @@ public final class PgnNotation {
                 promotionType);
     }
 
-    /**
-     * Returns whether a candidate move matches a parsed SAN descriptor.
-     *
-     * @param candidate candidate move
-     * @param descriptor parsed SAN
-     * @return true when the candidate matches
-     */
     private static boolean matchesDescriptor(Move candidate, SanDescriptor descriptor) {
         if (candidate == null
                 || candidate.getPiece() == null
@@ -486,15 +472,6 @@ public final class PgnNotation {
         return promotion.getPromotedPiece().getType() == descriptor.promotionType();
     }
 
-    /**
-     * Returns exactly one semantically distinct move or reports a normal SAN
-     * resolution error. Equivalent duplicate UCI candidates are collapsed before
-     * ambiguity is evaluated.
-     *
-     * @param matches candidate matches
-     * @param rawSan source SAN token
-     * @return unique move
-     */
     private static Move requireSingleMatch(List<Move> matches, String rawSan) throws NoMoveFoundException {
         Move uniqueMove = null;
         String uniqueUci = null;
