@@ -5,25 +5,19 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 
-import org.apache.commons.lang3.StringUtils;
-
 import demo.chess.admin.Admin;
 import demo.chess.definitions.Color;
 import demo.chess.definitions.PieceType;
 import demo.chess.definitions.board.Board;
 import demo.chess.definitions.engines.impl.NoMoveFoundException;
-import demo.chess.definitions.fields.Field;
-import demo.chess.definitions.moves.Castling;
-import demo.chess.definitions.moves.EnPassant;
 import demo.chess.definitions.moves.Move;
 import demo.chess.definitions.moves.MoveList;
-import demo.chess.definitions.moves.Promotion;
 import demo.chess.definitions.pieces.Piece;
 import demo.chess.definitions.players.BlackPlayer;
 import demo.chess.definitions.players.Player;
 import demo.chess.definitions.players.WhitePlayer;
 import demo.chess.definitions.states.State;
-import demo.chess.game.DummyGame;
+import demo.chess.notation.PgnNotation;
 
 /**
  * The ChessGame class implements the core functionality for applying different
@@ -98,7 +92,6 @@ public class ChessGame extends ChessGameTemplate {
 			getPlayer().getChessClock().resume();
 		}
 	}
-
 
 	/**
 	 * Checks the for game end.
@@ -248,9 +241,9 @@ public class ChessGame extends ChessGameTemplate {
 	protected long hashOf(Piece piece) {
 		final long primeBiggerThanProductOfAll = 11;
 		final long color = piece.getColor().equals(Color.WHITE) ? 1 : 2;
-		return (long) (color  	+ primeBiggerThanProductOfAll * piece.getType().hash()
-						+ Math.pow(primeBiggerThanProductOfAll, 2) * (piece.getField().getFile())
-						+ Math.pow(primeBiggerThanProductOfAll, 3) * (piece.getField().getRank()));
+		return (long) (color + primeBiggerThanProductOfAll * piece.getType().hash()
+				+ Math.pow(primeBiggerThanProductOfAll, 2) * (piece.getField().getFile())
+				+ Math.pow(primeBiggerThanProductOfAll, 3) * (piece.getField().getRank()));
 	}
 
 	/**
@@ -269,190 +262,15 @@ public class ChessGame extends ChessGameTemplate {
 	}
 
 	/**
-	 * Returns the unicode symbol.
-	 * @param s the s
-	 * @param color the color
-	 * @return the unicode symbol
-	 */
-	public String getUnicodeSymbol(String s, Color color) {
-			switch (color) {
-			case WHITE:
-				switch (s.toLowerCase()) {
-				case "k":
-					return "♔";
-				case "q":
-					return "♕";
-				case "r":
-					return "♖";
-				case "b":
-					return "♗";
-				case "n":
-					return "♘";
-				}
-			case BLACK:
-				switch (s.toLowerCase()) {
-				case "k":
-					return "♚";
-				case "q":
-					return "♛";
-				case "r":
-					return "♜";
-				case "b":
-					return "♝";
-				case "n":
-					return "♞";
-			}
-			default:
-				return "";
-			}
-	}
-
-	/**
-	 * Returns the short algebraic notated move.
+	 * Returns the short algebraic notation used by the live move list.
+	 *
+	 * <p>All notation rules are owned by {@link PgnNotation}; ChessGame only
+	 * delegates to the canonical formatter.</p>
+	 *
 	 * @param moveToExecute the move to execute
-	 * @return the short algebraic notated move
+	 * @return display SAN for the move
 	 */
 	public String getShortAlgebraicNotatedMove(Move moveToExecute) throws NoMoveFoundException, IOException {
-		
-		DummyGame simulation = Simulation.forkDummyFrom(getMoveList());
-		
-		String convertedMove = "";
-		Field originalSource = moveToExecute.getSource();
-		Field originalTarget = moveToExecute.getTarget();
-		Field source = simulation.getChessBoard().getField(originalSource.getFile(), originalSource.getRank());
-		Field target = simulation.getChessBoard().getField(originalTarget.getFile(), originalTarget.getRank());
-		Move moveInSimulation = simulation.getPlayer().getMoveInSimulation(simulation, moveToExecute);
-		String pieceToString = getUnicodeSymbol(getPiecePrefix(source.getPiece()),source.getPiece().getColor());
-		String sourceFieldToString = "";
-		if (moveInSimulation.getPiece().getType().equals(PieceType.PAWN) && target.getPiece() != null) {
-			sourceFieldToString = moveInSimulation.getPiece().getField().toString().substring(0, 1);
-		}
-		String hits = target.getPiece() == null || moveToExecute instanceof Castling ? "" : "x";
-		String targetFieldToString = target.toString();
-		String postFix = moveInSimulation instanceof EnPassant ? " e.p." : "";
-
-		if (moveInSimulation instanceof EnPassant) {
-			sourceFieldToString = moveInSimulation.getPiece().getField().toString().substring(0, 1);
-			hits = "x";
-		}
-		List<Move> validMoves = simulation.getPlayer().getValidMoves(this);
-
-		if (moveInSimulation instanceof Castling) {
-			pieceToString = "";
-			sourceFieldToString = "";
-			targetFieldToString = "";
-			postFix = "0-0-0";
-			if (source.getFile() > 4) {
-				postFix = "0-0";
-			}
-		} else if (moveInSimulation instanceof Promotion) {
-			targetFieldToString = target.toString();
-			List<Promotion> promotions = new ArrayList<>();
-			validMoves.forEach(move -> {
-				if (move instanceof Promotion && move.getTarget().equals(target)) {
-					promotions.add(((Promotion) move));
-				}
-			});
-			if (promotions.size() != 4) {
-				sourceFieldToString = source.getName();
-			}
-			postFix = "=" + getPiecePrefix(((Promotion) moveInSimulation).getPromotedPiece());
-
-		} else if (!moveInSimulation.getPiece().getType().equals(PieceType.PAWN)) {
-			sourceFieldToString = getSourceDisambiguationForMove(validMoves, moveInSimulation);
-		}
-		convertedMove = pieceToString + sourceFieldToString + hits + targetFieldToString + postFix;
-		return convertedMove + getCheckSuffix(simulation, moveInSimulation);
-	}
-
-	/**
-	 * Returns the SAN suffix for a checking or mating move.
-	 * @param simulation the position before the move
-	 * @param moveInSimulation the move to apply in the simulation
-	 * @return an empty string, + for check, or # for checkmate
-	 */
-	private String getCheckSuffix(DummyGame simulation, Move moveInSimulation) throws NoMoveFoundException, IOException {
-		simulation.apply(moveInSimulation);
-		Player checkedPlayer = simulation.getPlayer();
-		Player attackingPlayer = checkedPlayer.getColor().equals(Color.WHITE)
-				? simulation.getBlackPlayer()
-				: simulation.getWhitePlayer();
-		Field checkedKingField = checkedPlayer.getKing().getField();
-
-		boolean kingIsAttacked = attackingPlayer.getSimpleMoves().stream()
-				.map(Move::getTarget)
-				.anyMatch(checkedKingField::equals);
-		if (!kingIsAttacked) {
-			return StringUtils.EMPTY;
-		}
-
-		return checkedPlayer.getValidMoves(simulation).isEmpty() ? "#" : "+";
-	}
-
-	/**
-	 * Returns the source disambiguation for move.
-	 * @param validMoves the valid moves
-	 * @param moveInSimulation the move in simulation
-	 * @return the source disambiguation for move
-	 */
-	private String getSourceDisambiguationForMove(List<Move> validMoves, Move moveInSimulation) {
-		if (moveInSimulation == null
-				|| moveInSimulation.getPiece() == null
-				|| moveInSimulation.getPiece().getType().equals(PieceType.PAWN)
-				|| moveInSimulation.getSource() == null
-				|| moveInSimulation.getTarget() == null) {
-			return StringUtils.EMPTY;
-		}
-
-		List<Move> competingMoves = new ArrayList<>();
-		for (Move candidate : validMoves) {
-			if (candidate == null
-					|| candidate.getPiece() == null
-					|| candidate.getSource() == null
-					|| candidate.getTarget() == null) {
-				continue;
-			}
-
-			if (candidate.getSource().equals(moveInSimulation.getSource())
-					&& candidate.getTarget().equals(moveInSimulation.getTarget())) {
-				continue;
-			}
-
-			if (candidate.getTarget().equals(moveInSimulation.getTarget())
-					&& candidate.getPiece().getType().equals(moveInSimulation.getPiece().getType())) {
-				competingMoves.add(candidate);
-			}
-		}
-
-		if (competingMoves.isEmpty()) {
-			return StringUtils.EMPTY;
-		}
-
-		boolean sameFileExists = competingMoves.stream()
-				.anyMatch(candidate -> candidate.getSource().getFile() == moveInSimulation.getSource().getFile());
-		boolean sameRankExists = competingMoves.stream()
-				.anyMatch(candidate -> candidate.getSource().getRank() == moveInSimulation.getSource().getRank());
-
-		if (sameFileExists && sameRankExists) {
-			return moveInSimulation.getSource().toString();
-		}
-
-		if (sameFileExists) {
-			return moveInSimulation.getSource().toString().substring(1, 2);
-		}
-
-		return moveInSimulation.getSource().toString().substring(0, 1);
-	}
-
-	/**
-	 * Returns the piece prefix.
-	 * @param piece the piece
-	 * @return the piece prefix
-	 */
-	String getPiecePrefix(Piece piece) {
-		if (piece.getType().equals(PieceType.PAWN)) {
-			return StringUtils.EMPTY;
-		}
-		return piece.getType().equals(PieceType.KNIGHT) ? "N" : piece.getType().name().substring(0, 1);
+		return PgnNotation.toDisplayNotation(this, moveToExecute);
 	}
 }
