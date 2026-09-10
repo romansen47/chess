@@ -88,8 +88,7 @@ public class GameSaver {
                     pgn.append(' ');
                 }
 
-                pgn.append(PgnNotation.toSan(dummyGame, move));
-                dummyGame.apply(move);
+                pgn.append(PgnNotation.toSanAndApply(dummyGame, move));
                 ply++;
             }
         }
