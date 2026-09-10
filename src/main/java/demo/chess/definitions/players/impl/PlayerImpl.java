@@ -28,6 +28,7 @@ import demo.chess.definitions.pieces.impl.Rook;
 import demo.chess.definitions.players.Player;
 import demo.chess.definitions.states.State;
 import demo.chess.game.Game;
+import demo.chess.game.TerminalPositionEvaluator;
 import demo.chess.game.impl.Simulation;
 
 /**
@@ -113,17 +114,9 @@ public abstract class PlayerImpl implements Player {
 	 */
 	@Override
 	public void resignOrStaleMate(Game chessGame) {
-		Player opponent = getColor().equals(Color.WHITE) ? chessGame.getBlackPlayer() : chessGame.getWhitePlayer();
-		List<Field> listOfAttackedFields = opponent.getSimpleMoves().stream().map(Move::getTarget).distinct()
-				.collect(Collectors.toList());
-		if (!listOfAttackedFields.contains(king.getField())) {
-			chessGame.setState(State.STALEMATE);
-		} else {
-			if (opponent.getColor().equals(Color.WHITE)) {
-				chessGame.setState(State.BLACK_MATED);
-			} else {
-				chessGame.setState(State.WHITE_MATED);
-			}
+		State terminalState = TerminalPositionEvaluator.determineStateWhenNoLegalMoves(chessGame);
+		if (terminalState != null) {
+			chessGame.setState(terminalState);
 		}
 		if (chessGame.getWhitePlayer().getChessClock().isStarted()) {
 			chessGame.getWhitePlayer().getChessClock().stop();

@@ -16,6 +16,7 @@ import demo.chess.definitions.engines.impl.NoMoveFoundException;
 import demo.chess.definitions.moves.Move;
 import demo.chess.game.DummyGame;
 import demo.chess.game.Game;
+import demo.chess.game.LegalMoveResolver;
 import demo.chess.game.impl.Simulation;
 import demo.chess.notation.PgnNotation;
 
@@ -64,16 +65,10 @@ public class GameLoader {
                 throw new NoMoveFoundException("Invalid UCI move at ply " + ply + ": " + rawMove);
             }
 
-            Move finalMove = null;
-            List<Move> moves = game.getPlayer().getValidMoves(game);
-            for (Move move : moves) {
-                if (move.toString().equalsIgnoreCase(uciMove)) {
-                    finalMove = move;
-                    break;
-                }
-            }
-
-            if (finalMove == null) {
+            Move finalMove;
+            try {
+                finalMove = LegalMoveResolver.resolveUci(game, uciMove);
+            } catch (NoMoveFoundException e) {
                 throw new NoMoveFoundException("No legal UCI move at ply " + ply + ": " + rawMove);
             }
 
