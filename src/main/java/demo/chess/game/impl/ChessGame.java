@@ -362,7 +362,31 @@ public class ChessGame extends ChessGameTemplate {
 			sourceFieldToString = getSourceDisambiguationForMove(validMoves, moveInSimulation);
 		}
 		convertedMove = pieceToString + sourceFieldToString + hits + targetFieldToString + postFix;
-		return convertedMove;
+		return convertedMove + getCheckSuffix(simulation, moveInSimulation);
+	}
+
+	/**
+	 * Returns the SAN suffix for a checking or mating move.
+	 * @param simulation the position before the move
+	 * @param moveInSimulation the move to apply in the simulation
+	 * @return an empty string, + for check, or # for checkmate
+	 */
+	private String getCheckSuffix(DummyGame simulation, Move moveInSimulation) throws NoMoveFoundException, IOException {
+		simulation.apply(moveInSimulation);
+		Player checkedPlayer = simulation.getPlayer();
+		Player attackingPlayer = checkedPlayer.getColor().equals(Color.WHITE)
+				? simulation.getBlackPlayer()
+				: simulation.getWhitePlayer();
+		Field checkedKingField = checkedPlayer.getKing().getField();
+
+		boolean kingIsAttacked = attackingPlayer.getSimpleMoves().stream()
+				.map(Move::getTarget)
+				.anyMatch(checkedKingField::equals);
+		if (!kingIsAttacked) {
+			return StringUtils.EMPTY;
+		}
+
+		return checkedPlayer.getValidMoves(simulation).isEmpty() ? "#" : "+";
 	}
 
 	/**
