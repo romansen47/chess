@@ -7,7 +7,7 @@ public final class MoveAnnotation {
 
     private final MoveAnnotationKind kind;
     private final double bestEvaluation;
-    private final Double loss;
+    private final Double winChanceLoss;
     private final Double secondBestEvaluation;
     private final BrilliantReason brilliantReason;
     private final Double materialInvestment;
@@ -19,7 +19,7 @@ public final class MoveAnnotation {
     public MoveAnnotation(
             MoveAnnotationKind kind,
             double bestEvaluation,
-            Double loss,
+            Double winChanceLoss,
             Double secondBestEvaluation,
             BrilliantReason brilliantReason,
             Double materialInvestment,
@@ -29,7 +29,7 @@ public final class MoveAnnotation {
             Integer finalRank) {
         this.kind = kind;
         this.bestEvaluation = bestEvaluation;
-        this.loss = loss;
+        this.winChanceLoss = winChanceLoss;
         this.secondBestEvaluation = secondBestEvaluation;
         this.brilliantReason = brilliantReason;
         this.materialInvestment = materialInvestment;
@@ -47,8 +47,8 @@ public final class MoveAnnotation {
         return bestEvaluation;
     }
 
-    public Double getLoss() {
-        return loss;
+    public Double getWinChanceLoss() {
+        return winChanceLoss;
     }
 
     public Double getSecondBestEvaluation() {
