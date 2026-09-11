@@ -51,17 +51,24 @@ public final class MoveAnnotationClassifier {
         double playedScore = EvaluationScoring.moverScore(
                 played != null ? played.getEvaluation() : resultingEvaluation,
                 whiteMover);
-        double loss = Math.max(0.0, bestScore - playedScore);
+        double bestWinPercent =
+                EvaluationScoring.winPercentFromMoverScore(bestScore);
+        double playedWinPercent =
+                EvaluationScoring.winPercentFromMoverScore(playedScore);
+        double winChanceLoss = Math.max(
+                0.0,
+                bestWinPercent - playedWinPercent);
 
-        // Layer 1: objective quality. Human-interest signals may explain a
-        // difficult move, but they must never overwrite a genuine engine
-        // mistake or blunder.
-        ObjectiveMoveQuality quality = qualityEvaluator.evaluate(loss);
+        // Layer 1: objective quality is based on practical winning-chance loss,
+        // not on raw pawn-evaluation loss. This avoids marking a move as a
+        // blunder merely because +18 becomes +13 while the game remains
+        // overwhelmingly won.
+        ObjectiveMoveQuality quality = qualityEvaluator.evaluate(winChanceLoss);
         if (quality == ObjectiveMoveQuality.BLUNDER) {
             return new MoveAnnotation(
                     MoveAnnotationKind.BLUNDER,
                     best.getEvaluation(),
-                    loss,
+                    winChanceLoss,
                     null,
                     null,
                     null,
@@ -75,7 +82,7 @@ public final class MoveAnnotationClassifier {
             return new MoveAnnotation(
                     MoveAnnotationKind.MISTAKE,
                     best.getEvaluation(),
-                    loss,
+                    winChanceLoss,
                     null,
                     null,
                     null,
