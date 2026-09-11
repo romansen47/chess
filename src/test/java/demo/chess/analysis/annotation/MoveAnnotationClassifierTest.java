@@ -264,7 +264,26 @@ public class MoveAnnotationClassifierTest {
     }
 
     @Test
-    public void onePawnPlusLossReceivesMistakeMark() {
+    public void largePawnEvaluationDropInWonPositionIsNotAutomaticallyABlunder() {
+        Game root = Simulation.createSimulation();
+
+        DeepAnalysisResult result = result(
+                List.of(
+                        line(17.77, 20, "e2e4 e7e5"),
+                        line(12.82, 20, "d2d4 d7d5"),
+                        line(12.00, 20, "g1f3 g8f6")),
+                Map.of());
+
+        MoveAnnotation annotation = classifier.classify(root, "d2d4", result, 12.82);
+
+        // Roughly +17.77 -> +12.82 is almost five pawns of raw engine
+        // evaluation, but less than one percentage point of practical winning
+        // chance. It must therefore not become ? or ??.
+        assertNull(annotation);
+    }
+
+    @Test
+    public void tenPointPracticalWinChanceLossReceivesMistakeMark() {
         Game root = Simulation.createSimulation();
 
         DeepAnalysisResult result = result(
@@ -281,7 +300,7 @@ public class MoveAnnotationClassifierTest {
     }
 
     @Test
-    public void threePawnPlusLossReceivesBlunderMark() {
+    public void twentyFivePointPracticalWinChanceLossReceivesBlunderMark() {
         Game root = Simulation.createSimulation();
 
         DeepAnalysisResult result = result(
