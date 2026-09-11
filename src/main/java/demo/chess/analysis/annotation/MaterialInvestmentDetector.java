@@ -103,12 +103,12 @@ final class MaterialInvestmentDetector {
         }
     }
 
-    private double materialBalanceForMover(Game game, boolean whiteMover) {
+    static double materialBalanceForMover(Game game, boolean whiteMover) {
         double whiteBalance = whiteMaterialBalance(game.getChessBoard());
         return whiteMover ? whiteBalance : -whiteBalance;
     }
 
-    private double whiteMaterialBalance(Board board) {
+    private static double whiteMaterialBalance(Board board) {
         double result = 0.0;
         for (int file = 1; file <= 8; file++) {
             for (int rank = 1; rank <= 8; rank++) {
@@ -124,7 +124,7 @@ final class MaterialInvestmentDetector {
         return result;
     }
 
-    private double pieceValue(PieceType type) {
+    static double pieceValue(PieceType type) {
         if (type == null) {
             return 0.0;
         }
