@@ -2,7 +2,10 @@ package demo.chess.definitions.engines.impl;
 
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
+import java.util.TreeMap;
 import java.util.concurrent.ExecutionException;
 
 import demo.chess.definitions.Color;
@@ -13,6 +16,8 @@ import demo.chess.definitions.moves.Move;
 import demo.chess.game.Game;
 
 public class DeepAnalysisUciEngine extends EvaluationUciEngine implements DeepAnalysisEngine {
+
+    private Map<Integer, List<EngineLine>> lastDepthHistory = Map.of();
 
     /**
      * Creates a new DeepAnalysisUciEngine instance.
@@ -34,9 +39,11 @@ public class DeepAnalysisUciEngine extends EvaluationUciEngine implements DeepAn
         String moveListAsString = chessGame.getMoveList().toString();
         List<EngineLine> cachedLines = getCachedBestLines().get(moveListAsString);
         if (cachedLines != null) {
+            lastDepthHistory = Map.of();
             return cachedLines;
         }
 
+        lastDepthHistory = Map.of();
         applyConfig(config);
 
         List<Move> moveList = new ArrayList<>(chessGame.getMoveList());
@@ -59,9 +66,60 @@ public class DeepAnalysisUciEngine extends EvaluationUciEngine implements DeepAn
         }
 
         Color sideToMove = moveList.size() % 2 == 0 ? Color.WHITE : Color.BLACK;
+        lastDepthHistory = buildDepthHistory(sideToMove, rawInfoLines, config);
         List<EngineLine> parsedLines = parseBestLinesAtHighestDepth(sideToMove, rawInfoLines, config);
         getCachedBestLines().put(moveListAsString, parsedLines);
         return parsedLines;
+    }
+
+    /**
+     * Returns the depth snapshots collected during the most recent finite
+     * deep-analysis search.
+     * @return depth-to-lines snapshots
+     */
+    @Override
+    public synchronized Map<Integer, List<EngineLine>> getLastDepthHistory() {
+        return lastDepthHistory;
+    }
+
+    /**
+     * Builds one parsed snapshot for every depth for which the engine emitted
+     * at least one usable principal variation. This preserves information that
+     * EvaluationUciEngine normally discards after selecting the final depth.
+     *
+     * @param color side to move
+     * @param rawInfoLines raw UCI info lines from this finite search
+     * @param config engine configuration
+     * @return immutable depth snapshots in ascending depth order
+     */
+    private Map<Integer, List<EngineLine>> buildDepthHistory(
+            Color color,
+            List<String> rawInfoLines,
+            EngineConfig config) {
+        TreeMap<Integer, List<String>> rawByDepth = new TreeMap<>();
+        for (String rawLine : rawInfoLines) {
+            if (!rawLine.contains(" depth ") || !rawLine.contains(" pv ")) {
+                continue;
+            }
+
+            int depth;
+            try {
+                depth = Integer.parseInt(rawLine.split("depth ")[1].split(" ")[0]);
+            } catch (RuntimeException ignored) {
+                continue;
+            }
+
+            rawByDepth.computeIfAbsent(depth, ignored -> new ArrayList<>()).add(rawLine);
+        }
+
+        Map<Integer, List<EngineLine>> result = new LinkedHashMap<>();
+        for (Map.Entry<Integer, List<String>> entry : rawByDepth.entrySet()) {
+            List<EngineLine> parsed = parseBestLinesAtHighestDepth(color, entry.getValue(), config);
+            if (!parsed.isEmpty()) {
+                result.put(entry.getKey(), List.copyOf(parsed));
+            }
+        }
+        return Map.copyOf(result);
     }
 
     /**
