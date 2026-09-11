@@ -9,7 +9,8 @@ public enum State {
 	BLACK_RESIGNED("black resigned"),
 	LOST_ON_TIME("lost on time"),
 	DRAW_BY_50_MOVES_RULE("Draw by fifty-move rule"),
-	DRAW_BY_THREEFOLD_REPETITION("Draw by threefold repetition");
+	DRAW_BY_THREEFOLD_REPETITION("Draw by threefold repetition"),
+	DRAW_BY_INSUFFICIENT_MATERIAL("Draw by insufficient mating material");
 
 	/**
 	 * Creates a new State instance.

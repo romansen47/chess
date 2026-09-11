@@ -163,6 +163,10 @@ public class ChessGame extends ChessGameTemplate {
 	 */
 	protected boolean checkForGameEnd() throws NoMoveFoundException, IOException {
 		boolean gameEnd = false;
+		if (TerminalPositionEvaluator.hasInsufficientMatingMaterial(this)) {
+			setState(State.DRAW_BY_INSUFFICIENT_MATERIAL);
+			return true;
+		}
 		if (getPlayer().getValidMoves(this).isEmpty()) {
 			getPlayer().resignOrStaleMate(this);
 			return true;
