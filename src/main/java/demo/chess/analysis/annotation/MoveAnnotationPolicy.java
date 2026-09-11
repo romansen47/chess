@@ -21,8 +21,8 @@ public final class MoveAnnotationPolicy {
     public static final double BRILLIANT_MATERIAL_INVESTMENT = 2.0;
     public static final int BRILLIANT_MATERIAL_HORIZON_PLIES = 6;
 
-    public static final double MISTAKE_LOSS = 1.0;
-    public static final double BLUNDER_LOSS = 3.0;
+    public static final double MISTAKE_WIN_PERCENT_LOSS = 10.0;
+    public static final double BLUNDER_WIN_PERCENT_LOSS = 25.0;
 
     private MoveAnnotationPolicy() {
     }
