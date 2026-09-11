@@ -143,11 +143,11 @@ public class MoveAnnotationClassifierTest {
         DeepAnalysisResult result = result(
                 List.of(
                         line(0.4, 20, "g1f3 g8f6"),
-                        line(0.3, 20, "h5e5 c6e5"),
-                        line(0.2, 20, "f1c4 g8f6")),
+                        line(-4.0, 20, "h5e5 c6e5"),
+                        line(-5.0, 20, "f1c4 g8f6")),
                 Map.of());
 
-        MoveAnnotation annotation = classifier.classify(root, "h5e5", result, 0.3);
+        MoveAnnotation annotation = classifier.classify(root, "h5e5", result, -4.0);
 
         assertNotNull(annotation);
         assertEquals(MoveAnnotationKind.BRILLIANT, annotation.getKind());
