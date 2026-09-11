@@ -339,6 +339,45 @@ public class MoveAnnotationClassifierTest {
     }
 
     @Test
+    public void byrneFischerBe6IsBrilliantBecauseQueenIsOffered()
+            throws Exception {
+        Game root = positionAfter(
+                "g1f3", "g8f6",
+                "c2c4", "g7g6",
+                "b1c3", "f8g7",
+                "d2d4", "e8g8",
+                "c1f4", "d7d5",
+                "d1b3", "d5c4",
+                "b3c4", "c7c6",
+                "e2e4", "b8d7",
+                "a1d1", "d7b6",
+                "c4c5", "c8g4",
+                "f4g5", "b6a4",
+                "c5a3", "a4c3",
+                "b2c3", "f6e4",
+                "g5e7", "d8b6",
+                "f1c4", "e4c3",
+                "e7c5", "f8e8",
+                "e1f1");
+
+        DeepAnalysisResult result = result(
+                List.of(
+                        line(-3.01, 20, "g4e6 a3c3 b6c5 d4c5 g7c3 c4e6 e8e6"),
+                        line(0.70, 20, "c3b5 c4f7"),
+                        line(1.67, 20, "c3b1 a3c1")),
+                Map.of());
+
+        MoveAnnotation annotation = classifier.classify(root, "g4e6", result, -3.01);
+
+        assertNotNull(annotation);
+        assertEquals(MoveAnnotationKind.BRILLIANT, annotation.getKind());
+        assertEquals(
+                BrilliantReason.MATERIAL_INVESTMENT,
+                annotation.getBrilliantReason());
+        assertEquals(6.0, annotation.getMaterialInvestment(), 0.001);
+    }
+
+    @Test
     public void nezhmetdinovQueenSacrificeWithThreePointNetInvestmentIsBrilliant()
             throws Exception {
         Game root = positionAfter(
