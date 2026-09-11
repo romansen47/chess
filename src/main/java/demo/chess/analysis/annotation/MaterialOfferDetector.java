@@ -57,7 +57,13 @@ final class MaterialOfferDetector {
                 Move replayedCapture = LegalMoveResolver.resolveUci(
                         afterCapture,
                         opponentMove.toString());
+                int captureFile = replayedCapture.getTarget().getFile();
+                int captureRank = replayedCapture.getTarget().getRank();
                 afterCapture.apply(replayedCapture);
+
+                Piece capturingPiece = afterCapture.getChessBoard()
+                        .getField(captureFile, captureRank)
+                        .getPiece();
 
                 double balanceAfterCapture =
                         MaterialInvestmentDetector.materialBalanceForMover(
@@ -65,7 +71,7 @@ final class MaterialOfferDetector {
                                 whiteMover);
 
                 double immediateRecovery =
-                        bestImmediateMaterialRecovery(afterCapture);
+                        directRecaptureValue(afterCapture, capturingPiece);
                 double stabilizedBalance =
                         balanceAfterCapture + immediateRecovery;
 
@@ -81,30 +87,23 @@ final class MaterialOfferDetector {
         }
     }
 
-    private double bestImmediateMaterialRecovery(Game game)
+    private double directRecaptureValue(
+            Game game,
+            Piece capturingPiece)
             throws NoMoveFoundException, java.io.IOException {
-        double best = 0.0;
-
-        for (Move reply : game.getPlayer().getValidMoves(game)) {
-            double gain = 0.0;
-            Piece captured = capturedPiece(reply);
-            if (captured != null
-                    && captured.getColor() != reply.getPiece().getColor()) {
-                gain += MaterialInvestmentDetector.pieceValue(captured.getType());
-            }
-
-            if (reply instanceof Promotion promotion
-                    && promotion.getPromotedPiece() != null) {
-                gain += Math.max(
-                        0.0,
-                        MaterialInvestmentDetector.pieceValue(
-                                promotion.getPromotedPiece().getType()) - 1.0);
-            }
-
-            best = Math.max(best, gain);
+        if (capturingPiece == null) {
+            return 0.0;
         }
 
-        return best;
+        for (Move reply : game.getPlayer().getValidMoves(game)) {
+            Piece captured = capturedPiece(reply);
+            if (captured == capturingPiece) {
+                return MaterialInvestmentDetector.pieceValue(
+                        capturingPiece.getType());
+            }
+        }
+
+        return 0.0;
     }
 
     private Piece capturedPiece(Move move) {
