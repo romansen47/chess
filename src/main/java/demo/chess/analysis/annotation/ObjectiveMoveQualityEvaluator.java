@@ -2,11 +2,11 @@ package demo.chess.analysis.annotation;
 
 final class ObjectiveMoveQualityEvaluator {
 
-    ObjectiveMoveQuality evaluate(double loss) {
-        if (loss >= MoveAnnotationPolicy.BLUNDER_LOSS) {
+    ObjectiveMoveQuality evaluate(double winChanceLoss) {
+        if (winChanceLoss >= MoveAnnotationPolicy.BLUNDER_WIN_PERCENT_LOSS) {
             return ObjectiveMoveQuality.BLUNDER;
         }
-        if (loss >= MoveAnnotationPolicy.MISTAKE_LOSS) {
+        if (winChanceLoss >= MoveAnnotationPolicy.MISTAKE_WIN_PERCENT_LOSS) {
             return ObjectiveMoveQuality.MISTAKE;
         }
         return ObjectiveMoveQuality.ACCEPTABLE;
