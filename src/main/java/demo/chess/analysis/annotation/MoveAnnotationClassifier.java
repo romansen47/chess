@@ -15,6 +15,8 @@ import demo.chess.game.Game;
  */
 public final class MoveAnnotationClassifier {
 
+    private final ObjectiveMoveQualityEvaluator qualityEvaluator =
+            new ObjectiveMoveQualityEvaluator();
     private final OnlyMoveDetector onlyMoveDetector = new OnlyMoveDetector();
     private final BrilliantMoveDetector brilliantMoveDetector =
             new BrilliantMoveDetector();
@@ -51,6 +53,40 @@ public final class MoveAnnotationClassifier {
                 whiteMover);
         double loss = Math.max(0.0, bestScore - playedScore);
 
+        // Layer 1: objective quality. Human-interest signals may explain a
+        // difficult move, but they must never overwrite a genuine engine
+        // mistake or blunder.
+        ObjectiveMoveQuality quality = qualityEvaluator.evaluate(loss);
+        if (quality == ObjectiveMoveQuality.BLUNDER) {
+            return new MoveAnnotation(
+                    MoveAnnotationKind.BLUNDER,
+                    best.getEvaluation(),
+                    loss,
+                    null,
+                    null,
+                    null,
+                    null,
+                    null,
+                    null,
+                    null);
+        }
+
+        if (quality == ObjectiveMoveQuality.MISTAKE) {
+            return new MoveAnnotation(
+                    MoveAnnotationKind.MISTAKE,
+                    best.getEvaluation(),
+                    loss,
+                    null,
+                    null,
+                    null,
+                    null,
+                    null,
+                    null,
+                    null);
+        }
+
+        // Layer 2: human-difficulty evidence. Only objectively acceptable
+        // moves can become brilliant.
         BrilliantMoveDetector.BrilliantEvidence brilliant =
                 brilliantMoveDetector.find(
                         positionBeforeMove,
@@ -70,34 +106,6 @@ public final class MoveAnnotationClassifier {
                     brilliant.getEarlyRank(),
                     brilliant.getFinalDepth(),
                     brilliant.getFinalRank());
-        }
-
-        if (loss >= MoveAnnotationPolicy.BLUNDER_LOSS) {
-            return new MoveAnnotation(
-                    MoveAnnotationKind.BLUNDER,
-                    best.getEvaluation(),
-                    loss,
-                    null,
-                    null,
-                    null,
-                    null,
-                    null,
-                    null,
-                    null);
-        }
-
-        if (loss >= MoveAnnotationPolicy.MISTAKE_LOSS) {
-            return new MoveAnnotation(
-                    MoveAnnotationKind.MISTAKE,
-                    best.getEvaluation(),
-                    loss,
-                    null,
-                    null,
-                    null,
-                    null,
-                    null,
-                    null,
-                    null);
         }
 
         if (playedIndex == 0 && candidates.size() > 1) {
