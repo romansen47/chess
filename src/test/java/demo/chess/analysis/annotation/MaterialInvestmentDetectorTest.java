@@ -109,7 +109,7 @@ public class MaterialInvestmentDetectorTest {
         play(game, "b7b5");
         play(game, "h7g5");
         play(game, "c8c7");
-        play(game, "d4f7");
+        play(game, "b3f7");
 
         return game;
     }
