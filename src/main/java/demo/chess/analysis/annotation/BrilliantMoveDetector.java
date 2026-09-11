@@ -31,10 +31,23 @@ final class BrilliantMoveDetector {
             return null;
         }
 
+        EngineLine finalBest = finalCandidates.get(0);
         EngineLine finalPlayed = finalCandidates.get(finalPlayedIndex);
+        double finalRegret = winningChanceRegret(
+                finalBest,
+                finalPlayed,
+                whiteMover);
+
+        // A brilliance signal may explain why a move is difficult for a human,
+        // but it must not turn a materially inferior engine choice into "!!".
+        if (finalRegret > MoveAnnotationPolicy.BRILLIANT_MAX_FINAL_REGRET_WIN_PERCENT) {
+            return null;
+        }
+
         DeepDiscoveryEvidence discovery = findDeepDiscovery(
                 result,
                 finalPlayed,
+                finalRegret,
                 playedMoveUci,
                 whiteMover);
 
@@ -75,6 +88,7 @@ final class BrilliantMoveDetector {
     private DeepDiscoveryEvidence findDeepDiscovery(
             DeepAnalysisResult result,
             EngineLine finalPlayed,
+            double finalRegret,
             String playedMoveUci,
             boolean whiteMover) {
         List<Map.Entry<Integer, List<EngineLine>>> snapshots = new ArrayList<>();
@@ -112,29 +126,34 @@ final class BrilliantMoveDetector {
 
         List<EngineLine> earlyRanked =
                 EvaluationScoring.rankLines(early.getValue(), whiteMover);
-        int earlyIndex = EvaluationScoring.findMoveIndex(earlyRanked, playedMoveUci);
-
-        boolean outsideTopThree = earlyIndex < 0
-                || earlyIndex >= MoveAnnotationPolicy.BRILLIANT_MAX_FINAL_RANK;
-
-        boolean gainedWinningChance = false;
-        if (earlyIndex >= 0) {
-            double earlyScore = EvaluationScoring.moverScore(
-                    earlyRanked.get(earlyIndex).getEvaluation(),
-                    whiteMover);
-            double finalScore = EvaluationScoring.moverScore(
-                    finalPlayed.getEvaluation(),
-                    whiteMover);
-            double gain = EvaluationScoring.winPercentFromMoverScore(finalScore)
-                    - EvaluationScoring.winPercentFromMoverScore(earlyScore);
-            gainedWinningChance =
-                    gain >= MoveAnnotationPolicy.BRILLIANT_DISCOVERY_WIN_PERCENT_GAIN;
-        }
-
-        if (!outsideTopThree && !gainedWinningChance) {
+        if (earlyRanked.size() < MoveAnnotationPolicy.BRILLIANT_MAX_FINAL_RANK) {
             return null;
         }
 
+        int earlyIndex = EvaluationScoring.findMoveIndex(earlyRanked, playedMoveUci);
+        EngineLine earlyReference = earlyIndex >= 0
+                ? earlyRanked.get(earlyIndex)
+                : earlyRanked.get(earlyRanked.size() - 1);
+
+        // If the played move is outside MultiPV, the last returned candidate is
+        // an upper bound for its score. The resulting regret is therefore a
+        // conservative lower bound, which is still useful without treating a
+        // mere rank change as evidence.
+        double earlyRegret = winningChanceRegret(
+                earlyRanked.get(0),
+                earlyReference,
+                whiteMover);
+        double regretImprovement = earlyRegret - finalRegret;
+
+        if (earlyRegret
+                    < MoveAnnotationPolicy.BRILLIANT_DISCOVERY_MIN_EARLY_REGRET_WIN_PERCENT
+                || regretImprovement
+                    < MoveAnnotationPolicy.BRILLIANT_DISCOVERY_MIN_REGRET_IMPROVEMENT_WIN_PERCENT) {
+            return null;
+        }
+
+        // Avoid one-depth spikes: the move must remain Top 3 in at least two of
+        // the last three sufficiently deep snapshots.
         int lateStart = Math.max(
                 1,
                 (int) Math.ceil(
@@ -166,6 +185,22 @@ final class BrilliantMoveDetector {
                 early.getKey(),
                 earlyIndex >= 0 ? earlyIndex + 1 : null,
                 finalDepth);
+    }
+
+    private double winningChanceRegret(
+            EngineLine best,
+            EngineLine candidate,
+            boolean whiteMover) {
+        double bestScore = EvaluationScoring.moverScore(
+                best.getEvaluation(),
+                whiteMover);
+        double candidateScore = EvaluationScoring.moverScore(
+                candidate.getEvaluation(),
+                whiteMover);
+        return Math.max(
+                0.0,
+                EvaluationScoring.winPercentFromMoverScore(bestScore)
+                        - EvaluationScoring.winPercentFromMoverScore(candidateScore));
     }
 
     private int maxHistoryDepth(DeepAnalysisResult result) {
