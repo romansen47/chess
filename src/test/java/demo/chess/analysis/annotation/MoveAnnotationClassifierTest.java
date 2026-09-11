@@ -143,16 +143,30 @@ public class MoveAnnotationClassifierTest {
                         line(1.0, 20, "d2d4 d7d5"),
                         line(0.8, 20, "g1f3 g8f6")),
                 history(
+                        // Early phase (25-40%): e4 is substantially behind.
+                        depth(5,
+                                line(0.5, 5, "d2d4"),
+                                line(0.3, 5, "g1f3"),
+                                line(-1.0, 5, "e2e4")),
                         depth(6,
-                                line(0.4, 6, "d2d4"),
+                                line(0.5, 6, "d2d4"),
                                 line(0.3, 6, "g1f3"),
-                                line(0.2, 6, "c2c4"),
                                 line(-1.0, 6, "e2e4")),
+                        depth(8,
+                                line(0.6, 8, "d2d4"),
+                                line(0.4, 8, "g1f3"),
+                                line(-0.9, 8, "e2e4")),
+                        // Middle phase (45-65%): the regret is shrinking.
                         depth(10,
-                                line(0.5, 10, "d2d4"),
-                                line(0.4, 10, "g1f3"),
-                                line(0.3, 10, "c2c4"),
-                                line(-1.0, 10, "e2e4")),
+                                line(0.7, 10, "d2d4"),
+                                line(-0.1, 10, "e2e4"),
+                                line(-0.2, 10, "g1f3")),
+                        depth(12,
+                                line(0.8, 12, "d2d4"),
+                                line(0.0, 12, "e2e4"),
+                                line(-0.2, 12, "g1f3")),
+                        // Late phase (75-100%): e4 is stable in the Top 3 and
+                        // finally becomes the best move.
                         depth(15,
                                 line(1.2, 15, "e2e4"),
                                 line(1.0, 15, "d2d4"),
@@ -171,6 +185,135 @@ public class MoveAnnotationClassifierTest {
         assertNotNull(annotation);
         assertEquals(MoveAnnotationKind.BRILLIANT, annotation.getKind());
         assertEquals(BrilliantReason.DEEP_DISCOVERY, annotation.getBrilliantReason());
+    }
+    @Test
+    public void kramnikLekoQd3IsStrengthDiscoveryBrilliant() throws Exception {
+        Game root = positionAfter(
+                "e2e4", "e7e5",
+                "g1f3", "b8c6",
+                "f1b5", "a7a6",
+                "b5a4", "g8f6",
+                "e1g1", "f8e7",
+                "f1e1", "b7b5",
+                "a4b3", "e8g8",
+                "c2c3", "d7d5",
+                "e4d5", "f6d5",
+                "f3e5", "c6e5",
+                "e1e5", "c7c6",
+                "d2d4", "e7d6",
+                "e5e1", "d8h4",
+                "g2g3", "h4h3",
+                "e1e4", "g7g5",
+                "d1f1", "h3h5",
+                "b1d2", "c8f5",
+                "f2f3", "d5f6",
+                "e4e1", "a8e8",
+                "e1e8", "f8e8",
+                "a2a4", "h5g6",
+                "a4b5", "f5d3",
+                "f1f2", "e8e2",
+                "f2e2", "d3e2",
+                "b5a6");
+
+        DeepAnalysisResult result = result(
+                List.of(
+                        line(-5.83, 20, "g6d3 g1f2"),
+                        line(-3.15, 20, "g8g7 a1a5"),
+                        line(-0.92, 20, "e2a6 a1a6")),
+                history(
+                        // Actual Stockfish-19 shape from the supplied Qd3 log:
+                        // already a plausible candidate early, but its
+                        // practical strength grows enormously with search.
+                        depth(5,
+                                line(-0.54, 5, "g6d3"),
+                                line(-0.54, 5, "d6b8"),
+                                line(-0.15, 5, "g8g7")),
+                        depth(6,
+                                line(-1.90, 6, "d6b8"),
+                                line(-1.04, 6, "g6d3"),
+                                line(-0.55, 6, "g8g7")),
+                        depth(7,
+                                line(-1.23, 7, "d6b8"),
+                                line(-1.08, 7, "e2a6"),
+                                line(-0.97, 7, "g6d3")),
+                        depth(8,
+                                line(-1.37, 8, "g6d3"),
+                                line(-1.17, 8, "e2a6"),
+                                line(-0.93, 8, "g8g7")),
+                        depth(10,
+                                line(-1.91, 10, "g6d3"),
+                                line(-1.45, 10, "e2a6"),
+                                line(-1.39, 10, "g8g7")),
+                        depth(12,
+                                line(-3.12, 12, "g6d3"),
+                                line(-1.57, 12, "g8g7"),
+                                line(-0.87, 12, "e2a6")),
+                        depth(15,
+                                line(-5.31, 15, "g6d3"),
+                                line(-2.54, 15, "g8g7"),
+                                line(-1.14, 15, "e2a6")),
+                        depth(16,
+                                line(-6.25, 16, "g6d3"),
+                                line(-2.44, 16, "g8g7"),
+                                line(-0.96, 16, "e2a6")),
+                        depth(18,
+                                line(-6.73, 18, "g6d3"),
+                                line(-1.96, 18, "g8g7"),
+                                line(-0.76, 18, "e2a6")),
+                        depth(20,
+                                line(-5.83, 20, "g6d3"),
+                                line(-3.15, 20, "g8g7"),
+                                line(-0.92, 20, "e2a6"))));
+
+        MoveAnnotation annotation = classifier.classify(root, "g6d3", result, -5.83);
+
+        assertNotNull(annotation);
+        assertEquals(MoveAnnotationKind.BRILLIANT, annotation.getKind());
+        assertEquals(BrilliantReason.DEEP_DISCOVERY, annotation.getBrilliantReason());
+    }
+
+    @Test
+    public void stableBestMoveWithSmallStrengthGrowthIsNotBrilliant() {
+        Game root = Simulation.createSimulation();
+
+        DeepAnalysisResult result = result(
+                List.of(
+                        line(0.65, 20, "e2e4 e7e5"),
+                        line(0.60, 20, "d2d4 d7d5"),
+                        line(0.55, 20, "g1f3 g8f6")),
+                history(
+                        depth(5,
+                                line(0.40, 5, "e2e4"),
+                                line(0.38, 5, "d2d4"),
+                                line(0.35, 5, "g1f3")),
+                        depth(8,
+                                line(0.45, 8, "e2e4"),
+                                line(0.42, 8, "d2d4"),
+                                line(0.40, 8, "g1f3")),
+                        depth(10,
+                                line(0.50, 10, "e2e4"),
+                                line(0.47, 10, "d2d4"),
+                                line(0.45, 10, "g1f3")),
+                        depth(12,
+                                line(0.55, 12, "e2e4"),
+                                line(0.52, 12, "d2d4"),
+                                line(0.50, 12, "g1f3")),
+                        depth(15,
+                                line(0.60, 15, "e2e4"),
+                                line(0.57, 15, "d2d4"),
+                                line(0.55, 15, "g1f3")),
+                        depth(18,
+                                line(0.63, 18, "e2e4"),
+                                line(0.59, 18, "d2d4"),
+                                line(0.56, 18, "g1f3")),
+                        depth(20,
+                                line(0.65, 20, "e2e4"),
+                                line(0.60, 20, "d2d4"),
+                                line(0.55, 20, "g1f3"))));
+
+        MoveAnnotation annotation = classifier.classify(root, "e2e4", result, 0.65);
+
+        assertNull(annotation);
     }
 
     @Test
