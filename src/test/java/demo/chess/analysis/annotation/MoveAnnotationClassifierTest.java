@@ -1,8 +1,8 @@
 package demo.chess.analysis.annotation;
 
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNull;
 
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -96,7 +96,45 @@ public class MoveAnnotationClassifierTest {
     }
 
     @Test
-    public void moveDiscoveredOnlyAtHigherDepthReceivesBrilliantMark() {
+    public void closeOpeningRankShuffleDoesNotCountAsDeepDiscovery() {
+        Game root = Simulation.createSimulation();
+
+        DeepAnalysisResult result = result(
+                List.of(
+                        line(0.45, 20, "d2d4 d7d5"),
+                        line(0.42, 20, "e2e4 e7e5"),
+                        line(0.40, 20, "g1f3 g8f6")),
+                history(
+                        depth(6,
+                                line(0.40, 6, "d2d4"),
+                                line(0.39, 6, "g1f3"),
+                                line(0.38, 6, "c2c4"),
+                                line(0.37, 6, "e2e4")),
+                        depth(10,
+                                line(0.41, 10, "d2d4"),
+                                line(0.40, 10, "g1f3"),
+                                line(0.39, 10, "c2c4"),
+                                line(0.38, 10, "e2e4")),
+                        depth(15,
+                                line(0.44, 15, "d2d4"),
+                                line(0.42, 15, "e2e4"),
+                                line(0.40, 15, "g1f3")),
+                        depth(18,
+                                line(0.45, 18, "d2d4"),
+                                line(0.42, 18, "e2e4"),
+                                line(0.40, 18, "g1f3")),
+                        depth(20,
+                                line(0.45, 20, "d2d4"),
+                                line(0.42, 20, "e2e4"),
+                                line(0.40, 20, "g1f3"))));
+
+        MoveAnnotation annotation = classifier.classify(root, "e2e4", result, 0.42);
+
+        assertNull(annotation);
+    }
+
+    @Test
+    public void moveWithLargeRegretReductionReceivesBrilliantMark() {
         Game root = Simulation.createSimulation();
 
         DeepAnalysisResult result = result(
@@ -136,8 +174,29 @@ public class MoveAnnotationClassifierTest {
     }
 
     @Test
-    public void temporaryQueenInvestmentCanReceiveBrilliantMarkWithoutEngineDependency()
+    public void soundQueenInvestmentCanReceiveBrilliantMarkWithoutEngineDependency()
             throws Exception {
+        Game root = positionAfter("e2e4", "e7e5", "d1h5", "b8c6");
+
+        DeepAnalysisResult result = result(
+                List.of(
+                        line(0.4, 20, "g1f3 g8f6"),
+                        line(0.3, 20, "h5e5 c6e5"),
+                        line(0.2, 20, "f1c4 g8f6")),
+                Map.of());
+
+        MoveAnnotation annotation = classifier.classify(root, "h5e5", result, 0.3);
+
+        assertNotNull(annotation);
+        assertEquals(MoveAnnotationKind.BRILLIANT, annotation.getKind());
+        assertEquals(
+                BrilliantReason.MATERIAL_INVESTMENT,
+                annotation.getBrilliantReason());
+        assertEquals(8.0, annotation.getMaterialInvestment(), 0.001);
+    }
+
+    @Test
+    public void objectivelyBadQueenSacrificeRemainsBlunder() throws Exception {
         Game root = positionAfter("e2e4", "e7e5", "d1h5", "b8c6");
 
         DeepAnalysisResult result = result(
@@ -150,11 +209,42 @@ public class MoveAnnotationClassifierTest {
         MoveAnnotation annotation = classifier.classify(root, "h5e5", result, -4.0);
 
         assertNotNull(annotation);
-        assertEquals(MoveAnnotationKind.BRILLIANT, annotation.getKind());
-        assertEquals(
-                BrilliantReason.MATERIAL_INVESTMENT,
-                annotation.getBrilliantReason());
-        assertEquals(8.0, annotation.getMaterialInvestment(), 0.001);
+        assertEquals(MoveAnnotationKind.BLUNDER, annotation.getKind());
+    }
+
+    @Test
+    public void unrelatedLaterMaterialLossDoesNotMakeRootMoveBrilliant() {
+        Game root = Simulation.createSimulation();
+
+        DeepAnalysisResult result = result(
+                List.of(
+                        line(0.4, 20, "e2e4 e7e5 d1h5 b8c6 h5e5 c6e5"),
+                        line(0.3, 20, "d2d4 d7d5"),
+                        line(0.2, 20, "g1f3 g8f6")),
+                Map.of());
+
+        MoveAnnotation annotation = classifier.classify(root, "e2e4", result, 0.4);
+
+        assertNull(annotation);
+    }
+
+    @Test
+    public void ordinaryEqualExchangeDoesNotCountAsMaterialSacrifice() throws Exception {
+        Game root = positionAfter(
+                "e2e4", "e7e5",
+                "g1f3", "b8c6",
+                "f1b5", "a7a6");
+
+        DeepAnalysisResult result = result(
+                List.of(
+                        line(0.3, 20, "b5c6 d7c6"),
+                        line(0.2, 20, "b5a4 g8f6"),
+                        line(0.1, 20, "b5e2 g8f6")),
+                Map.of());
+
+        MoveAnnotation annotation = classifier.classify(root, "b5c6", result, 0.3);
+
+        assertNull(annotation);
     }
 
     @Test
