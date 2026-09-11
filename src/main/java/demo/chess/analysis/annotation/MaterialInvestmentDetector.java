@@ -22,8 +22,9 @@ final class MaterialInvestmentDetector {
      * balance anywhere in the next few plies. That could attribute an unrelated
      * later exchange to the root move. Here the moved piece itself must actually
      * be captured within the horizon. One immediate reply by the mover is then
-     * allowed to recover material, so ordinary exchanges are not mistaken for
-     * sacrifices.</p>
+     * allowed to recover material, even when that reply is the first ply just
+     * beyond the detection horizon. This prevents a boundary capture from
+     * turning an ordinary exchange into a false sacrifice.</p>
      */
     double calculate(
             Game rootPosition,
@@ -75,7 +76,7 @@ final class MaterialInvestmentDetector {
                 // material. This filters normal exchange sequences such as
                 // Bxc6 dxc6 without erasing genuine temporary sacrifices whose
                 // compensation lies deeper than a simple recapture.
-                if (index + 1 < count) {
+                if (index + 1 < moves.length) {
                     Move recovery = LegalMoveResolver.resolveUci(
                             simulation,
                             moves[index + 1]);
