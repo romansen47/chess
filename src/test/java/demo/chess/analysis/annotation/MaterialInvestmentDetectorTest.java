@@ -57,14 +57,16 @@ public class MaterialInvestmentDetectorTest {
     }
 
     @Test
-    public void blackRookSacrificeAfterBxf7HasTwoPointNetInvestment()
+    public void blackKnightSacrificeHasTwoPointNetInvestment()
             throws Exception {
-        Game root = positionBeforeBlackRookTakesF7();
+        Game root = positionAfter(
+                "e2e4", "g8f6",
+                "b1c3");
 
         EngineLine line = line(
                 0.0,
                 20,
-                "c7f7 h3h8 g8h8 g5f7");
+                "f6e4 c3e4");
 
         double investment = detector.calculate(root, line, false, 6);
 
@@ -97,21 +99,6 @@ public class MaterialInvestmentDetectorTest {
                 "f6h7", "g7g8",
                 "f3h3", "e6e5",
                 "f2f4");
-    }
-
-    private Game positionBeforeBlackRookTakesF7() throws Exception {
-        Game game = positionBeforeBlackBishopTakesF1();
-
-        play(game, "e2f1");
-        play(game, "g1f1");
-        play(game, "a8c8");
-        play(game, "c3d4");
-        play(game, "b7b5");
-        play(game, "h7g5");
-        play(game, "c8c7");
-        play(game, "b3f7");
-
-        return game;
     }
 
     private Game positionAfter(String... moves) throws Exception {
