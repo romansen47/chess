@@ -1,19 +1,20 @@
 package demo.chess.definitions.engines;
 
-import java.util.List;
-import java.util.Map;
+import java.io.IOException;
+import java.util.concurrent.ExecutionException;
+
+import demo.chess.game.Game;
 
 public interface DeepAnalysisEngine extends EvaluationEngine {
 
     /**
-     * Returns the completed depth snapshots collected during the most recent
-     * finite deep-analysis search. The map key is the UCI search depth.
+     * Runs one finite DeepAnalysis search and returns both its final variants
+     * and the usable intermediate depth history from that same search.
      *
-     * <p>Live/infinite evaluation does not use this history.</p>
-     *
-     * @return immutable depth-to-lines snapshots, or an empty map
+     * @param chessGame current position
+     * @param config engine configuration
+     * @return immutable DeepAnalysis result
      */
-    default Map<Integer, List<EngineLine>> getLastDepthHistory() {
-        return Map.of();
-    }
+    DeepAnalysisResult analyze(Game chessGame, EngineConfig config)
+            throws IOException, InterruptedException, ExecutionException;
 }
