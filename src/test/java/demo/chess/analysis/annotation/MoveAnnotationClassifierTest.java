@@ -174,6 +174,40 @@ public class MoveAnnotationClassifierTest {
     }
 
     @Test
+    public void onePawnPlusLossReceivesMistakeMark() {
+        Game root = Simulation.createSimulation();
+
+        DeepAnalysisResult result = result(
+                List.of(
+                        line(0.5, 20, "e2e4 e7e5"),
+                        line(-1.0, 20, "d2d4 d7d5"),
+                        line(-2.0, 20, "g1f3 g8f6")),
+                Map.of());
+
+        MoveAnnotation annotation = classifier.classify(root, "d2d4", result, -1.0);
+
+        assertNotNull(annotation);
+        assertEquals(MoveAnnotationKind.MISTAKE, annotation.getKind());
+    }
+
+    @Test
+    public void threePawnPlusLossReceivesBlunderMark() {
+        Game root = Simulation.createSimulation();
+
+        DeepAnalysisResult result = result(
+                List.of(
+                        line(0.5, 20, "e2e4 e7e5"),
+                        line(-3.0, 20, "d2d4 d7d5"),
+                        line(-4.0, 20, "g1f3 g8f6")),
+                Map.of());
+
+        MoveAnnotation annotation = classifier.classify(root, "d2d4", result, -3.0);
+
+        assertNotNull(annotation);
+        assertEquals(MoveAnnotationKind.BLUNDER, annotation.getKind());
+    }
+
+    @Test
     public void blackCandidateRankingUsesBlackPointOfView() throws Exception {
         Game root = positionAfter("e2e4");
 
