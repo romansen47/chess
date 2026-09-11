@@ -10,14 +10,13 @@ import java.util.concurrent.ExecutionException;
 
 import demo.chess.definitions.Color;
 import demo.chess.definitions.engines.DeepAnalysisEngine;
+import demo.chess.definitions.engines.DeepAnalysisResult;
 import demo.chess.definitions.engines.EngineConfig;
 import demo.chess.definitions.engines.EngineLine;
 import demo.chess.definitions.moves.Move;
 import demo.chess.game.Game;
 
 public class DeepAnalysisUciEngine extends EvaluationUciEngine implements DeepAnalysisEngine {
-
-    private Map<Integer, List<EngineLine>> lastDepthHistory = Map.of();
 
     /**
      * Creates a new DeepAnalysisUciEngine instance.
@@ -28,10 +27,9 @@ public class DeepAnalysisUciEngine extends EvaluationUciEngine implements DeepAn
     }
 
     /**
-     * Returns the best lines.
-     * @param chessGame the chess game
-     * @param config the config
-     * @return the best lines
+     * Returns the best lines for compatibility with EvaluationEngine callers.
+     * DeepAnalysis consumers should use analyze() to keep final lines and
+     * intermediate history bound to one result object.
      */
     @Override
     public synchronized List<EngineLine> getBestLines(Game chessGame, EngineConfig config)
@@ -39,11 +37,20 @@ public class DeepAnalysisUciEngine extends EvaluationUciEngine implements DeepAn
         String moveListAsString = chessGame.getMoveList().toString();
         List<EngineLine> cachedLines = getCachedBestLines().get(moveListAsString);
         if (cachedLines != null) {
-            lastDepthHistory = Map.of();
             return cachedLines;
         }
+        return analyze(chessGame, config).getFinalLines();
+    }
 
-        lastDepthHistory = Map.of();
+    /**
+     * Runs one finite DeepAnalysis search.
+     * @param chessGame current position
+     * @param config engine configuration
+     * @return final lines and depth history from the same search
+     */
+    @Override
+    public synchronized DeepAnalysisResult analyze(Game chessGame, EngineConfig config)
+            throws IOException, InterruptedException, ExecutionException {
         applyConfig(config);
 
         List<Move> moveList = new ArrayList<>(chessGame.getMoveList());
@@ -66,20 +73,13 @@ public class DeepAnalysisUciEngine extends EvaluationUciEngine implements DeepAn
         }
 
         Color sideToMove = moveList.size() % 2 == 0 ? Color.WHITE : Color.BLACK;
-        lastDepthHistory = buildDepthHistory(sideToMove, rawInfoLines, config);
-        List<EngineLine> parsedLines = parseBestLinesAtHighestDepth(sideToMove, rawInfoLines, config);
-        getCachedBestLines().put(moveListAsString, parsedLines);
-        return parsedLines;
-    }
+        Map<Integer, List<EngineLine>> depthHistory =
+                buildDepthHistory(sideToMove, rawInfoLines, config);
+        List<EngineLine> finalLines =
+                parseBestLinesAtHighestDepth(sideToMove, rawInfoLines, config);
 
-    /**
-     * Returns the depth snapshots collected during the most recent finite
-     * deep-analysis search.
-     * @return depth-to-lines snapshots
-     */
-    @Override
-    public synchronized Map<Integer, List<EngineLine>> getLastDepthHistory() {
-        return lastDepthHistory;
+        getCachedBestLines().put(chessGame.getMoveList().toString(), finalLines);
+        return new DeepAnalysisResult(finalLines, depthHistory);
     }
 
     /**
