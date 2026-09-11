@@ -2,11 +2,15 @@ package demo.chess.definitions.engines.impl;
 
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
+import java.util.TreeMap;
 import java.util.concurrent.ExecutionException;
 
 import demo.chess.definitions.Color;
 import demo.chess.definitions.engines.DeepAnalysisEngine;
+import demo.chess.definitions.engines.DeepAnalysisResult;
 import demo.chess.definitions.engines.EngineConfig;
 import demo.chess.definitions.engines.EngineLine;
 import demo.chess.definitions.moves.Move;
@@ -23,10 +27,9 @@ public class DeepAnalysisUciEngine extends EvaluationUciEngine implements DeepAn
     }
 
     /**
-     * Returns the best lines.
-     * @param chessGame the chess game
-     * @param config the config
-     * @return the best lines
+     * Returns the best lines for compatibility with EvaluationEngine callers.
+     * DeepAnalysis consumers should use analyze() to keep final lines and
+     * intermediate history bound to one result object.
      */
     @Override
     public synchronized List<EngineLine> getBestLines(Game chessGame, EngineConfig config)
@@ -36,7 +39,18 @@ public class DeepAnalysisUciEngine extends EvaluationUciEngine implements DeepAn
         if (cachedLines != null) {
             return cachedLines;
         }
+        return analyze(chessGame, config).getFinalLines();
+    }
 
+    /**
+     * Runs one finite DeepAnalysis search.
+     * @param chessGame current position
+     * @param config engine configuration
+     * @return final lines and depth history from the same search
+     */
+    @Override
+    public synchronized DeepAnalysisResult analyze(Game chessGame, EngineConfig config)
+            throws IOException, InterruptedException, ExecutionException {
         applyConfig(config);
 
         List<Move> moveList = new ArrayList<>(chessGame.getMoveList());
@@ -59,9 +73,53 @@ public class DeepAnalysisUciEngine extends EvaluationUciEngine implements DeepAn
         }
 
         Color sideToMove = moveList.size() % 2 == 0 ? Color.WHITE : Color.BLACK;
-        List<EngineLine> parsedLines = parseBestLinesAtHighestDepth(sideToMove, rawInfoLines, config);
-        getCachedBestLines().put(moveListAsString, parsedLines);
-        return parsedLines;
+        Map<Integer, List<EngineLine>> depthHistory =
+                buildDepthHistory(sideToMove, rawInfoLines, config);
+        List<EngineLine> finalLines =
+                parseBestLinesAtHighestDepth(sideToMove, rawInfoLines, config);
+
+        getCachedBestLines().put(chessGame.getMoveList().toString(), finalLines);
+        return new DeepAnalysisResult(finalLines, depthHistory);
+    }
+
+    /**
+     * Builds one parsed snapshot for every depth for which the engine emitted
+     * at least one usable principal variation. This preserves information that
+     * EvaluationUciEngine normally discards after selecting the final depth.
+     *
+     * @param color side to move
+     * @param rawInfoLines raw UCI info lines from this finite search
+     * @param config engine configuration
+     * @return immutable depth snapshots in ascending depth order
+     */
+    private Map<Integer, List<EngineLine>> buildDepthHistory(
+            Color color,
+            List<String> rawInfoLines,
+            EngineConfig config) {
+        TreeMap<Integer, List<String>> rawByDepth = new TreeMap<>();
+        for (String rawLine : rawInfoLines) {
+            if (!rawLine.contains(" depth ") || !rawLine.contains(" pv ")) {
+                continue;
+            }
+
+            int depth;
+            try {
+                depth = Integer.parseInt(rawLine.split("depth ")[1].split(" ")[0]);
+            } catch (RuntimeException ignored) {
+                continue;
+            }
+
+            rawByDepth.computeIfAbsent(depth, ignored -> new ArrayList<>()).add(rawLine);
+        }
+
+        Map<Integer, List<EngineLine>> result = new LinkedHashMap<>();
+        for (Map.Entry<Integer, List<String>> entry : rawByDepth.entrySet()) {
+            List<EngineLine> parsed = parseBestLinesAtHighestDepth(color, entry.getValue(), config);
+            if (!parsed.isEmpty()) {
+                result.put(entry.getKey(), List.copyOf(parsed));
+            }
+        }
+        return Map.copyOf(result);
     }
 
     /**
