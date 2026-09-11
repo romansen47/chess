@@ -1,6 +1,5 @@
 package demo.chess.definitions.engines;
 
-import java.util.ArrayList;
 import java.util.Collections;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -39,7 +38,7 @@ public final class DeepAnalysisResult {
 
         Map<Integer, List<EngineLine>> ordered = new LinkedHashMap<>();
         for (Map.Entry<Integer, List<EngineLine>> entry : sorted.entrySet()) {
-            ordered.put(entry.getKey(), new ArrayList<>(entry.getValue()));
+            ordered.put(entry.getKey(), entry.getValue());
         }
         this.depthHistory = Collections.unmodifiableMap(ordered);
     }
