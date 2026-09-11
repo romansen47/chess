@@ -42,6 +42,26 @@ public class MaterialInvestmentDetectorTest {
     }
 
     @Test
+    public void recoveryJustBeyondHorizonPreventsFalseKnightInvestment()
+            throws Exception {
+        Game root = positionAfter(
+                "g1f3", "g8f6",
+                "c2c4", "g7g6");
+
+        EngineLine line = line(
+                0.0,
+                20,
+                "b1c3 d7d5 c4d5 f6d5 h2h4 d5c3 b2c3");
+
+        double investment = detector.calculate(root, line, true, 6);
+
+        // Byrne-Fischer: Nc3 itself is not a three-point sacrifice. The
+        // knight is captured on the sixth inspected ply and White recaptures
+        // immediately on the seventh. That recovery must still be credited.
+        assertEquals(0.0, investment, 0.001);
+    }
+
+    @Test
     public void blackBishopWinningExchangeIsNotMaterialInvestment()
             throws Exception {
         Game root = positionBeforeBlackBishopTakesF1();
