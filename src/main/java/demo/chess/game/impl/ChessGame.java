@@ -17,6 +17,7 @@ import demo.chess.definitions.players.BlackPlayer;
 import demo.chess.definitions.players.Player;
 import demo.chess.definitions.players.WhitePlayer;
 import demo.chess.definitions.states.State;
+import demo.chess.game.TerminalPositionEvaluator;
 import demo.chess.notation.PgnNotation;
 
 /**
