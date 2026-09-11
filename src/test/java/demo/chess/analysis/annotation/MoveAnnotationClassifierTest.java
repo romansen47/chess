@@ -196,6 +196,39 @@ public class MoveAnnotationClassifierTest {
     }
 
     @Test
+    public void nezhmetdinovQueenSacrificeWithThreePointNetInvestmentIsBrilliant()
+            throws Exception {
+        Game root = positionAfter(
+                "e2e4", "c7c5",
+                "g1f3", "b8c6",
+                "d2d4", "c5d4",
+                "f3d4", "g7g6",
+                "b1c3", "f8g7",
+                "c1e3", "g8f6",
+                "f1c4", "e8g8",
+                "c4b3", "f6g4",
+                "d1g4", "c6d4",
+                "g4h4", "d8a5",
+                "e1g1", "g7f6");
+
+        DeepAnalysisResult result = result(
+                List.of(
+                        line(0.40, 20, "c3d5 e7e6"),
+                        line(0.35, 20, "h4f6 d4e2 c3e2 e7f6"),
+                        line(0.20, 20, "a1d1 d7d6")),
+                Map.of());
+
+        MoveAnnotation annotation = classifier.classify(root, "h4f6", result, 0.35);
+
+        assertNotNull(annotation);
+        assertEquals(MoveAnnotationKind.BRILLIANT, annotation.getKind());
+        assertEquals(
+                BrilliantReason.MATERIAL_INVESTMENT,
+                annotation.getBrilliantReason());
+        assertEquals(3.0, annotation.getMaterialInvestment(), 0.001);
+    }
+
+    @Test
     public void objectivelyBadQueenSacrificeRemainsBlunder() throws Exception {
         Game root = positionAfter("e2e4", "e7e5", "d1h5", "b8c6");
 
