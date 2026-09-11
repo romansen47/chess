@@ -16,7 +16,7 @@ public final class MoveAnnotationPolicy {
     public static final double BRILLIANT_MAX_FINAL_REGRET_WIN_PERCENT = 10.0;
     public static final double BRILLIANT_DISCOVERY_EARLY_DEPTH_RATIO = 0.60;
     public static final double BRILLIANT_DISCOVERY_LATE_DEPTH_RATIO = 0.75;
-    public static final double BRILLIANT_DISCOVERY_MIN_EARLY_REGRET_WIN_PERCENT = 15.0;
+    public static final double BRILLIANT_DISCOVERY_MIN_EARLY_REGRET_WIN_PERCENT = 12.0;
     public static final double BRILLIANT_DISCOVERY_MIN_REGRET_IMPROVEMENT_WIN_PERCENT = 10.0;
     public static final double BRILLIANT_MATERIAL_INVESTMENT = 2.0;
     public static final int BRILLIANT_MATERIAL_HORIZON_PLIES = 6;
