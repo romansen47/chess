@@ -13,6 +13,8 @@ final class BrilliantMoveDetector {
 
     private final MaterialInvestmentDetector materialDetector =
             new MaterialInvestmentDetector();
+    private final MaterialOfferDetector materialOfferDetector =
+            new MaterialOfferDetector();
 
     BrilliantEvidence find(
             Game rootPosition,
@@ -58,8 +60,17 @@ final class BrilliantMoveDetector {
                 finalPlayed,
                 whiteMover,
                 MoveAnnotationPolicy.BRILLIANT_MATERIAL_HORIZON_PLIES);
+        double materialOffer = materialOfferDetector.calculate(
+                rootPosition,
+                playedMoveUci,
+                whiteMover);
+
+        double materialEvidence = materialInvestment
+                >= MoveAnnotationPolicy.BRILLIANT_MATERIAL_INVESTMENT
+                ? materialInvestment
+                : materialOffer;
         boolean hasMaterialInvestment =
-                materialInvestment >= MoveAnnotationPolicy.BRILLIANT_MATERIAL_INVESTMENT;
+                materialEvidence >= MoveAnnotationPolicy.BRILLIANT_MATERIAL_INVESTMENT;
 
         if (discovery == null && !hasMaterialInvestment) {
             return null;
@@ -80,7 +91,7 @@ final class BrilliantMoveDetector {
 
         return new BrilliantEvidence(
                 reason,
-                hasMaterialInvestment ? materialInvestment : null,
+                hasMaterialInvestment ? materialEvidence : null,
                 discovery != null ? discovery.earlyDepth : null,
                 discovery != null ? discovery.earlyRank : null,
                 finalDepth,
