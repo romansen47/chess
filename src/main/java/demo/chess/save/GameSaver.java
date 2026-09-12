@@ -14,6 +14,7 @@ import demo.chess.definitions.moves.Move;
 import demo.chess.definitions.moves.MoveList;
 import demo.chess.game.DummyGame;
 import demo.chess.game.impl.Simulation;
+import demo.chess.notation.PgnMoveAnnotation;
 import demo.chess.notation.PgnNotation;
 
 public class GameSaver {
@@ -57,6 +58,22 @@ public class GameSaver {
      */
     public String toPgn(Iterable<Move> moveList, Map<String, String> suppliedTags)
             throws NoMoveFoundException, IOException {
+        return toPgn(moveList, suppliedTags, Map.of());
+    }
+
+    /**
+     * Serializes a game together with user-visible PGN annotations.
+     *
+     * @param moveList main-line moves
+     * @param suppliedTags PGN tags
+     * @param annotations annotations keyed by one-based ply
+     * @return PGN document
+     */
+    public String toPgn(
+            Iterable<Move> moveList,
+            Map<String, String> suppliedTags,
+            Map<Integer, PgnMoveAnnotation> annotations)
+            throws NoMoveFoundException, IOException {
         Map<String, String> tags = createTags(suppliedTags);
         String resultToken = normalizeResult(tags.get("Result"));
         tags.put("Result", resultToken);
@@ -90,6 +107,7 @@ public class GameSaver {
 
                 pgn.append(PgnNotation.toSanAndApply(dummyGame, move));
                 ply++;
+                appendAnnotation(pgn, annotations != null ? annotations.get(ply) : null);
             }
         }
 
@@ -98,6 +116,58 @@ public class GameSaver {
         }
         pgn.append(resultToken).append('\n');
         return pgn.toString();
+    }
+
+    private void appendAnnotation(StringBuilder pgn, PgnMoveAnnotation annotation) {
+        if (annotation == null || annotation.isEmpty()) {
+            return;
+        }
+
+        Integer nagNumber = nagNumber(annotation.nag());
+        if (nagNumber != null) {
+            pgn.append(" $").append(nagNumber);
+        }
+
+        String comment = annotation.comment();
+        String evaluation = annotation.evaluation();
+        if (comment != null || evaluation != null) {
+            pgn.append(" {");
+            if (comment != null) {
+                pgn.append(sanitizeComment(comment));
+            }
+            if (evaluation != null) {
+                if (comment != null) {
+                    pgn.append(' ');
+                }
+                pgn.append("[%eval ").append(evaluation).append(']');
+            }
+            pgn.append('}');
+        }
+
+        for (String variation : annotation.variations()) {
+            if (variation != null && !variation.isBlank()) {
+                pgn.append(" (").append(variation.trim()).append(')');
+            }
+        }
+    }
+
+    private Integer nagNumber(String symbol) {
+        if (symbol == null) {
+            return null;
+        }
+        return switch (symbol) {
+            case "!" -> 1;
+            case "?" -> 2;
+            case "!!" -> 3;
+            case "??" -> 4;
+            case "!?" -> 5;
+            case "?!" -> 6;
+            default -> null;
+        };
+    }
+
+    private String sanitizeComment(String comment) {
+        return comment.replace('}', ']');
     }
 
     /**
