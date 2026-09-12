@@ -17,10 +17,8 @@ import demo.chess.game.impl.Simulation;
 
 final class BrilliantMoveDetector {
 
-    private final MaterialInvestmentDetector materialDetector =
-            new MaterialInvestmentDetector();
-    private final MaterialOfferDetector materialOfferDetector =
-            new MaterialOfferDetector();
+    private final MaterialSacrificeDetector materialSacrificeDetector =
+            new MaterialSacrificeDetector();
 
     BrilliantEvidence find(
             Game rootPosition,
@@ -53,6 +51,15 @@ final class BrilliantMoveDetector {
             return null;
         }
 
+        /*
+         * Once even the best available move is already inside a forced mate
+         * against the mover, a material loss is desperation rather than
+         * brilliance. Do not manufacture "!!" from sacrifice evidence there.
+         */
+        if (isForcedMateAgainstMover(finalBest, whiteMover)) {
+            return null;
+        }
+
         DeepDiscoveryEvidence discovery = findDeepDiscovery(
                 result,
                 finalPlayed,
@@ -61,22 +68,13 @@ final class BrilliantMoveDetector {
                 playedMoveUci,
                 whiteMover);
 
-        double materialInvestment = materialDetector.calculate(
-                rootPosition,
-                finalPlayed,
-                whiteMover,
-                MoveAnnotationPolicy.BRILLIANT_MATERIAL_HORIZON_PLIES);
-        double materialOffer = materialOfferDetector.calculate(
-                rootPosition,
-                playedMoveUci,
-                whiteMover);
-
-        double materialEvidence = materialInvestment
-                >= MoveAnnotationPolicy.BRILLIANT_MATERIAL_INVESTMENT
-                ? materialInvestment
-                : materialOffer;
-        boolean hasMaterialInvestment =
-                materialEvidence >= MoveAnnotationPolicy.BRILLIANT_MATERIAL_INVESTMENT;
+        MaterialSacrificeEvidence sacrifice =
+                materialSacrificeDetector.find(
+                        rootPosition,
+                        finalPlayed,
+                        playedMoveUci,
+                        whiteMover);
+        boolean hasMaterialInvestment = sacrifice != null;
         boolean checkingMove = givesCheck(
                 rootPosition,
                 playedMoveUci,
@@ -114,7 +112,8 @@ final class BrilliantMoveDetector {
 
         return new BrilliantEvidence(
                 reason,
-                hasMaterialInvestment ? materialEvidence : null,
+                sacrifice != null ? sacrifice.getValue() : null,
+                sacrifice != null ? sacrifice.getType() : null,
                 discovery != null ? discovery.earlyDepth : null,
                 discovery != null ? discovery.earlyRank : null,
                 finalDepth,
@@ -126,6 +125,22 @@ final class BrilliantMoveDetector {
                 discovery != null ? discovery.earlyStrength : null,
                 discovery != null ? discovery.middleStrength : null,
                 discovery != null ? discovery.lateStrength : null);
+    }
+
+    private boolean isForcedMateAgainstMover(
+            EngineLine best,
+            boolean whiteMover) {
+        if (best == null) {
+            return false;
+        }
+
+        double moverScore =
+                EvaluationScoring.moverScore(
+                        best.getEvaluation(),
+                        whiteMover);
+        return moverScore < 0.0
+                && (best.getMateDistance() != null
+                        || Math.abs(best.getEvaluation()) >= 99.0);
     }
 
     private DeepDiscoveryEvidence findDeepDiscovery(
@@ -481,6 +496,7 @@ final class BrilliantMoveDetector {
     static final class BrilliantEvidence {
         private final BrilliantReason reason;
         private final Double materialInvestment;
+        private final MaterialSacrificeType sacrificeType;
         private final Integer earlyDepth;
         private final Integer earlyRank;
         private final int finalDepth;
@@ -496,6 +512,7 @@ final class BrilliantMoveDetector {
         BrilliantEvidence(
                 BrilliantReason reason,
                 Double materialInvestment,
+                MaterialSacrificeType sacrificeType,
                 Integer earlyDepth,
                 Integer earlyRank,
                 int finalDepth,
@@ -509,6 +526,7 @@ final class BrilliantMoveDetector {
                 Double lateStrength) {
             this.reason = reason;
             this.materialInvestment = materialInvestment;
+            this.sacrificeType = sacrificeType;
             this.earlyDepth = earlyDepth;
             this.earlyRank = earlyRank;
             this.finalDepth = finalDepth;
@@ -528,6 +546,10 @@ final class BrilliantMoveDetector {
 
         Double getMaterialInvestment() {
             return materialInvestment;
+        }
+
+        MaterialSacrificeType getSacrificeType() {
+            return sacrificeType;
         }
 
         Integer getEarlyDepth() {
