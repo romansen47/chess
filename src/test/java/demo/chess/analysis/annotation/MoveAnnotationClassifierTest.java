@@ -257,6 +257,9 @@ public class MoveAnnotationClassifierTest {
                 BrilliantReason.MATERIAL_INVESTMENT,
                 annotation.getBrilliantReason());
         assertEquals(8.0, annotation.getMaterialInvestment(), 0.001);
+        assertEquals(
+                MaterialSacrificeType.ACTIVE_INVESTMENT,
+                annotation.getSacrificeType());
     }
 
     @Test
@@ -448,6 +451,9 @@ public class MoveAnnotationClassifierTest {
                 BrilliantReason.MATERIAL_INVESTMENT,
                 annotation.getBrilliantReason());
         assertEquals(6.0, annotation.getMaterialInvestment(), 0.001);
+        assertEquals(
+                MaterialSacrificeType.NEW_MATERIAL_OFFER,
+                annotation.getSacrificeType());
     }
 
     @Test
@@ -481,6 +487,26 @@ public class MoveAnnotationClassifierTest {
                 BrilliantReason.MATERIAL_INVESTMENT,
                 annotation.getBrilliantReason());
         assertEquals(3.0, annotation.getMaterialInvestment(), 0.001);
+    }
+
+    @Test
+    public void forcedMateAgainstMoverCannotBecomeBrilliantFromSacrifice()
+            throws Exception {
+        Game root = positionAfter(
+                "e2e4", "e7e5",
+                "d1h5", "b8c6");
+
+        DeepAnalysisResult result = result(
+                List.of(
+                        line(-99.0, 20, 3, "g1f3 g8f6"),
+                        line(-99.0, 20, 3, "h5e5 c6e5"),
+                        line(-99.0, 20, 3, "f1c4 g8f6")),
+                Map.of());
+
+        MoveAnnotation annotation =
+                classifier.classify(root, "h5e5", result, -99.0);
+
+        assertNull(annotation);
     }
 
     @Test
@@ -648,6 +674,14 @@ public class MoveAnnotationClassifierTest {
 
     private EngineLine line(double evaluation, int depth, String moves) {
         return new EngineLine(evaluation, depth, null, moves);
+    }
+
+    private EngineLine line(
+            double evaluation,
+            int depth,
+            Integer mateDistance,
+            String moves) {
+        return new EngineLine(evaluation, depth, mateDistance, moves);
     }
 
     private DeepAnalysisResult result(
