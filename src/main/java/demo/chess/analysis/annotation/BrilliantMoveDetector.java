@@ -4,10 +4,16 @@ import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
+
+import demo.chess.definitions.moves.Move;
+import demo.chess.definitions.players.Player;
 
 import demo.chess.definitions.engines.DeepAnalysisResult;
 import demo.chess.definitions.engines.EngineLine;
 import demo.chess.game.Game;
+import demo.chess.game.LegalMoveResolver;
+import demo.chess.game.impl.Simulation;
 
 final class BrilliantMoveDetector {
 
@@ -73,6 +79,19 @@ final class BrilliantMoveDetector {
                 materialEvidence >= MoveAnnotationPolicy.BRILLIANT_MATERIAL_INVESTMENT;
 
         if (discovery == null && !hasMaterialInvestment) {
+            return null;
+        }
+
+        /*
+         * Checks are forcing by nature and can therefore look artificially
+         * "deep" in the engine's search history. A checking move must not
+         * become brilliant from deep-discovery evidence alone. Genuine
+         * sacrifices remain eligible because material evidence is independent
+         * of whether the move gives check.
+         */
+        if (discovery != null
+                && !hasMaterialInvestment
+                && givesCheck(rootPosition, playedMoveUci, whiteMover)) {
             return null;
         }
 
@@ -259,6 +278,38 @@ final class BrilliantMoveDetector {
                 representative.getKey(),
                 representativeIndex >= 0 ? representativeIndex + 1 : null,
                 finalDepth);
+    }
+
+    private boolean givesCheck(
+            Game rootPosition,
+            String playedMoveUci,
+            boolean whiteMover) {
+        try {
+            Game afterMove = Simulation.forkDummyFrom(rootPosition.getMoveList());
+            Move move = LegalMoveResolver.resolveUci(afterMove, playedMoveUci);
+            afterMove.apply(move);
+
+            Player mover = whiteMover
+                    ? afterMove.getWhitePlayer()
+                    : afterMove.getBlackPlayer();
+            Player opponent = whiteMover
+                    ? afterMove.getBlackPlayer()
+                    : afterMove.getWhitePlayer();
+
+            if (opponent == null
+                    || opponent.getKing() == null
+                    || opponent.getKing().getField() == null) {
+                return false;
+            }
+
+            return mover.getSimpleMoves().stream()
+                    .map(Move::getTarget)
+                    .filter(Objects::nonNull)
+                    .anyMatch(opponent.getKing().getField()::equals);
+        } catch (Exception ignored) {
+            // Brilliant annotations must remain best-effort heuristics.
+            return false;
+        }
     }
 
     private List<Map.Entry<Integer, List<EngineLine>>> usableSnapshots(
