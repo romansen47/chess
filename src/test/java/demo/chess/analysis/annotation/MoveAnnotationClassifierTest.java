@@ -263,6 +263,117 @@ public class MoveAnnotationClassifierTest {
     }
 
     @Test
+    public void hopelessKramnikLekoQxe2IsNotBrilliantForMaterialLoss()
+            throws Exception {
+        Game root = positionAfter(
+                "e2e4", "e7e5",
+                "g1f3", "b8c6",
+                "f1b5", "a7a6",
+                "b5a4", "g8f6",
+                "e1g1", "f8e7",
+                "f1e1", "b7b5",
+                "a4b3", "e8g8",
+                "c2c3", "d7d5",
+                "e4d5", "f6d5",
+                "f3e5", "c6e5",
+                "e1e5", "c7c6",
+                "d2d4", "e7d6",
+                "e5e1", "d8h4",
+                "g2g3", "h4h3",
+                "e1e4", "g7g5",
+                "d1f1", "h3h5",
+                "b1d2", "c8f5",
+                "f2f3", "d5f6",
+                "e4e1", "a8e8",
+                "e1e8", "f8e8",
+                "a2a4", "h5g6",
+                "a4b5", "f5d3",
+                "f1f2", "e8e2");
+
+        DeepAnalysisResult result = result(
+                List.of(
+                        line(-5.93, 20, "b5a6 e2f2"),
+                        line(-6.21, 20, "f2e2 d3e2"),
+                        line(-7.32, 20, "b5b6 e2f2")),
+                Map.of());
+
+        MoveAnnotation annotation =
+                classifier.classify(root, "f2e2", result, -6.28);
+
+        assertNull(annotation);
+    }
+
+    @Test
+    public void obviousKramnikLekoBxe2IsNotStrengthDiscovery()
+            throws Exception {
+        Game root = positionAfter(
+                "e2e4", "e7e5",
+                "g1f3", "b8c6",
+                "f1b5", "a7a6",
+                "b5a4", "g8f6",
+                "e1g1", "f8e7",
+                "f1e1", "b7b5",
+                "a4b3", "e8g8",
+                "c2c3", "d7d5",
+                "e4d5", "f6d5",
+                "f3e5", "c6e5",
+                "e1e5", "c7c6",
+                "d2d4", "e7d6",
+                "e5e1", "d8h4",
+                "g2g3", "h4h3",
+                "e1e4", "g7g5",
+                "d1f1", "h3h5",
+                "b1d2", "c8f5",
+                "f2f3", "d5f6",
+                "e4e1", "a8e8",
+                "e1e8", "f8e8",
+                "a2a4", "h5g6",
+                "a4b5", "f5d3",
+                "f1f2", "e8e2",
+                "f2e2");
+
+        DeepAnalysisResult result = result(
+                List.of(
+                        line(-6.28, 20, "d3e2 c1g5"),
+                        line(7.68, 20, "g6f5 e2e3"),
+                        line(7.81, 20, "a6b5 e2e3")),
+                history(
+                        depth(5,
+                                line(-0.60, 5, "d3e2"),
+                                line(0.10, 5, "g6f5"),
+                                line(0.20, 5, "a6b5")),
+                        depth(8,
+                                line(-1.00, 8, "d3e2"),
+                                line(0.20, 8, "g6f5"),
+                                line(0.30, 8, "a6b5")),
+                        depth(10,
+                                line(-2.20, 10, "d3e2"),
+                                line(0.30, 10, "g6f5"),
+                                line(0.40, 10, "a6b5")),
+                        depth(12,
+                                line(-3.00, 12, "d3e2"),
+                                line(0.40, 12, "g6f5"),
+                                line(0.50, 12, "a6b5")),
+                        depth(15,
+                                line(-5.00, 15, "d3e2"),
+                                line(0.50, 15, "g6f5"),
+                                line(0.60, 15, "a6b5")),
+                        depth(18,
+                                line(-6.00, 18, "d3e2"),
+                                line(0.60, 18, "g6f5"),
+                                line(0.70, 18, "a6b5")),
+                        depth(20,
+                                line(-6.28, 20, "d3e2"),
+                                line(0.70, 20, "g6f5"),
+                                line(0.80, 20, "a6b5"))));
+
+        MoveAnnotation annotation =
+                classifier.classify(root, "d3e2", result, -6.55);
+
+        assertNull(annotation);
+    }
+
+    @Test
     public void kramnikLekoQd3IsStrengthDiscoveryBrilliant() throws Exception {
         Game root = positionAfter(
                 "e2e4", "e7e5",
