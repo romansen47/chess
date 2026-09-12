@@ -187,6 +187,79 @@ public class MoveAnnotationClassifierTest {
         assertEquals(BrilliantReason.DEEP_DISCOVERY, annotation.getBrilliantReason());
     }
     @Test
+    public void checkingMoveIsNotBrilliantFromDeepDiscoveryAlone()
+            throws Exception {
+        Game root = positionAfter("c2c4", "d7d5");
+
+        DeepAnalysisResult result = result(
+                List.of(
+                        line(1.5, 20, "d1a4 b8c6"),
+                        line(1.0, 20, "g1f3 g8f6"),
+                        line(0.8, 20, "e2e3 e7e5")),
+                history(
+                        depth(5,
+                                line(0.5, 5, "g1f3"),
+                                line(0.3, 5, "e2e3"),
+                                line(-1.0, 5, "d1a4")),
+                        depth(6,
+                                line(0.5, 6, "g1f3"),
+                                line(0.3, 6, "e2e3"),
+                                line(-1.0, 6, "d1a4")),
+                        depth(8,
+                                line(0.6, 8, "g1f3"),
+                                line(0.4, 8, "e2e3"),
+                                line(-0.9, 8, "d1a4")),
+                        depth(10,
+                                line(0.7, 10, "g1f3"),
+                                line(-0.1, 10, "d1a4"),
+                                line(-0.2, 10, "e2e3")),
+                        depth(12,
+                                line(0.8, 12, "g1f3"),
+                                line(0.0, 12, "d1a4"),
+                                line(-0.2, 12, "e2e3")),
+                        depth(15,
+                                line(1.2, 15, "d1a4"),
+                                line(1.0, 15, "g1f3"),
+                                line(0.8, 15, "e2e3")),
+                        depth(18,
+                                line(1.4, 18, "d1a4"),
+                                line(1.0, 18, "g1f3"),
+                                line(0.8, 18, "e2e3")),
+                        depth(20,
+                                line(1.5, 20, "d1a4"),
+                                line(1.0, 20, "g1f3"),
+                                line(0.8, 20, "e2e3"))));
+
+        MoveAnnotation annotation = classifier.classify(root, "d1a4", result, 1.5);
+
+        assertNull(annotation);
+    }
+
+    @Test
+    public void checkingQueenSacrificeCanStillBeBrilliant()
+            throws Exception {
+        Game root = positionAfter(
+                "e2e4", "e7e5",
+                "d1h5", "b8c6");
+
+        DeepAnalysisResult result = result(
+                List.of(
+                        line(0.40, 20, "h5f7 e8f7"),
+                        line(0.30, 20, "g1f3 g8f6"),
+                        line(0.20, 20, "f1c4 g8f6")),
+                Map.of());
+
+        MoveAnnotation annotation = classifier.classify(root, "h5f7", result, 0.40);
+
+        assertNotNull(annotation);
+        assertEquals(MoveAnnotationKind.BRILLIANT, annotation.getKind());
+        assertEquals(
+                BrilliantReason.MATERIAL_INVESTMENT,
+                annotation.getBrilliantReason());
+        assertEquals(8.0, annotation.getMaterialInvestment(), 0.001);
+    }
+
+    @Test
     public void kramnikLekoQd3IsStrengthDiscoveryBrilliant() throws Exception {
         Game root = positionAfter(
                 "e2e4", "e7e5",
