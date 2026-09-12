@@ -452,7 +452,7 @@ public class MoveAnnotationClassifierTest {
                 annotation.getBrilliantReason());
         assertEquals(6.0, annotation.getMaterialInvestment(), 0.001);
         assertEquals(
-                MaterialSacrificeType.NEW_MATERIAL_OFFER,
+                MaterialSacrificeType.DECLINED_MATERIAL_SAVE,
                 annotation.getSacrificeType());
     }
 
