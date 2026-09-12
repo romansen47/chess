@@ -118,6 +118,50 @@ public class MaterialOfferDetectorTest {
     }
 
     @Test
+    public void kramnikLekoBxc3OffsetsPassiveLossWithCapturedKnight()
+            throws Exception {
+        Game root = positionAfter(
+                "e2e4", "e7e5",
+                "g1f3", "b8c6",
+                "f1b5", "a7a6",
+                "b5a4", "g8f6",
+                "e1g1", "f8e7",
+                "f1e1", "b7b5",
+                "a4b3", "e8g8",
+                "c2c3", "d7d5",
+                "e4d5", "f6d5",
+                "f3e5", "c6e5",
+                "e1e5", "c7c6",
+                "d2d4", "e7d6",
+                "e5e1", "d8h4",
+                "g2g3", "h4h3",
+                "e1e4", "g7g5",
+                "d1f1", "h3h5",
+                "b1d2", "c8f5",
+                "f2f3", "d5f6",
+                "e4e1", "a8e8",
+                "e1e8", "f8e8",
+                "a2a4", "h5g6",
+                "a4b5", "f5d3",
+                "f1f2", "e8e2",
+                "f2e2", "d3e2",
+                "b5a6", "g6d3",
+                "e1f2", "e2f3",
+                "d2f3", "f6e4",
+                "f2e1", "e4c3");
+
+        MaterialSacrificeEvidence evidence =
+                detector.find(root, "b2c3", true);
+
+        /*
+         * 29.bxc3 wins the knight on c3 before Black can exploit any other
+         * hanging white piece. Passive sacrifice accounting therefore has to
+         * start from the material balance before bxc3, not after it.
+         */
+        assertNull(evidence);
+    }
+
+    @Test
     public void ordinaryDevelopmentDoesNotOfferMaterialImmediately()
             throws Exception {
         Game root = positionAfter(
