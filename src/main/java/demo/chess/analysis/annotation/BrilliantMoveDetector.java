@@ -77,6 +77,10 @@ final class BrilliantMoveDetector {
                 : materialOffer;
         boolean hasMaterialInvestment =
                 materialEvidence >= MoveAnnotationPolicy.BRILLIANT_MATERIAL_INVESTMENT;
+        boolean checkingMove = givesCheck(
+                rootPosition,
+                playedMoveUci,
+                whiteMover);
 
         if (discovery == null && !hasMaterialInvestment) {
             return null;
@@ -91,7 +95,7 @@ final class BrilliantMoveDetector {
          */
         if (discovery != null
                 && !hasMaterialInvestment
-                && givesCheck(rootPosition, playedMoveUci, whiteMover)) {
+                && checkingMove) {
             return null;
         }
 
@@ -114,7 +118,14 @@ final class BrilliantMoveDetector {
                 discovery != null ? discovery.earlyDepth : null,
                 discovery != null ? discovery.earlyRank : null,
                 finalDepth,
-                finalPlayedIndex + 1);
+                finalPlayedIndex + 1,
+                checkingMove,
+                discovery != null ? discovery.earlyRegret : null,
+                discovery != null ? discovery.middleRegret : null,
+                discovery != null ? discovery.lateRegret : null,
+                discovery != null ? discovery.earlyStrength : null,
+                discovery != null ? discovery.middleStrength : null,
+                discovery != null ? discovery.lateStrength : null);
     }
 
     private DeepDiscoveryEvidence findDeepDiscovery(
@@ -277,7 +288,13 @@ final class BrilliantMoveDetector {
         return new DeepDiscoveryEvidence(
                 representative.getKey(),
                 representativeIndex >= 0 ? representativeIndex + 1 : null,
-                finalDepth);
+                finalDepth,
+                earlyMetrics.medianRegret,
+                middleMetrics.medianRegret,
+                lateMetrics.medianRegret,
+                earlyMetrics.medianStrength,
+                middleMetrics.medianStrength,
+                lateMetrics.medianStrength);
     }
 
     private boolean givesCheck(
@@ -464,6 +481,13 @@ final class BrilliantMoveDetector {
         private final Integer earlyRank;
         private final int finalDepth;
         private final int finalRank;
+        private final boolean givesCheck;
+        private final Double earlyRegret;
+        private final Double middleRegret;
+        private final Double lateRegret;
+        private final Double earlyStrength;
+        private final Double middleStrength;
+        private final Double lateStrength;
 
         BrilliantEvidence(
                 BrilliantReason reason,
@@ -471,13 +495,27 @@ final class BrilliantMoveDetector {
                 Integer earlyDepth,
                 Integer earlyRank,
                 int finalDepth,
-                int finalRank) {
+                int finalRank,
+                boolean givesCheck,
+                Double earlyRegret,
+                Double middleRegret,
+                Double lateRegret,
+                Double earlyStrength,
+                Double middleStrength,
+                Double lateStrength) {
             this.reason = reason;
             this.materialInvestment = materialInvestment;
             this.earlyDepth = earlyDepth;
             this.earlyRank = earlyRank;
             this.finalDepth = finalDepth;
             this.finalRank = finalRank;
+            this.givesCheck = givesCheck;
+            this.earlyRegret = earlyRegret;
+            this.middleRegret = middleRegret;
+            this.lateRegret = lateRegret;
+            this.earlyStrength = earlyStrength;
+            this.middleStrength = middleStrength;
+            this.lateStrength = lateStrength;
         }
 
         BrilliantReason getReason() {
@@ -503,6 +541,34 @@ final class BrilliantMoveDetector {
         int getFinalRank() {
             return finalRank;
         }
+
+        boolean givesCheck() {
+            return givesCheck;
+        }
+
+        Double getEarlyRegret() {
+            return earlyRegret;
+        }
+
+        Double getMiddleRegret() {
+            return middleRegret;
+        }
+
+        Double getLateRegret() {
+            return lateRegret;
+        }
+
+        Double getEarlyStrength() {
+            return earlyStrength;
+        }
+
+        Double getMiddleStrength() {
+            return middleStrength;
+        }
+
+        Double getLateStrength() {
+            return lateStrength;
+        }
     }
 
     private static final class PhaseMetrics {
@@ -527,11 +593,32 @@ final class BrilliantMoveDetector {
         private final int earlyDepth;
         private final Integer earlyRank;
         private final int finalDepth;
+        private final double earlyRegret;
+        private final double middleRegret;
+        private final double lateRegret;
+        private final double earlyStrength;
+        private final double middleStrength;
+        private final double lateStrength;
 
-        private DeepDiscoveryEvidence(int earlyDepth, Integer earlyRank, int finalDepth) {
+        private DeepDiscoveryEvidence(
+                int earlyDepth,
+                Integer earlyRank,
+                int finalDepth,
+                double earlyRegret,
+                double middleRegret,
+                double lateRegret,
+                double earlyStrength,
+                double middleStrength,
+                double lateStrength) {
             this.earlyDepth = earlyDepth;
             this.earlyRank = earlyRank;
             this.finalDepth = finalDepth;
+            this.earlyRegret = earlyRegret;
+            this.middleRegret = middleRegret;
+            this.lateRegret = lateRegret;
+            this.earlyStrength = earlyStrength;
+            this.middleStrength = middleStrength;
+            this.lateStrength = lateStrength;
         }
     }
 }
