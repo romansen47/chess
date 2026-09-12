@@ -16,7 +16,7 @@ public class MaterialOfferDetectorTest {
     private final MaterialOfferDetector detector = new MaterialOfferDetector();
 
     @Test
-    public void byrneFischerBe6CreatesNewQueenOfferForSixNetPoints()
+    public void byrneFischerBe6DeclinesToSaveAttackedQueen()
             throws Exception {
         Game root = positionAfter(
                 "g1f3", "g8f6",
@@ -39,6 +39,23 @@ public class MaterialOfferDetectorTest {
 
         MaterialSacrificeEvidence evidence =
                 detector.find(root, "g4e6", false);
+
+        assertNotNull(evidence);
+        assertEquals(
+                MaterialSacrificeType.DECLINED_MATERIAL_SAVE,
+                evidence.getType());
+        assertEquals(6.0, evidence.getValue(), 0.001);
+    }
+
+    @Test
+    public void movingBlockerCanCreateNewQueenOffer()
+            throws Exception {
+        Game root = positionAfter(
+                "d2d3", "d7d5",
+                "b1d2", "c8g4");
+
+        MaterialSacrificeEvidence evidence =
+                detector.find(root, "e2e4", true);
 
         assertNotNull(evidence);
         assertEquals(
