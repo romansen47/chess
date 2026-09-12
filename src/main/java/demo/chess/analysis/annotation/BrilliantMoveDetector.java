@@ -292,9 +292,9 @@ final class BrilliantMoveDetector {
                 earlyMetrics.medianRegret,
                 middleMetrics.medianRegret,
                 lateMetrics.medianRegret,
-                earlyMetrics.medianStrength,
-                middleMetrics.medianStrength,
-                lateMetrics.medianStrength);
+                finiteOrNull(earlyMetrics.medianStrength),
+                finiteOrNull(middleMetrics.medianStrength),
+                finiteOrNull(lateMetrics.medianStrength));
     }
 
     private boolean givesCheck(
@@ -464,6 +464,10 @@ final class BrilliantMoveDetector {
         return (sorted.get(middle - 1) + sorted.get(middle)) / 2.0;
     }
 
+    private Double finiteOrNull(double value) {
+        return Double.isFinite(value) ? value : null;
+    }
+
     private int maxHistoryDepth(DeepAnalysisResult result) {
         int max = 0;
         for (Integer depth : result.getDepthHistory().keySet()) {
@@ -596,9 +600,9 @@ final class BrilliantMoveDetector {
         private final double earlyRegret;
         private final double middleRegret;
         private final double lateRegret;
-        private final double earlyStrength;
-        private final double middleStrength;
-        private final double lateStrength;
+        private final Double earlyStrength;
+        private final Double middleStrength;
+        private final Double lateStrength;
 
         private DeepDiscoveryEvidence(
                 int earlyDepth,
@@ -607,9 +611,9 @@ final class BrilliantMoveDetector {
                 double earlyRegret,
                 double middleRegret,
                 double lateRegret,
-                double earlyStrength,
-                double middleStrength,
-                double lateStrength) {
+                Double earlyStrength,
+                Double middleStrength,
+                Double lateStrength) {
             this.earlyDepth = earlyDepth;
             this.earlyRank = earlyRank;
             this.finalDepth = finalDepth;
