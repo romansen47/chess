@@ -317,7 +317,7 @@ final class BrilliantMoveDetector {
             String playedMoveUci,
             boolean whiteMover) {
         try {
-            Game afterMove = Simulation.forkDummyFrom(rootPosition.getMoveList());
+            Game afterMove = Simulation.forkSimulationFrom(rootPosition.getMoveList());
             Move move = LegalMoveResolver.resolveUci(afterMove, playedMoveUci);
             afterMove.apply(move);
 
