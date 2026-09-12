@@ -72,7 +72,7 @@ final class MaterialOfferDetector {
                         whiteMover,
                         rootBalance);
                 if (value
-                        < MoveAnnotationPolicy.BRILLIANT_MATERIAL_INVESTMENT) {
+                        < MoveAnnotationPolicy.EXTRAORDINARY_MATERIAL_INVESTMENT) {
                     continue;
                 }
 
