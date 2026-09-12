@@ -19,9 +19,9 @@ import demo.chess.game.impl.Simulation;
  *
  * <p>This class deliberately does not participate in move classification.
  * It only refines the explanation of an already detected passive material
- * offer. The sacrificing side may choose captures, checks or promotions;
- * the defender may choose any legal reply. A result is returned only when
- * compensation can be proved within the small search horizon and node budget.</p>
+ * offer. To keep the diagnosis causal and conservative, only forcing moves
+ * by the piece that played the extraordinary candidate move are considered
+ * as compensation. The defender may choose any legal reply.</p>
  */
 final class MaterialCompensationAnalyzer {
 
@@ -52,8 +52,17 @@ final class MaterialCompensationAnalyzer {
                             afterAcceptance,
                             whiteMover);
 
-            apply(afterAcceptance, playedMoveUci);
-            apply(afterAcceptance, sacrifice.getAcceptanceMoveUci());
+            Move rootMove =
+                    LegalMoveResolver.resolveUci(
+                            afterAcceptance,
+                            playedMoveUci);
+            int trackedFile = rootMove.getTarget().getFile();
+            int trackedRank = rootMove.getTarget().getRank();
+            afterAcceptance.apply(rootMove);
+
+            apply(
+                    afterAcceptance,
+                    sacrifice.getAcceptanceMoveUci());
 
             SearchBudget budget =
                     new SearchBudget(MAX_SEARCH_NODES);
@@ -61,6 +70,8 @@ final class MaterialCompensationAnalyzer {
                     afterAcceptance,
                     whiteMover,
                     rootBalance,
+                    trackedFile,
+                    trackedRank,
                     0,
                     budget);
 
@@ -80,6 +91,8 @@ final class MaterialCompensationAnalyzer {
             Game position,
             boolean whiteMover,
             double rootBalance,
+            int trackedFile,
+            int trackedRank,
             int depth,
             SearchBudget budget)
             throws Exception {
@@ -97,9 +110,9 @@ final class MaterialCompensationAnalyzer {
                                         whiteMover));
 
         /*
-         * Reaching a mover turn below the normal sacrifice threshold means
-         * the opponent has already had the opportunity to answer the
-         * compensating move and could not restore a qualifying material loss.
+         * A compensation is only accepted after the defender has had a reply.
+         * Reaching the mover's turn below the normal sacrifice threshold means
+         * that reply could not restore a qualifying material loss.
          */
         if (moverTurn
                 && remainingLoss
@@ -125,6 +138,13 @@ final class MaterialCompensationAnalyzer {
         if (moverTurn) {
             List<MoveCandidate> forcing = new ArrayList<>();
             for (Move move : legalMoves) {
+                if (!startsFrom(
+                        move,
+                        trackedFile,
+                        trackedRank)) {
+                    continue;
+                }
+
                 MoveCandidate candidate =
                         createCandidate(position, move);
                 if (candidate.forcing()) {
@@ -144,6 +164,8 @@ final class MaterialCompensationAnalyzer {
                         candidate.position(),
                         whiteMover,
                         rootBalance,
+                        candidate.targetFile(),
+                        candidate.targetRank(),
                         depth + 1,
                         budget);
                 if (child.compensated()
@@ -162,6 +184,8 @@ final class MaterialCompensationAnalyzer {
                     child,
                     whiteMover,
                     rootBalance,
+                    trackedFile,
+                    trackedRank,
                     depth + 1,
                     budget);
             if (!branch.compensated()) {
@@ -186,6 +210,8 @@ final class MaterialCompensationAnalyzer {
                                 captured.getType()) * 100.0)
                 : 0;
 
+        int targetFile = move.getTarget().getFile();
+        int targetRank = move.getTarget().getRank();
         Game child = replay(position, move);
         boolean check = sideToMoveIsInCheck(child);
         int priority =
@@ -195,7 +221,19 @@ final class MaterialCompensationAnalyzer {
         return new MoveCandidate(
                 child,
                 capture || promotion || check,
-                priority);
+                priority,
+                targetFile,
+                targetRank);
+    }
+
+    private boolean startsFrom(
+            Move move,
+            int file,
+            int rank) {
+        return move != null
+                && move.getSource() != null
+                && move.getSource().getFile() == file
+                && move.getSource().getRank() == rank;
     }
 
     private Game replay(
@@ -283,7 +321,9 @@ final class MaterialCompensationAnalyzer {
     private record MoveCandidate(
             Game position,
             boolean forcing,
-            int priority) {
+            int priority,
+            int targetFile,
+            int targetRank) {
     }
 
     private record SearchResult(
