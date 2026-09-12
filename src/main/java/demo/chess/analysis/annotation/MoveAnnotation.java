@@ -11,6 +11,7 @@ public final class MoveAnnotation {
     private final Double secondBestEvaluation;
     private final BrilliantReason brilliantReason;
     private final Double materialInvestment;
+    private final MaterialSacrificeType sacrificeType;
     private final Integer earlyDepth;
     private final Integer earlyRank;
     private final Integer finalDepth;
@@ -30,6 +31,7 @@ public final class MoveAnnotation {
             Double secondBestEvaluation,
             BrilliantReason brilliantReason,
             Double materialInvestment,
+            MaterialSacrificeType sacrificeType,
             Integer earlyDepth,
             Integer earlyRank,
             Integer finalDepth,
@@ -41,6 +43,7 @@ public final class MoveAnnotation {
                 secondBestEvaluation,
                 brilliantReason,
                 materialInvestment,
+                null,
                 earlyDepth,
                 earlyRank,
                 finalDepth,
@@ -78,6 +81,7 @@ public final class MoveAnnotation {
         this.secondBestEvaluation = secondBestEvaluation;
         this.brilliantReason = brilliantReason;
         this.materialInvestment = materialInvestment;
+        this.sacrificeType = sacrificeType;
         this.earlyDepth = earlyDepth;
         this.earlyRank = earlyRank;
         this.finalDepth = finalDepth;
@@ -113,6 +117,10 @@ public final class MoveAnnotation {
 
     public Double getMaterialInvestment() {
         return materialInvestment;
+    }
+
+    public MaterialSacrificeType getSacrificeType() {
+        return sacrificeType;
     }
 
     public Integer getEarlyDepth() {
