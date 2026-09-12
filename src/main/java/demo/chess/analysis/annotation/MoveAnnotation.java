@@ -9,44 +9,33 @@ public final class MoveAnnotation {
     private final double bestEvaluation;
     private final Double winChanceLoss;
     private final Double secondBestEvaluation;
-    private final BrilliantReason brilliantReason;
+
+    private final ExtraordinaryReason extraordinaryReason;
     private final Double materialInvestment;
     private final MaterialSacrificeType sacrificeType;
+
     private final Integer earlyDepth;
     private final Integer earlyRank;
     private final Integer finalDepth;
     private final Integer finalRank;
     private final Boolean givesCheck;
     private final Double earlyRegret;
-    private final Double middleRegret;
-    private final Double lateRegret;
     private final Double earlyStrength;
-    private final Double middleStrength;
-    private final Double lateStrength;
+    private final Double finalStrength;
 
     public MoveAnnotation(
             MoveAnnotationKind kind,
             double bestEvaluation,
             Double winChanceLoss,
-            Double secondBestEvaluation,
-            BrilliantReason brilliantReason,
-            Double materialInvestment,
-            Integer earlyDepth,
-            Integer earlyRank,
-            Integer finalDepth,
-            Integer finalRank) {
+            Double secondBestEvaluation) {
         this(
                 kind,
                 bestEvaluation,
                 winChanceLoss,
                 secondBestEvaluation,
-                brilliantReason,
-                materialInvestment,
                 null,
-                earlyDepth,
-                earlyRank,
-                finalDepth,
-                finalRank,
+                null,
+                null,
                 null,
                 null,
                 null,
@@ -61,7 +50,7 @@ public final class MoveAnnotation {
             double bestEvaluation,
             Double winChanceLoss,
             Double secondBestEvaluation,
-            BrilliantReason brilliantReason,
+            ExtraordinaryReason extraordinaryReason,
             Double materialInvestment,
             MaterialSacrificeType sacrificeType,
             Integer earlyDepth,
@@ -70,16 +59,13 @@ public final class MoveAnnotation {
             Integer finalRank,
             Boolean givesCheck,
             Double earlyRegret,
-            Double middleRegret,
-            Double lateRegret,
             Double earlyStrength,
-            Double middleStrength,
-            Double lateStrength) {
+            Double finalStrength) {
         this.kind = kind;
         this.bestEvaluation = bestEvaluation;
         this.winChanceLoss = winChanceLoss;
         this.secondBestEvaluation = secondBestEvaluation;
-        this.brilliantReason = brilliantReason;
+        this.extraordinaryReason = extraordinaryReason;
         this.materialInvestment = materialInvestment;
         this.sacrificeType = sacrificeType;
         this.earlyDepth = earlyDepth;
@@ -88,11 +74,8 @@ public final class MoveAnnotation {
         this.finalRank = finalRank;
         this.givesCheck = givesCheck;
         this.earlyRegret = earlyRegret;
-        this.middleRegret = middleRegret;
-        this.lateRegret = lateRegret;
         this.earlyStrength = earlyStrength;
-        this.middleStrength = middleStrength;
-        this.lateStrength = lateStrength;
+        this.finalStrength = finalStrength;
     }
 
     public MoveAnnotationKind getKind() {
@@ -111,8 +94,8 @@ public final class MoveAnnotation {
         return secondBestEvaluation;
     }
 
-    public BrilliantReason getBrilliantReason() {
-        return brilliantReason;
+    public ExtraordinaryReason getExtraordinaryReason() {
+        return extraordinaryReason;
     }
 
     public Double getMaterialInvestment() {
@@ -147,23 +130,11 @@ public final class MoveAnnotation {
         return earlyRegret;
     }
 
-    public Double getMiddleRegret() {
-        return middleRegret;
-    }
-
-    public Double getLateRegret() {
-        return lateRegret;
-    }
-
     public Double getEarlyStrength() {
         return earlyStrength;
     }
 
-    public Double getMiddleStrength() {
-        return middleStrength;
-    }
-
-    public Double getLateStrength() {
-        return lateStrength;
+    public Double getFinalStrength() {
+        return finalStrength;
     }
 }
