@@ -112,7 +112,14 @@ public final class MoveAnnotationClassifier {
                     brilliant.getEarlyDepth(),
                     brilliant.getEarlyRank(),
                     brilliant.getFinalDepth(),
-                    brilliant.getFinalRank());
+                    brilliant.getFinalRank(),
+                    brilliant.givesCheck(),
+                    brilliant.getEarlyRegret(),
+                    brilliant.getMiddleRegret(),
+                    brilliant.getLateRegret(),
+                    brilliant.getEarlyStrength(),
+                    brilliant.getMiddleStrength(),
+                    brilliant.getLateStrength());
         }
 
         if (playedIndex == 0 && candidates.size() > 1) {
