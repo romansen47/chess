@@ -120,7 +120,8 @@ public final class MoveAnnotationClassifier {
                     extraordinary.getEarlyStrength(),
                     extraordinary.getFinalStrength(),
                     extraordinary.getShortTermMaterialCompensated(),
-                    extraordinary.getMaterialCompensationPlies());
+                    extraordinary.getMaterialCompensationPlies(),
+                    extraordinary.getForcedMateDistance());
         }
 
         if (playedIndex == 0 && candidates.size() > 1) {

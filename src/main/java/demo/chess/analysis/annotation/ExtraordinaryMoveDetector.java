@@ -130,7 +130,10 @@ final class ExtraordinaryMoveDetector {
                 discovery != null ? discovery.earlyStrength() : null,
                 discovery != null ? discovery.finalStrength() : null,
                 compensation != null ? Boolean.TRUE : null,
-                compensation != null ? compensation.plies() : null);
+                compensation != null ? compensation.plies() : null,
+                sacrifice != null
+                        ? forcedMateDistance(finalPlayed, whiteMover)
+                        : null);
     }
 
     private boolean materialContextIsMeaningful(
@@ -155,6 +158,22 @@ final class ExtraordinaryMoveDetector {
                 whiteMover);
         return EvaluationScoring.winPercentFromMoverScore(
                 moverScore);
+    }
+
+    private Integer forcedMateDistance(
+            EngineLine line,
+            boolean whiteMover) {
+        if (line == null || line.getMateDistance() == null) {
+            return null;
+        }
+
+        double evaluation = line.getEvaluation();
+        boolean moverForcesMate = whiteMover
+                ? evaluation > 0.0
+                : evaluation < 0.0;
+        return moverForcesMate
+                ? Math.abs(line.getMateDistance())
+                : null;
     }
 
     private boolean givesCheck(
@@ -209,6 +228,7 @@ final class ExtraordinaryMoveDetector {
         private final Double finalStrength;
         private final Boolean shortTermMaterialCompensated;
         private final Integer materialCompensationPlies;
+        private final Integer forcedMateDistance;
 
         ExtraordinaryEvidence(
                 ExtraordinaryReason reason,
@@ -223,7 +243,8 @@ final class ExtraordinaryMoveDetector {
                 Double earlyStrength,
                 Double finalStrength,
                 Boolean shortTermMaterialCompensated,
-                Integer materialCompensationPlies) {
+                Integer materialCompensationPlies,
+                Integer forcedMateDistance) {
             this.reason = reason;
             this.materialInvestment = materialInvestment;
             this.sacrificeType = sacrificeType;
@@ -239,6 +260,7 @@ final class ExtraordinaryMoveDetector {
                     shortTermMaterialCompensated;
             this.materialCompensationPlies =
                     materialCompensationPlies;
+            this.forcedMateDistance = forcedMateDistance;
         }
 
         ExtraordinaryReason getReason() {
@@ -291,6 +313,10 @@ final class ExtraordinaryMoveDetector {
 
         Integer getMaterialCompensationPlies() {
             return materialCompensationPlies;
+        }
+
+        Integer getForcedMateDistance() {
+            return forcedMateDistance;
         }
     }
 }

@@ -91,6 +91,30 @@ public class MoveAnnotationClassifierTest {
     }
 
     @Test
+    public void materialSacrificeCanCarryForcedMateDiagnostic() throws Exception {
+        Game root = positionAfter(
+                "e2e4", "e7e5",
+                "d1h5", "b8c6");
+
+        MoveAnnotation annotation = classifier.classify(
+                root,
+                "h5f7",
+                result(
+                        List.of(
+                                mateLine(99.0, 20, 3, "h5f7 e8f7"),
+                                line(0.30, 20, "g1f3 g8f6"),
+                                line(0.20, 20, "f1c4 g8f6")),
+                        Map.of()),
+                99.0);
+
+        assertNotNull(annotation);
+        assertEquals(
+                MoveAnnotationKind.EXTRAORDINARY,
+                annotation.getKind());
+        assertEquals(Integer.valueOf(3), annotation.getForcedMateDistance());
+    }
+
+    @Test
     public void genuineStrengthDiscoveryCanBeExtraordinary() {
         Game root = Simulation.createSimulation();
 
@@ -211,6 +235,18 @@ public class MoveAnnotationClassifierTest {
                 evaluation,
                 depth,
                 null,
+                moves);
+    }
+
+    private EngineLine mateLine(
+            double evaluation,
+            int depth,
+            int mateDistance,
+            String moves) {
+        return new EngineLine(
+                evaluation,
+                depth,
+                mateDistance,
                 moves);
     }
 
