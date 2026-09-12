@@ -42,6 +42,7 @@ public final class MoveAnnotation {
                 null,
                 null,
                 null,
+                null,
                 null);
     }
 
