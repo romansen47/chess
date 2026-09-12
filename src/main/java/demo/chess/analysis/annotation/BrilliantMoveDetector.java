@@ -19,6 +19,8 @@ final class BrilliantMoveDetector {
 
     private final MaterialSacrificeDetector materialSacrificeDetector =
             new MaterialSacrificeDetector();
+    private final BrillianceEligibilityPolicy eligibilityPolicy =
+            new BrillianceEligibilityPolicy();
 
     BrilliantEvidence find(
             Game rootPosition,
@@ -51,15 +53,6 @@ final class BrilliantMoveDetector {
             return null;
         }
 
-        /*
-         * Once even the best available move is already inside a forced mate
-         * against the mover, a material loss is desperation rather than
-         * brilliance. Do not manufacture "!!" from sacrifice evidence there.
-         */
-        if (isForcedMateAgainstMover(finalBest, whiteMover)) {
-            return null;
-        }
-
         DeepDiscoveryEvidence discovery = findDeepDiscovery(
                 result,
                 finalPlayed,
@@ -68,12 +61,19 @@ final class BrilliantMoveDetector {
                 playedMoveUci,
                 whiteMover);
 
-        MaterialSacrificeEvidence sacrifice =
+        MaterialSacrificeEvidence detectedSacrifice =
                 materialSacrificeDetector.find(
                         rootPosition,
                         finalPlayed,
                         playedMoveUci,
                         whiteMover);
+        MaterialSacrificeEvidence sacrifice =
+                detectedSacrifice != null
+                        && eligibilityPolicy.allowsMaterialSacrifice(
+                                finalBest,
+                                whiteMover)
+                        ? detectedSacrifice
+                        : null;
         boolean hasMaterialInvestment = sacrifice != null;
         boolean checkingMove = givesCheck(
                 rootPosition,
@@ -125,22 +125,6 @@ final class BrilliantMoveDetector {
                 discovery != null ? discovery.earlyStrength : null,
                 discovery != null ? discovery.middleStrength : null,
                 discovery != null ? discovery.lateStrength : null);
-    }
-
-    private boolean isForcedMateAgainstMover(
-            EngineLine best,
-            boolean whiteMover) {
-        if (best == null) {
-            return false;
-        }
-
-        double moverScore =
-                EvaluationScoring.moverScore(
-                        best.getEvaluation(),
-                        whiteMover);
-        return moverScore < 0.0
-                && (best.getMateDistance() != null
-                        || Math.abs(best.getEvaluation()) >= 99.0);
     }
 
     private DeepDiscoveryEvidence findDeepDiscovery(
@@ -272,6 +256,9 @@ final class BrilliantMoveDetector {
         boolean strengthDiscovery =
                 finalPlayedIndex == 0
                 && hasStrengthSamples
+                && earlyMetrics.medianRegret
+                        >= MoveAnnotationPolicy
+                                .BRILLIANT_DISCOVERY_MIN_STRENGTH_EARLY_REGRET_WIN_PERCENT
                 && earlyTopThreeRatio
                         >= MoveAnnotationPolicy.BRILLIANT_DISCOVERY_EARLY_TOP_THREE_RATIO
                 && totalStrengthGain
