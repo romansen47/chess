@@ -146,7 +146,7 @@ public class MaterialOfferDetectorTest {
                 "f1f2", "e8e2",
                 "f2e2", "d3e2",
                 "b5a6", "g6d3",
-                "e1f2", "e2f3",
+                "g1f2", "e2f3",
                 "d2f3", "f6e4",
                 "f2e1", "e4c3");
 
