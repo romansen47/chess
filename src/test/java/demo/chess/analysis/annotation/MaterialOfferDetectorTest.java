@@ -66,6 +66,27 @@ public class MaterialOfferDetectorTest {
     }
 
     @Test
+    public void forcedCheckReplyDoesNotGetCreditForAlreadyHangingQueen()
+            throws Exception {
+        Game root = positionAfter(
+                "e2e4", "e7e5",
+                "d1h5", "b8c6",
+                "g1f3", "g8f6",
+                "d2d3", "f8b4");
+
+        MaterialSacrificeEvidence evidence =
+                detector.find(root, "c2c3", true);
+
+        /*
+         * The queen on h5 was already attacked by Nf6. Because White is in
+         * check from Bb4+, the queen has no legal move that can save itself
+         * while also answering the check. Blocking with c3 therefore must not
+         * receive sacrifice credit for an unavoidable queen threat.
+         */
+        assertNull(evidence);
+    }
+
+    @Test
     public void checkmateDoesNotInventPseudoLegalMaterialOffer()
             throws Exception {
         Game root = positionAfter(
