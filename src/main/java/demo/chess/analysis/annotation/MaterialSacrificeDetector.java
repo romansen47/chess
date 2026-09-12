@@ -24,7 +24,7 @@ final class MaterialSacrificeDetector {
                 rootPosition,
                 finalPlayed,
                 whiteMover,
-                MoveAnnotationPolicy.BRILLIANT_MATERIAL_HORIZON_PLIES);
+                MoveAnnotationPolicy.EXTRAORDINARY_MATERIAL_HORIZON_PLIES);
 
         MaterialSacrificeEvidence offer = offerDetector.find(
                 rootPosition,
@@ -32,10 +32,10 @@ final class MaterialSacrificeDetector {
                 whiteMover);
 
         boolean activeQualifies =
-                investment >= MoveAnnotationPolicy.BRILLIANT_MATERIAL_INVESTMENT;
+                investment >= MoveAnnotationPolicy.EXTRAORDINARY_MATERIAL_INVESTMENT;
         boolean offerQualifies = offer != null
                 && offer.getValue()
-                        >= MoveAnnotationPolicy.BRILLIANT_MATERIAL_INVESTMENT;
+                        >= MoveAnnotationPolicy.EXTRAORDINARY_MATERIAL_INVESTMENT;
 
         if (activeQualifies
                 && (!offerQualifies || investment >= offer.getValue())) {
