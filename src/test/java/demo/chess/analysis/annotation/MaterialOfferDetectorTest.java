@@ -1,6 +1,8 @@
 package demo.chess.analysis.annotation;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNull;
 
 import org.junit.Test;
 
@@ -14,7 +16,7 @@ public class MaterialOfferDetectorTest {
     private final MaterialOfferDetector detector = new MaterialOfferDetector();
 
     @Test
-    public void byrneFischerBe6OffersQueenForSixNetPoints()
+    public void byrneFischerBe6CreatesNewQueenOfferForSixNetPoints()
             throws Exception {
         Game root = positionAfter(
                 "g1f3", "g8f6",
@@ -35,24 +37,59 @@ public class MaterialOfferDetectorTest {
                 "e7c5", "f8e8",
                 "e1f1");
 
-        double offer = detector.calculate(root, "g4e6", false);
+        MaterialSacrificeEvidence evidence =
+                detector.find(root, "g4e6", false);
 
-        // 17...Be6 deliberately leaves the queen on b6 to Bxb6.
-        // After Bxb6 Black can recover the bishop with axb6:
-        // queen 9 - bishop 3 = six net points deliberately offered.
-        assertEquals(6.0, offer, 0.001);
+        assertNotNull(evidence);
+        assertEquals(
+                MaterialSacrificeType.NEW_MATERIAL_OFFER,
+                evidence.getType());
+        assertEquals(6.0, evidence.getValue(), 0.001);
     }
 
     @Test
-    public void byrneFischerNc3DoesNotOfferMaterialImmediately()
+    public void deliberatelyIgnoringAttackedQueenIsDeclinedSave()
+            throws Exception {
+        Game root = positionAfter(
+                "e2e4", "e7e5",
+                "f1c4", "b8c6",
+                "d1h5", "g8f6");
+
+        MaterialSacrificeEvidence evidence =
+                detector.find(root, "d2d3", true);
+
+        assertNotNull(evidence);
+        assertEquals(
+                MaterialSacrificeType.DECLINED_MATERIAL_SAVE,
+                evidence.getType());
+        assertEquals(9.0, evidence.getValue(), 0.001);
+    }
+
+    @Test
+    public void checkmateDoesNotInventPseudoLegalMaterialOffer()
+            throws Exception {
+        Game root = positionAfter(
+                "e2e4", "e7e5",
+                "f1c4", "b8c6",
+                "d1h5", "g8f6");
+
+        MaterialSacrificeEvidence evidence =
+                detector.find(root, "h5f7", true);
+
+        assertNull(evidence);
+    }
+
+    @Test
+    public void ordinaryDevelopmentDoesNotOfferMaterialImmediately()
             throws Exception {
         Game root = positionAfter(
                 "g1f3", "g8f6",
                 "c2c4", "g7g6");
 
-        double offer = detector.calculate(root, "b1c3", true);
+        MaterialSacrificeEvidence evidence =
+                detector.find(root, "b1c3", true);
 
-        assertEquals(0.0, offer, 0.001);
+        assertNull(evidence);
     }
 
     private Game positionAfter(String... moves) throws Exception {
