@@ -44,7 +44,15 @@ public final class MoveAnnotationPolicy {
     public static final double BRILLIANT_DISCOVERY_MIN_STRENGTH_GAIN_WIN_PERCENT = 20.0;
     public static final double BRILLIANT_DISCOVERY_MIN_STRENGTH_PHASE_STEP_WIN_PERCENT = 5.0;
     public static final double BRILLIANT_DISCOVERY_EARLY_TOP_THREE_RATIO = 0.50;
+    public static final double BRILLIANT_DISCOVERY_MIN_STRENGTH_EARLY_REGRET_WIN_PERCENT = 1.0;
 
+    /*
+     * A pure material sacrifice should still preserve meaningful practical
+     * chances. This prevents forced/obvious liquidation while already
+     * hopelessly lost from becoming "!!". Deep-discovery evidence is assessed
+     * independently and is deliberately not subject to this threshold.
+     */
+    public static final double BRILLIANT_MATERIAL_MIN_BEST_WIN_PERCENT = 15.0;
     public static final double BRILLIANT_MATERIAL_INVESTMENT = 3.0;
     public static final int BRILLIANT_MATERIAL_HORIZON_PLIES = 6;
 
