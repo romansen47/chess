@@ -47,14 +47,14 @@ final class MaterialOfferDetector {
         try {
             Game afterRoot =
                     Simulation.forkSimulationFrom(rootPosition.getMoveList());
-            Move rootMove =
-                    LegalMoveResolver.resolveUci(afterRoot, playedMoveUci);
-            afterRoot.apply(rootMove);
-
-            double balanceAfterRoot =
+            double rootBalance =
                     MaterialInvestmentDetector.materialBalanceForMover(
                             afterRoot,
                             whiteMover);
+
+            Move rootMove =
+                    LegalMoveResolver.resolveUci(afterRoot, playedMoveUci);
+            afterRoot.apply(rootMove);
 
             MaterialSacrificeEvidence best = null;
             List<Move> legalOpponentMoves =
@@ -70,7 +70,7 @@ final class MaterialOfferDetector {
                         afterRoot,
                         opponentMove,
                         whiteMover,
-                        balanceAfterRoot);
+                        rootBalance);
                 if (value
                         < MoveAnnotationPolicy.BRILLIANT_MATERIAL_INVESTMENT) {
                     continue;
@@ -152,7 +152,7 @@ final class MaterialOfferDetector {
             Game afterRoot,
             Move opponentMove,
             boolean whiteMover,
-            double balanceAfterRoot)
+            double rootBalance)
             throws NoMoveFoundException, IOException {
         Game afterCapture =
                 Simulation.forkSimulationFrom(afterRoot.getMoveList());
@@ -178,7 +178,7 @@ final class MaterialOfferDetector {
 
         return Math.max(
                 0.0,
-                balanceAfterRoot - stabilizedBalance);
+                rootBalance - stabilizedBalance);
     }
 
     private Piece correspondingRootPiece(
