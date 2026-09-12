@@ -167,7 +167,7 @@ public class GameSaver {
     }
 
     private String sanitizeComment(String comment) {
-        return comment.replace('}', ']');
+        return comment.replace('{', '[').replace('}', ']');
     }
 
     /**
