@@ -26,6 +26,8 @@ final class ExtraordinaryMoveDetector {
             new MaterialSacrificeDetector();
     private final DeepDiscoveryDetector deepDiscoveryDetector =
             new DeepDiscoveryDetector();
+    private final MaterialCompensationAnalyzer materialCompensationAnalyzer =
+            new MaterialCompensationAnalyzer();
 
     ExtraordinaryEvidence find(
             Game rootPosition,
@@ -82,6 +84,15 @@ final class ExtraordinaryMoveDetector {
             sacrifice = null;
         }
 
+        MaterialCompensationAnalyzer.Evidence compensation =
+                sacrifice != null
+                        ? materialCompensationAnalyzer.find(
+                                rootPosition,
+                                playedMoveUci,
+                                sacrifice,
+                                whiteMover)
+                        : null;
+
         if (discovery == null && sacrifice == null) {
             return null;
         }
@@ -117,7 +128,9 @@ final class ExtraordinaryMoveDetector {
                         whiteMover),
                 discovery != null ? discovery.earlyRegret() : null,
                 discovery != null ? discovery.earlyStrength() : null,
-                discovery != null ? discovery.finalStrength() : null);
+                discovery != null ? discovery.finalStrength() : null,
+                compensation != null ? Boolean.TRUE : null,
+                compensation != null ? compensation.plies() : null);
     }
 
     private boolean materialContextIsMeaningful(
@@ -194,6 +207,8 @@ final class ExtraordinaryMoveDetector {
         private final Double earlyRegret;
         private final Double earlyStrength;
         private final Double finalStrength;
+        private final Boolean shortTermMaterialCompensated;
+        private final Integer materialCompensationPlies;
 
         ExtraordinaryEvidence(
                 ExtraordinaryReason reason,
@@ -206,7 +221,9 @@ final class ExtraordinaryMoveDetector {
                 boolean givesCheck,
                 Double earlyRegret,
                 Double earlyStrength,
-                Double finalStrength) {
+                Double finalStrength,
+                Boolean shortTermMaterialCompensated,
+                Integer materialCompensationPlies) {
             this.reason = reason;
             this.materialInvestment = materialInvestment;
             this.sacrificeType = sacrificeType;
@@ -218,6 +235,10 @@ final class ExtraordinaryMoveDetector {
             this.earlyRegret = earlyRegret;
             this.earlyStrength = earlyStrength;
             this.finalStrength = finalStrength;
+            this.shortTermMaterialCompensated =
+                    shortTermMaterialCompensated;
+            this.materialCompensationPlies =
+                    materialCompensationPlies;
         }
 
         ExtraordinaryReason getReason() {
@@ -262,6 +283,14 @@ final class ExtraordinaryMoveDetector {
 
         Double getFinalStrength() {
             return finalStrength;
+        }
+
+        Boolean getShortTermMaterialCompensated() {
+            return shortTermMaterialCompensated;
+        }
+
+        Integer getMaterialCompensationPlies() {
+            return materialCompensationPlies;
         }
     }
 }

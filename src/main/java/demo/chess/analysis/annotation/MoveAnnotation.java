@@ -22,6 +22,8 @@ public final class MoveAnnotation {
     private final Double earlyRegret;
     private final Double earlyStrength;
     private final Double finalStrength;
+    private final Boolean shortTermMaterialCompensated;
+    private final Integer materialCompensationPlies;
 
     public MoveAnnotation(
             MoveAnnotationKind kind,
@@ -33,6 +35,8 @@ public final class MoveAnnotation {
                 bestEvaluation,
                 winChanceLoss,
                 secondBestEvaluation,
+                null,
+                null,
                 null,
                 null,
                 null,
@@ -61,7 +65,9 @@ public final class MoveAnnotation {
             Boolean givesCheck,
             Double earlyRegret,
             Double earlyStrength,
-            Double finalStrength) {
+            Double finalStrength,
+            Boolean shortTermMaterialCompensated,
+            Integer materialCompensationPlies) {
         this.kind = kind;
         this.bestEvaluation = bestEvaluation;
         this.winChanceLoss = winChanceLoss;
@@ -77,6 +83,10 @@ public final class MoveAnnotation {
         this.earlyRegret = earlyRegret;
         this.earlyStrength = earlyStrength;
         this.finalStrength = finalStrength;
+        this.shortTermMaterialCompensated =
+                shortTermMaterialCompensated;
+        this.materialCompensationPlies =
+                materialCompensationPlies;
     }
 
     public MoveAnnotationKind getKind() {
@@ -137,5 +147,13 @@ public final class MoveAnnotation {
 
     public Double getFinalStrength() {
         return finalStrength;
+    }
+
+    public Boolean getShortTermMaterialCompensated() {
+        return shortTermMaterialCompensated;
+    }
+
+    public Integer getMaterialCompensationPlies() {
+        return materialCompensationPlies;
     }
 }

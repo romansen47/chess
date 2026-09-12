@@ -118,7 +118,9 @@ public final class MoveAnnotationClassifier {
                     extraordinary.givesCheck(),
                     extraordinary.getEarlyRegret(),
                     extraordinary.getEarlyStrength(),
-                    extraordinary.getFinalStrength());
+                    extraordinary.getFinalStrength(),
+                    extraordinary.getShortTermMaterialCompensated(),
+                    extraordinary.getMaterialCompensationPlies());
         }
 
         if (playedIndex == 0 && candidates.size() > 1) {

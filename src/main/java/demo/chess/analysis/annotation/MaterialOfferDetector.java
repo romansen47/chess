@@ -103,7 +103,10 @@ final class MaterialOfferDetector {
                 }
 
                 if (best == null || value > best.getValue()) {
-                    best = new MaterialSacrificeEvidence(type, value);
+                    best = new MaterialSacrificeEvidence(
+                            type,
+                            value,
+                            opponentMove.toString());
                 }
             }
 
