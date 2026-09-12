@@ -109,6 +109,7 @@ public final class MoveAnnotationClassifier {
                     null,
                     brilliant.getReason(),
                     brilliant.getMaterialInvestment(),
+                    brilliant.getSacrificeType(),
                     brilliant.getEarlyDepth(),
                     brilliant.getEarlyRank(),
                     brilliant.getFinalDepth(),
