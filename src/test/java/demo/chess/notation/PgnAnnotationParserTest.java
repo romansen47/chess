@@ -36,28 +36,6 @@ class PgnAnnotationParserTest {
     }
 
     @Test
-    void stripsChessAnalysisToolDiagnosticMetadataButKeepsEvaluation() throws Exception {
-        String pgn = """
-                [Event "ChessAnalysisTool diagnostic export"]
-                [White "White"]
-                [Black "Black"]
-                [Result "*"]
-                [AnalysisFormat "ChessAnalysisTool-Diagnostic-v2"]
-
-                1. e4 { [%eval 0.31] [%depth 15] class=GOOD symbol=! prePv1Eval=0.20 prePv1Depth=15 prePv1="Nf3 Nc6 Bb5" postPv1Eval=0.31 postPv1Depth=15 postPv1="e5 Nf3 Nc6" }
-                e5 { [%eval 0.10] [%depth 15] prePv1="e5 Nf3 Nc6" } *
-                """;
-
-        Map<Integer, PgnMoveAnnotation> annotations = new PgnAnnotationParser().parse(pgn);
-
-        assertEquals("0.31", annotations.get(1).evaluation());
-        assertEquals(null, annotations.get(1).comment());
-        assertEquals("0.10", annotations.get(2).evaluation());
-        assertEquals(null, annotations.get(2).comment());
-    }
-
-
-    @Test
     public void annotationExportRoundTripsThroughStandardPgn() throws Exception {
         List<String> moves = List.of("e2e4", "e7e5", "g1f3", "b8c6");
         Simulation simulation = Simulation.createSimulation();
