@@ -58,7 +58,11 @@ public class PgnAnnotationParser {
                     end = movetext.length();
                 }
                 if (ply > 0) {
-                    addComment(annotations, ply, movetext.substring(index + 1, end));
+                    addComment(
+                            annotations,
+                            ply,
+                            movetext.substring(index + 1, end),
+                            diagnosticExport);
                 }
                 index = end;
                 continue;
