@@ -24,6 +24,8 @@ public class PgnAnnotationParser {
             "(?m)^\\s*\\[[A-Za-z0-9_]+\\s+\"(?:\\\\.|[^\"])*\"\\]\\s*$");
     private static final Pattern EVAL_TAG = Pattern.compile(
             "(?i)\\[%eval\\s+([^\\]]+)]");
+    private static final Pattern DIAGNOSTIC_FORMAT_TAG = Pattern.compile(
+            "(?im)^\\s*\\[AnalysisFormat\\s+\"ChessAnalysisTool-Diagnostic-[^\"]+\"\\]\\s*$");
     private static final Pattern MOVE_NUMBER_PREFIX = Pattern.compile("^\\d+\\.(?:\\.\\.)?");
     private static final Pattern SYMBOLIC_NAG_SUFFIX = Pattern.compile("(!!|\\?\\?|!\\?|\\?!|!|\\?)$");
 
@@ -34,7 +36,9 @@ public class PgnAnnotationParser {
             return Map.of();
         }
 
-        String movetext = TAG_LINE.matcher(stripBom(content)).replaceAll(" ");
+        String normalizedContent = stripBom(content);
+        boolean diagnosticExport = DIAGNOSTIC_FORMAT_TAG.matcher(normalizedContent).find();
+        String movetext = TAG_LINE.matcher(normalizedContent).replaceAll(" ");
         DummyGame game = Simulation.createDummySimulation();
         StringBuilder token = new StringBuilder();
         int ply = 0;
@@ -151,7 +155,8 @@ public class PgnAnnotationParser {
     private void addComment(
             Map<Integer, MutableAnnotation> annotations,
             int ply,
-            String rawComment) {
+            String rawComment,
+            boolean diagnosticExport) {
         if (rawComment == null) {
             return;
         }
@@ -168,6 +173,10 @@ public class PgnAnnotationParser {
             matcher.appendReplacement(humanText, " ");
         }
         matcher.appendTail(humanText);
+
+        if (diagnosticExport) {
+            return;
+        }
 
         String comment = humanText.toString().trim();
         if (!comment.isEmpty()) {
