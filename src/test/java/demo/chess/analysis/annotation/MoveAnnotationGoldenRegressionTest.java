@@ -269,7 +269,7 @@ public class MoveAnnotationGoldenRegressionTest {
                         line(1.20, "♖h3"),
                         line(0.48, "♖f4")),
                 MoveAnnotationKind.BLUNDER,
-                27.24);
+                25.16);
 
         assertQuality(
                 "Nezhmetdinov-Chernikov 24...Bxf1",
@@ -281,7 +281,7 @@ public class MoveAnnotationGoldenRegressionTest {
                         line(4.88, "♝xf1"),
                         line(6.96, "♝g4")),
                 MoveAnnotationKind.MISTAKE,
-                20.12);
+                22.53);
 
         assertQuality(
                 "Nezhmetdinov-Chernikov 25.Kxf1",
@@ -293,7 +293,7 @@ public class MoveAnnotationGoldenRegressionTest {
                         line(4.06, "fxe5"),
                         line(1.93, "♔xf1")),
                 MoveAnnotationKind.MISTAKE,
-                21.13);
+                18.35);
 
         assertQuality(
                 "Nezhmetdinov-Chernikov 25...Rc8",
@@ -305,19 +305,24 @@ public class MoveAnnotationGoldenRegressionTest {
                         line(5.32, "♜xe4"),
                         line(5.92, "♜c8")),
                 MoveAnnotationKind.MISTAKE,
-                20.01);
+                19.80);
 
-        assertQuality(
-                "Nezhmetdinov-Chernikov 26.Bd4",
-                classify(
-                        NEZHMETDINOV_CHERNIKOV,
-                        51,
-                        3.91,
-                        line(5.86, "fxe5"),
-                        line(2.00, "♗d4"),
-                        line(-0.36, "♘g5")),
-                MoveAnnotationKind.MISTAKE,
-                22.02);
+        /*
+         * With move quality derived from the resulting position, the exported
+         * post-move evaluation 3.91 gives 26.Bd4 a win-chance loss of 8.80.
+         * That is below the 10-point mistake threshold, so it is intentionally
+         * no longer annotated as a mistake.
+         */
+        MoveAnnotation bd4 = classify(
+                NEZHMETDINOV_CHERNIKOV,
+                51,
+                3.91,
+                line(5.86, "fxe5"),
+                line(2.00, "♗d4"),
+                line(-0.36, "♘g5"));
+        assertNull(
+                "Nezhmetdinov-Chernikov 26.Bd4 must be unannotated",
+                bd4);
 
         MoveAnnotation rh8 = classify(
                 NEZHMETDINOV_CHERNIKOV,
