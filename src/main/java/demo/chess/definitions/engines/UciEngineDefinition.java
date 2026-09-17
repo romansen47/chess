@@ -112,6 +112,19 @@ public final class UciEngineDefinition {
     }
 
     /**
+     * Returns whether the engine advertised the standard Chess960 UCI switch
+     * during its handshake.
+     *
+     * <p>This is an advertised capability. Higher layers may additionally
+     * perform behavioral smoke tests for a particular engine/version.</p>
+     *
+     * @return whether {@code UCI_Chess960} is supported
+     */
+    public boolean supportsChess960() {
+        return UciSystemOptions.supportsChess960(options);
+    }
+
+    /**
      * Performs the copy operation.
      * @return the result of the operation
      */
@@ -121,6 +134,11 @@ public final class UciEngineDefinition {
 
     /**
      * Creates the runtime config.
+     *
+     * <p>System-managed UCI values such as {@code UCI_Chess960} are deliberately
+     * ignored even when they are present in a legacy profile map. Their runtime
+     * value is derived from game context by the engine adapter.</p>
+     *
      * @param depth the depth
      * @param moveTimeSeconds the move time seconds
      * @param optionValues the option values
@@ -140,6 +158,9 @@ public final class UciEngineDefinition {
 
         if (optionValues != null) {
             for (Map.Entry<String, String> entry : optionValues.entrySet()) {
+                if (UciSystemOptions.isSystemManaged(entry.getKey())) {
+                    continue;
+                }
                 UciOption option = result.getOption(entry.getKey());
                 if (option == null) {
                     throw new IllegalArgumentException(

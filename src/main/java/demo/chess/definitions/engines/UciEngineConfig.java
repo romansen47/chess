@@ -10,6 +10,8 @@ import java.util.Objects;
  *
  * There is intentionally no Player/Evaluation/DeepAnalysis discriminator here.
  * The same configured profile can be consumed by any of those use cases.
+ * System-managed protocol options remain in the option schema as capabilities,
+ * but are not serialized as ordinary profile commands.
  */
 public class UciEngineConfig implements EngineConfig {
 
@@ -127,6 +129,15 @@ public class UciEngineConfig implements EngineConfig {
     }
 
     /**
+     * Returns whether the engine schema advertises Chess960 support.
+     *
+     * @return whether {@code UCI_Chess960} is available as a check option
+     */
+    public boolean supportsChess960() {
+        return UciSystemOptions.supportsChess960(options);
+    }
+
+    /**
      * Sets the option value.
      * @param name the name
      * @param value the value
@@ -148,13 +159,21 @@ public class UciEngineConfig implements EngineConfig {
     }
 
     /**
-     * Performs the to uci set option commands operation.
-     * @return the result of the operation
+     * Serializes only profile-managed UCI values.
+     *
+     * <p>Options whose value is derived from runtime/game context are excluded.
+     * In particular this prevents a persisted {@code UCI_Chess960=false}
+     * default from disabling Chess960 immediately before a search.</p>
+     *
+     * @return newline-separated UCI {@code setoption} commands
      */
     @Override
     public String toUciSetOptionCommands() {
         StringBuilder result = new StringBuilder();
         for (Map.Entry<String, UciOption> entry : options.entrySet()) {
+            if (UciSystemOptions.isSystemManaged(entry.getKey())) {
+                continue;
+            }
             UciOption option = entry.getValue();
             if (option == null || !option.isConfigurable()) {
                 continue;

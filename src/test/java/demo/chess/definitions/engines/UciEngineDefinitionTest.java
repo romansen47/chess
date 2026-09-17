@@ -1,8 +1,10 @@
 package demo.chess.definitions.engines;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotSame;
 import static org.junit.Assert.assertThrows;
+import static org.junit.Assert.assertTrue;
 
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -42,6 +44,30 @@ public class UciEngineDefinitionTest {
     }
 
     /**
+     * Verifies that system-managed Chess960 state remains capability metadata
+     * and can neither be restored nor emitted by an ordinary profile.
+     */
+    @Test
+    public void keepsChess960OptionSystemManaged() {
+        UciEngineDefinition definition = createDefinition();
+
+        assertTrue(definition.supportsChess960());
+
+        UciEngineConfig config = definition.createRuntimeConfig(
+                0,
+                1,
+                Map.of(
+                        "Hash", "64",
+                        "UCI_Chess960", "true"));
+
+        assertTrue(config.supportsChess960());
+        assertEquals("false", config.getOption("UCI_Chess960").getValue());
+        assertFalse(config.toUciSetOptionCommands().contains("UCI_Chess960"));
+        assertEquals("setoption name Hash value 64\nsetoption name Ponder value true",
+                config.toUciSetOptionCommands());
+    }
+
+    /**
      * Verifies that runtime and copied configurations do not share mutable option values.
      */
     @Test
@@ -78,7 +104,8 @@ public class UciEngineDefinitionTest {
     }
 
     /**
-     * Creates a representative engine definition containing configurable and action-only options.
+     * Creates a representative engine definition containing configurable,
+     * system-managed and action-only options.
      * @return the engine definition used by the tests
      */
     private UciEngineDefinition createDefinition() {
@@ -93,6 +120,13 @@ public class UciEngineDefinitionTest {
         options.put("Ponder", new UciOption(
                 UciOptionType.CHECK,
                 "true",
+                null,
+                null,
+                null,
+                List.of()));
+        options.put("UCI_Chess960", new UciOption(
+                UciOptionType.CHECK,
+                "false",
                 null,
                 null,
                 null,

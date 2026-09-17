@@ -85,6 +85,27 @@ The engine abstraction is based on the UCI protocol and is intended to support e
 
 Before a game is sent to an engine, `ConsoleUciEngine` configures `UCI_Chess960` from the game's starting-position context. Classical position 518 continues to use `position startpos`; non-standard positions use `position fen <initial-fen>` followed by the encoded move sequence.
 
+### Engine capabilities and system-managed options
+
+A successful UCI handshake only proves that an executable speaks UCI. Chess960 support is a separate advertised capability. The core recognizes an engine as Chess960-capable when its handshake contains a `UCI_Chess960` option of type `check`.
+
+`UCI_Chess960` is **system-managed**. It remains part of the engine option schema because it describes a capability, but it is not an ordinary profile value. `UciEngineConfig.toUciSetOptionCommands()` deliberately omits it, and `ConsoleUciEngine` derives its value from the current `Game` immediately before a search. This prevents a persisted default such as `UCI_Chess960=false` from silently switching a running Chess960 engine back to classical mode.
+
+The runtime rules are:
+
+```text
+classical game + engine without UCI_Chess960
+    -> allowed; no unknown option is sent
+
+Chess960 game + engine advertising UCI_Chess960
+    -> UCI_Chess960=true, then FEN + canonical Chess960 UCI moves
+
+Chess960 game + engine without UCI_Chess960
+    -> rejected before search
+```
+
+The advertised option is the protocol-level capability signal. Higher application layers may additionally perform behavioral smoke tests for specific engine/version/network combinations.
+
 Some engines need additional files next to the executable. Lc0, for example, normally needs a compatible neural-network weights file and, depending on the distribution and platform, may also require runtime libraries such as DLL files. Keep the files belonging to an engine distribution together unless that distribution explicitly documents another layout.
 
 ## Design rules
@@ -95,14 +116,16 @@ When extending this module:
 2. Treat position 518 as one `ChessStartingPosition`, not as a separate implementation path unless an external protocol requires it.
 3. Keep external notation/protocol details in codecs or adapters; do not overload `toString()` with protocol meaning.
 4. Preserve starting-position context whenever moves are replayed, analyzed, saved or sent to an engine.
-5. Prefer focused rule helpers over growing `PlayerImpl` or `ChessGameTemplate` into general-purpose utility classes.
-6. Add Javadoc for public domain types and non-obvious compatibility constraints, and update this README when an architectural boundary changes.
+5. Keep system-managed UCI state out of reusable profile values; game context is authoritative for protocol mode.
+6. Do not assume that every UCI engine supports Chess960 merely because its handshake succeeds.
+7. Prefer focused rule helpers over growing `PlayerImpl` or `ChessGameTemplate` into general-purpose utility classes.
+8. Add Javadoc for public domain types and non-obvious compatibility constraints, and update this README when an architectural boundary changes.
 
 ## Build and tests
 
 This module is a Maven JAR project compiled with Java 21. In the complete application it is normally built from the parent `chess-project` Maven reactor rather than in isolation.
 
-The test suite contains regression tests for standard chess as well as dedicated Chess960 coverage for Scharnagl decoding, FEN/PGN, castling geometry and UCI position commands. Changes to shared move or simulation code should be verified through the parent reactor because the API, database and frontend consume this module together.
+The test suite contains regression tests for standard chess as well as dedicated Chess960 coverage for Scharnagl decoding, FEN/PGN, castling geometry, UCI position commands and system-managed engine protocol state. Changes to shared move or simulation code should be verified through the parent reactor because the API, database and frontend consume this module together.
 
 ## Role in the project
 
