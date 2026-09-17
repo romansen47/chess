@@ -12,6 +12,7 @@ import java.util.Map;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import demo.chess.definitions.ChessStartingPosition;
 import demo.chess.definitions.engines.impl.NoMoveFoundException;
 import demo.chess.definitions.moves.Move;
 import demo.chess.game.DummyGame;
@@ -19,6 +20,7 @@ import demo.chess.game.Game;
 import demo.chess.game.LegalMoveResolver;
 import demo.chess.game.impl.Simulation;
 import demo.chess.notation.PgnNotation;
+import demo.chess.notation.UciMoveCodec;
 
 public class GameLoader {
 
@@ -29,81 +31,45 @@ public class GameLoader {
     private static final Pattern PGN_NAG_PATTERN = Pattern.compile("\\$\\d+");
     private static final Pattern MOVE_NUMBER_PREFIX_PATTERN = Pattern.compile("^\\d+\\.(?:\\.\\.)?");
 
-    /**
-     * Loads the game.
-     * @param location the location
-     * @param game the game
-     */
     public void loadGame(String location, Game game) throws IOException, NoMoveFoundException {
         String content = Files.readString(Path.of(location), StandardCharsets.UTF_8);
         loadGame(parseMoveList(content), game);
     }
 
-    /**
-     * Loads the game.
-     * @param uciMoves the uci moves
-     * @param game the game
-     */
     public void loadGame(List<String> uciMoves, Game game) throws IOException, NoMoveFoundException {
-        if (game == null) {
-            throw new NoMoveFoundException("game must not be null");
-        }
-
-        if (uciMoves == null) {
-            return;
-        }
+        if (game == null) throw new NoMoveFoundException("game must not be null");
+        if (uciMoves == null) return;
 
         int ply = 0;
         for (String rawMove : uciMoves) {
-            if (rawMove == null || rawMove.isBlank()) {
-                continue;
-            }
-
+            if (rawMove == null || rawMove.isBlank()) continue;
             ply++;
             String uciMove = rawMove.trim().toLowerCase(Locale.ROOT);
             if (!uciMove.matches("[a-h][1-8][a-h][1-8][qrbn]?")) {
                 throw new NoMoveFoundException("Invalid UCI move at ply " + ply + ": " + rawMove);
             }
-
-            Move finalMove;
             try {
-                finalMove = LegalMoveResolver.resolveUci(game, uciMove);
+                game.apply(LegalMoveResolver.resolveUci(game, uciMove));
             } catch (NoMoveFoundException e) {
                 throw new NoMoveFoundException("No legal UCI move at ply " + ply + ": " + rawMove);
             }
-
-            game.apply(finalMove);
         }
     }
 
-    /**
-     * Parses the move list.
-     * @param content the content
-     * @return the result of the operation
-     */
     public List<String> parseMoveList(String content) throws NoMoveFoundException {
         List<String> moveList = new ArrayList<>();
-        if (content == null || content.isBlank()) {
-            return moveList;
-        }
-
+        if (content == null || content.isBlank()) return moveList;
         String normalizedContent = stripBom(content).trim();
-        if (normalizedContent.isEmpty()) {
-            return moveList;
-        }
+        if (normalizedContent.isEmpty()) return moveList;
 
         String[] tokens = normalizedContent.split("\\s+");
         int startIndex = 0;
-
         if (tokens.length > 0 && "position".equalsIgnoreCase(tokens[0])) {
             if (tokens.length < 2 || !"startpos".equalsIgnoreCase(tokens[1])) {
-                throw new NoMoveFoundException("Only UCI games starting from 'position startpos' are supported");
+                throw new NoMoveFoundException(
+                        "Raw UCI import currently requires 'position startpos'; use PGN/FEN for Chess960");
             }
-
-            if (tokens.length == 2) {
-                return moveList;
-            }
-
+            if (tokens.length == 2) return moveList;
             if (!"moves".equalsIgnoreCase(tokens[2])) {
                 throw new NoMoveFoundException("Expected 'moves' after 'position startpos'");
             }
@@ -114,45 +80,25 @@ public class GameLoader {
 
         for (int i = startIndex; i < tokens.length; i++) {
             String token = tokens[i].trim().toLowerCase(Locale.ROOT);
-            if (token.isEmpty()) {
-                continue;
-            }
+            if (token.isEmpty()) continue;
             if (!token.matches("[a-h][1-8][a-h][1-8][qrbn]?")) {
                 throw new NoMoveFoundException("Invalid UCI token: " + tokens[i]);
             }
             moveList.add(token);
         }
-
         return moveList;
     }
 
-    /**
-     * Splits PGN content into individual games.
-     *
-     * <p>Game boundaries are detected without interpreting result tokens from tag
-     * values, comments or variations. A new tag block after movetext starts a new
-     * game. Result-terminated tagless games are also separated when additional
-     * movetext follows on a later line.</p>
-     *
-     * @param content complete PGN content
-     * @return individual PGN games in source order
-     */
     public List<String> splitPgnGames(String content) {
         List<String> games = new ArrayList<>();
-        if (content == null || content.isBlank()) {
-            return games;
-        }
+        if (content == null || content.isBlank()) return games;
 
-        String normalized = stripBom(content)
-                .replace("\r\n", "\n")
-                .replace('\r', '\n');
+        String normalized = stripBom(content).replace("\r\n", "\n").replace('\r', '\n');
         StringBuilder current = new StringBuilder();
         boolean currentFinished = false;
-
         for (String line : normalized.split("\n", -1)) {
             boolean tagLine = PGN_TAG_PATTERN.matcher(line).matches();
             boolean currentHasMovetext = containsPgnMovetext(current.toString());
-
             if (tagLine && currentHasMovetext) {
                 addPgnGame(games, current);
                 currentFinished = false;
@@ -160,86 +106,77 @@ public class GameLoader {
                 addPgnGame(games, current);
                 currentFinished = false;
             }
-
             current.append(line).append('\n');
             currentFinished = endsWithPgnResult(current.toString());
         }
-
         addPgnGame(games, current);
         return games;
     }
 
-    /**
-     * Parses the pgn move list.
-     * @param content the content
-     * @return the result of the operation
-     */
+    /** Resolves the Chess960 start position encoded by PGN tags. */
+    public ChessStartingPosition parsePgnStartingPosition(String content) throws NoMoveFoundException {
+        Map<String, String> tags = parsePgnTags(content);
+        String fen = tags.get("FEN");
+        String variant = tags.get("Variant");
+        boolean chess960 = variant != null
+                && (variant.equalsIgnoreCase("Chess960")
+                        || variant.equalsIgnoreCase("FischerRandom")
+                        || variant.equalsIgnoreCase("Fischer Random"));
+
+        if (fen != null && !fen.isBlank()) {
+            try {
+                return ChessStartingPosition.fromInitialFen(fen);
+            } catch (IllegalArgumentException e) {
+                throw new NoMoveFoundException("Unsupported PGN initial FEN: " + e.getMessage());
+            }
+        }
+        if (chess960) {
+            throw new NoMoveFoundException("Chess960 PGN requires a FEN tag for the initial position");
+        }
+        return ChessStartingPosition.STANDARD;
+    }
+
     public List<String> parsePgnMoveList(String content) throws NoMoveFoundException, IOException {
         List<String> moveList = new ArrayList<>();
-        if (content == null || content.isBlank()) {
-            return moveList;
-        }
+        if (content == null || content.isBlank()) return moveList;
 
+        ChessStartingPosition startingPosition = parsePgnStartingPosition(content);
         String movetext = sanitizePgnMovetext(stripBom(content));
-
-        DummyGame dummyGame = Simulation.createDummySimulation();
+        DummyGame dummyGame = Simulation.createDummySimulation(startingPosition);
         int ply = 0;
 
         for (String rawToken : movetext.trim().split("\\s+")) {
             String token = stripMoveNumberPrefix(rawToken.trim());
-            if (token.isEmpty() || "e.p.".equalsIgnoreCase(token) || "ep".equalsIgnoreCase(token)) {
-                continue;
-            }
-            if (isResultToken(token)) {
-                break;
-            }
-
+            if (token.isEmpty() || "e.p.".equalsIgnoreCase(token) || "ep".equalsIgnoreCase(token)) continue;
+            if (isResultToken(token)) break;
             ply++;
             try {
                 Move move = PgnNotation.resolveSan(dummyGame, token);
-                moveList.add(move.toString());
+                moveList.add(UciMoveCodec.encode(dummyGame, move));
                 dummyGame.apply(move);
             } catch (NoMoveFoundException e) {
-                throw new NoMoveFoundException("Invalid PGN move at ply " + ply + ": " + token + " (" + e.getMessage() + ")");
+                throw new NoMoveFoundException(
+                        "Invalid PGN move at ply " + ply + ": " + token + " (" + e.getMessage() + ")");
             }
         }
-
         return moveList;
     }
 
-    /**
-     * Parses the pgn tags.
-     * @param content the content
-     * @return the result of the operation
-     */
     public Map<String, String> parsePgnTags(String content) {
         Map<String, String> tags = new LinkedHashMap<>();
-        if (content == null || content.isBlank()) {
-            return tags;
-        }
-
+        if (content == null || content.isBlank()) return tags;
         for (String line : stripBom(content).split("\\R", -1)) {
             if (line.isBlank()) {
-                if (!tags.isEmpty()) {
-                    break;
-                }
+                if (!tags.isEmpty()) break;
                 continue;
             }
-
             Matcher matcher = PGN_TAG_PATTERN.matcher(line);
-            if (!matcher.matches()) {
-                break;
-            }
+            if (!matcher.matches()) break;
             tags.put(matcher.group(1), unescapePgnTagValue(matcher.group(2)));
         }
         return tags;
     }
 
-    /**
-     * Loads the move list.
-     * @param location the location
-     * @return the result of the operation
-     */
     public List<String> loadMoveList(String location) throws IOException {
         String content = Files.readString(Path.of(location), StandardCharsets.UTF_8);
         try {
@@ -254,28 +191,18 @@ public class GameLoader {
             current.setLength(0);
             return;
         }
-
         String game = current.toString().trim();
-        if (!game.isEmpty()) {
-            games.add(game);
-        }
+        if (!game.isEmpty()) games.add(game);
         current.setLength(0);
     }
 
     private boolean containsPgnMovetext(String value) {
         String movetext = sanitizePgnMovetext(value).trim();
-        if (movetext.isEmpty()) {
-            return false;
-        }
-
+        if (movetext.isEmpty()) return false;
         for (String rawToken : movetext.split("\\s+")) {
             String token = stripMoveNumberPrefix(rawToken.trim());
-            if (token.isEmpty()
-                    || "e.p.".equalsIgnoreCase(token)
-                    || "ep".equalsIgnoreCase(token)
-                    || isResultToken(token)) {
-                continue;
-            }
+            if (token.isEmpty() || "e.p.".equalsIgnoreCase(token) || "ep".equalsIgnoreCase(token)
+                    || isResultToken(token)) continue;
             return true;
         }
         return false;
@@ -287,16 +214,11 @@ public class GameLoader {
 
     private boolean endsWithPgnResult(String value) {
         String movetext = sanitizePgnMovetext(value).trim();
-        if (movetext.isEmpty()) {
-            return false;
-        }
-
+        if (movetext.isEmpty()) return false;
         String[] tokens = movetext.split("\\s+");
         for (int index = tokens.length - 1; index >= 0; index--) {
             String token = stripMoveNumberPrefix(tokens[index].trim());
-            if (token.isEmpty() || "e.p.".equalsIgnoreCase(token) || "ep".equalsIgnoreCase(token)) {
-                continue;
-            }
+            if (token.isEmpty() || "e.p.".equalsIgnoreCase(token) || "ep".equalsIgnoreCase(token)) continue;
             return isResultToken(token);
         }
         return false;
@@ -308,27 +230,13 @@ public class GameLoader {
         movetext = PGN_BRACE_COMMENT_PATTERN.matcher(movetext).replaceAll(" ");
         movetext = PGN_LINE_COMMENT_PATTERN.matcher(movetext).replaceAll(" ");
         movetext = removeVariations(movetext);
-        movetext = PGN_NAG_PATTERN.matcher(movetext).replaceAll(" ");
-        return movetext;
+        return PGN_NAG_PATTERN.matcher(movetext).replaceAll(" ");
     }
 
-    /**
-     * Performs the strip bom operation.
-     * @param content the content
-     * @return the result of the operation
-     */
     private String stripBom(String content) {
-        if (content != null && content.startsWith("\uFEFF")) {
-            return content.substring(1);
-        }
-        return content;
+        return content != null && content.startsWith("\uFEFF") ? content.substring(1) : content;
     }
 
-    /**
-     * Performs the strip move number prefix operation.
-     * @param token the token
-     * @return the result of the operation
-     */
     private String stripMoveNumberPrefix(String token) {
         String result = token;
         Matcher matcher = MOVE_NUMBER_PREFIX_PATTERN.matcher(result);
@@ -339,27 +247,13 @@ public class GameLoader {
         return result;
     }
 
-    /**
-     * Returns whether the result token.
-     * @param token the token
-     * @return true when the condition is satisfied; otherwise false
-     */
     private boolean isResultToken(String token) {
-        return "1-0".equals(token)
-                || "0-1".equals(token)
-                || "1/2-1/2".equals(token)
-                || "*".equals(token);
+        return "1-0".equals(token) || "0-1".equals(token) || "1/2-1/2".equals(token) || "*".equals(token);
     }
 
-    /**
-     * Removes the variations.
-     * @param value the value
-     * @return the result of the operation
-     */
     private String removeVariations(String value) {
         StringBuilder result = new StringBuilder(value.length());
         int depth = 0;
-
         for (int i = 0; i < value.length(); i++) {
             char current = value.charAt(i);
             if (current == '(') {
@@ -367,28 +261,17 @@ public class GameLoader {
                 continue;
             }
             if (current == ')') {
-                if (depth > 0) {
-                    depth--;
-                }
+                if (depth > 0) depth--;
                 continue;
             }
-            if (depth == 0) {
-                result.append(current);
-            }
+            if (depth == 0) result.append(current);
         }
-
         return result.toString();
     }
 
-    /**
-     * Performs the unescape pgn tag value operation.
-     * @param value the value
-     * @return the result of the operation
-     */
     private String unescapePgnTagValue(String value) {
         StringBuilder result = new StringBuilder();
         boolean escaped = false;
-
         for (int i = 0; i < value.length(); i++) {
             char current = value.charAt(i);
             if (escaped) {
@@ -400,9 +283,7 @@ public class GameLoader {
                 result.append(current);
             }
         }
-        if (escaped) {
-            result.append('\\');
-        }
+        if (escaped) result.append('\\');
         return result.toString();
     }
 }
