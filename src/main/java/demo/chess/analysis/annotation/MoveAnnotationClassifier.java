@@ -50,10 +50,6 @@ public final class MoveAnnotationClassifier {
                 EvaluationScoring.findMoveIndex(
                         candidates,
                         playedMoveUci);
-        EngineLine played =
-                playedIndex >= 0
-                        ? candidates.get(playedIndex)
-                        : null;
 
         double bestScore =
                 EvaluationScoring.moverScore(
@@ -61,9 +57,7 @@ public final class MoveAnnotationClassifier {
                         whiteMover);
         double playedScore =
                 EvaluationScoring.moverScore(
-                        played != null
-                                ? played.getEvaluation()
-                                : resultingEvaluation,
+                        resultingEvaluation,
                         whiteMover);
         double bestWinPercent =
                 EvaluationScoring.winPercentFromMoverScore(
