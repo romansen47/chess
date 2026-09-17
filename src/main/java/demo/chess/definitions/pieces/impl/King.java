@@ -7,6 +7,8 @@ import java.util.stream.Collectors;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
+import demo.chess.definitions.CastlingRights;
+import demo.chess.definitions.CastlingSide;
 import demo.chess.definitions.Color;
 import demo.chess.definitions.PieceType;
 import demo.chess.definitions.board.Board;
@@ -16,131 +18,107 @@ import demo.chess.definitions.moves.impl.CastlingImpl;
 import demo.chess.definitions.moves.impl.ChessMove;
 import demo.chess.definitions.pieces.Piece;
 
-/**
- * Implementation of the king piece in a chess game.
- */
+/** Implementation of the king piece. */
 public class King extends PieceImpl {
 
-	private static final Logger logger = LogManager.getLogger(King.class);
+    private static final Logger logger = LogManager.getLogger(King.class);
+    private final CastlingRights castlingRights;
 
-	/**
-	 * Creates a new King instance.
-	 * @param color the color
-	 * @param field the field
-	 * @param chessBoard the chess board
-	 * @param setField the set field
-	 */
-	public King(Color color, Field field, Board chessBoard, boolean setField) {
-		super(color, field, chessBoard, setField);
-	}
+    public King(Color color, Field field, Board chessBoard, boolean setField) {
+        this(color, field, chessBoard, setField, null);
+    }
 
-	/**
-	 * Returns a string representation of this object.
-	 * @return the result of the operation
-	 */
-	@Override
-	public String toString() {
-		return getColor().label + "K" + getField().getName();
-	}
+    public King(
+            Color color,
+            Field field,
+            Board chessBoard,
+            boolean setField,
+            CastlingRights castlingRights) {
+        super(color, field, chessBoard, setField);
+        this.castlingRights = castlingRights;
+    }
 
-	/**
-	 * Returns the simple unvalidated moves.
-	 * @return the simple unvalidated moves
-	 */
-	@Override
-	public List<Move> getSimpleUnvalidatedMoves() {
-		List<Move> moveList = new ArrayList<>();
-		int file = getField().getFile();
-		int rank = getField().getRank();
-		addMove(file - 1, rank - 1, moveList);
-		addMove(file - 1, rank, moveList);
-		addMove(file - 1, rank + 1, moveList);
-		addMove(file, rank - 1, moveList);
-		addMove(file, rank + 1, moveList);
-		addMove(file + 1, rank - 1, moveList);
-		addMove(file + 1, rank, moveList);
-		addMove(file + 1, rank + 1, moveList);
-		moveList.addAll(addCastlingMoves());
-		return moveList;
-	}
+    @Override
+    public String toString() {
+        return getColor().label + "K" + getField().getName();
+    }
 
-	/**
-	 * Returns the possible unvalidated moves.
-	 * @return the possible unvalidated moves
-	 */
-	@Override
-	public List<Move> getPossibleUnvalidatedMoves() {
-		List<Move> moveList = getSimpleUnvalidatedMoves();
-		moveList.addAll(addCastlingMoves());
-		return moveList;
-	}
+    @Override
+    public List<Move> getSimpleUnvalidatedMoves() {
+        List<Move> moveList = new ArrayList<>();
+        int file = getField().getFile();
+        int rank = getField().getRank();
+        addMove(file - 1, rank - 1, moveList);
+        addMove(file - 1, rank, moveList);
+        addMove(file - 1, rank + 1, moveList);
+        addMove(file, rank - 1, moveList);
+        addMove(file, rank + 1, moveList);
+        addMove(file + 1, rank - 1, moveList);
+        addMove(file + 1, rank, moveList);
+        addMove(file + 1, rank + 1, moveList);
+        return moveList;
+    }
 
-	/**
-	 * Adds the castling moves.
-	 * @return the result of the operation
-	 */
-	private List<Move> addCastlingMoves() {
-		List<Move> moveList = new ArrayList<>();
-		List<Piece> allMovedPieces = this.getMoveList().stream().map(Move::getPiece).distinct()
-				.collect(Collectors.toList());
-		if (allMovedPieces.contains(this)) {
-			return moveList;
-		}
-		Piece rookA1 = getChessBoard().getField(1, 1).getPiece();
-		Piece rookH1 = getChessBoard().getField(8, 1).getPiece();
-		Piece rookA8 = getChessBoard().getField(1, 8).getPiece();
-		Piece rookH8 = getChessBoard().getField(8, 8).getPiece();
+    @Override
+    public List<Move> getPossibleUnvalidatedMoves() {
+        List<Move> moveList = getSimpleUnvalidatedMoves();
+        moveList.addAll(addCastlingMoves());
+        return moveList;
+    }
 
-		if (getColor().equals(Color.WHITE)) {
-			if (rookA1 != null && rookA1 instanceof Rook) {
-				moveList.add(new CastlingImpl(this, (Rook) rookA1));
-			}
-			if (rookH1 != null && rookH1 instanceof Rook) {
-				moveList.add(new CastlingImpl(this, (Rook) rookH1));
-			}
-		} else {
-			if (rookA8 != null && rookA8 instanceof Rook) {
-				moveList.add(new CastlingImpl(this, (Rook) rookA8));
-			}
-			if (rookH8 != null && rookH8 instanceof Rook) {
-				moveList.add(new CastlingImpl(this, (Rook) rookH8));
-			}
-		}
-		return moveList;
-	}
+    private List<Move> addCastlingMoves() {
+        List<Move> result = new ArrayList<>();
+        List<Piece> movedPieces = getMoveList().stream()
+                .map(Move::getPiece)
+                .distinct()
+                .collect(Collectors.toList());
+        if (movedPieces.contains(this)) return result;
 
-	/**
-	 * Adds the move.
-	 * @param i the i
-	 * @param j the j
-	 * @param moveList the move list
-	 */
-	private void addMove(int i, int j, List<Move> moveList) {
-		if (i > 0 && j > 0 && i < 9 && j < 9) {
-			Field targetField = this.getChessBoard().getField(i, j);
-			Piece targetPiece = targetField.getPiece();
-			if (targetPiece == null || !targetPiece.getColor().equals(this.getColor())) {
-				Move move = new ChessMove(this, this.getField(), targetField);
-				moveList.add(move);
-			}
-		}
-	}
+        for (CastlingSide side : CastlingSide.values()) {
+            Rook rook = findCastlingRook(side);
+            if (rook != null && !movedPieces.contains(rook)) {
+                result.add(new CastlingImpl(this, rook, side));
+            }
+        }
+        return result;
+    }
 
-	/**
-	 * Returns the logger.
-	 * @return the logger
-	 */
-	@Override
-	public Logger getLogger() {
-		return logger;
-	}
+    private Rook findCastlingRook(CastlingSide side) {
+        int rank = getField().getRank();
+        Integer configuredFile = castlingRights != null
+                ? castlingRights.getRookFile(getColor(), side)
+                : null;
+        if (castlingRights != null && configuredFile == null) return null;
 
-	/**
-	 * Returns the type.
-	 * @return the type
-	 */
-	@Override
-	public PieceType getType() {
-		return PieceType.KING;
-	}
+        if (configuredFile != null) {
+            Piece piece = getChessBoard().getField(configuredFile, rank).getPiece();
+            return piece instanceof Rook rook && rook.getColor() == getColor() ? rook : null;
+        }
+
+        int direction = side == CastlingSide.KING_SIDE ? 1 : -1;
+        for (int file = getField().getFile() + direction; file >= 1 && file <= 8; file += direction) {
+            Piece piece = getChessBoard().getField(file, rank).getPiece();
+            if (piece instanceof Rook rook && rook.getColor() == getColor()) return rook;
+        }
+        return null;
+    }
+
+    private void addMove(int file, int rank, List<Move> moveList) {
+        if (file < 1 || rank < 1 || file > 8 || rank > 8) return;
+        Field targetField = getChessBoard().getField(file, rank);
+        Piece targetPiece = targetField.getPiece();
+        if (targetPiece == null || targetPiece.getColor() != getColor()) {
+            moveList.add(new ChessMove(this, getField(), targetField));
+        }
+    }
+
+    @Override
+    public Logger getLogger() {
+        return logger;
+    }
+
+    @Override
+    public PieceType getType() {
+        return PieceType.KING;
+    }
 }

@@ -4,6 +4,7 @@ import java.io.IOException;
 import java.util.Collections;
 import java.util.List;
 
+import demo.chess.definitions.ChessStartingPosition;
 import demo.chess.definitions.board.Board;
 import demo.chess.definitions.board.impl.ChessBoard;
 import demo.chess.definitions.engines.impl.NoMoveFoundException;
@@ -19,122 +20,111 @@ import demo.chess.definitions.players.impl.WhitePlayerImpl;
 
 public class Simulation extends ChessGameTemplate {
 
-	/**
-	 * Creates a new Simulation instance.
-	 * @param chessBoard the chess board
-	 * @param whitePlayer the white player
-	 * @param blackPlayer the black player
-	 * @param moveList the move list
-	 */
-	public Simulation(Board chessBoard, WhitePlayer whitePlayer, BlackPlayer blackPlayer, MoveList moveList) {
-		super(chessBoard, whitePlayer, blackPlayer, moveList);
-	}
+    public Simulation(Board chessBoard, WhitePlayer whitePlayer, BlackPlayer blackPlayer, MoveList moveList) {
+        super(chessBoard, whitePlayer, blackPlayer, moveList);
+    }
 
-	/**
-	 * Creates the simulation.
-	 * @return the result of the operation
-	 */
-	public static Simulation createSimulation() {
-		MoveList moveList = new MoveListImpl();
-		return new Simulation(new ChessBoard(), new WhitePlayerImpl(moveList, "Simulation"),
-				new BlackPlayerImpl(moveList, "Simulation"), moveList);
-	}
+    public Simulation(
+            Board chessBoard,
+            WhitePlayer whitePlayer,
+            BlackPlayer blackPlayer,
+            MoveList moveList,
+            ChessStartingPosition startingPosition) {
+        super(chessBoard, whitePlayer, blackPlayer, moveList, startingPosition);
+    }
 
-	/**
-	 * Creates the dummy simulation.
-	 * @return the result of the operation
-	 */
-	public static DummyChessGame createDummySimulation() {
-		MoveList moveList = new MoveListImpl();
-		return new DummyChessGame(new ChessBoard(), new DummyWhitePlayer(moveList),
-				new DummyBlackPlayer(moveList), moveList);
-	}
-	
-	/**
-	 * Performs the fork simulation from operation.
-	 * @param ml the ml
-	 * @return the result of the operation
-	 */
-	public static Simulation forkSimulationFrom(MoveList ml) throws NoMoveFoundException, IOException {
-		Simulation simulation = createSimulation();
-		for (Move move : ml) {
-			simulation.apply(simulation.getPlayer().getMoveInSimulation(simulation, move));
-		}
-		return simulation;
-	}
+    public static Simulation createSimulation() {
+        return createSimulation(ChessStartingPosition.STANDARD);
+    }
 
-	/**
-	 * Performs the fork dummy from operation.
-	 * @param ml the ml
-	 * @return the result of the operation
-	 */
-	public static DummyChessGame forkDummyFrom(MoveList ml) throws NoMoveFoundException, IOException {
-		DummyChessGame fork = createDummySimulation();
-		for (Move move : ml) {
-			fork.apply(fork.getPlayer().getMoveInSimulation(fork, move));
-		}
-		return fork;
-	}
-	
-	/**
-	 * Returns the time for each player.
-	 * @return the time for each player
-	 */
-	@Override
-	public int getTimeForEachPlayer() {
-		return 10000;
-	}
+    public static Simulation createSimulation(ChessStartingPosition startingPosition) {
+        MoveList moveList = new MoveListImpl();
+        moveList.setStartingPosition(startingPosition);
+        return new Simulation(
+                new ChessBoard(),
+                new WhitePlayerImpl(moveList, "Simulation"),
+                new BlackPlayerImpl(moveList, "Simulation"),
+                moveList,
+                startingPosition);
+    }
 
-	/**
-	 * Returns the increment for white.
-	 * @return the increment for white
-	 */
-	@Override
-	public int getIncrementForWhite() {
-		return 0;
-	}
+    public static DummyChessGame createDummySimulation() {
+        return createDummySimulation(ChessStartingPosition.STANDARD);
+    }
 
-	/**
-	 * Sets the increment for white.
-	 * @param incrementForWhite the increment for white
-	 */
-	@Override
-	public void setIncrementForWhite(int incrementForWhite) {
-	}
+    public static DummyChessGame createDummySimulation(ChessStartingPosition startingPosition) {
+        MoveList moveList = new MoveListImpl();
+        moveList.setStartingPosition(startingPosition);
+        return new DummyChessGame(
+                new ChessBoard(),
+                new DummyWhitePlayer(moveList),
+                new DummyBlackPlayer(moveList),
+                moveList,
+                startingPosition);
+    }
 
-	/**
-	 * Returns the increment for black.
-	 * @return the increment for black
-	 */
-	@Override
-	public int getIncrementForBlack() {
-		return 0;
-	}
+    public static Simulation forkSimulationFrom(MoveList moveList) throws NoMoveFoundException, IOException {
+        ChessStartingPosition startingPosition = moveList != null
+                ? moveList.getStartingPosition()
+                : ChessStartingPosition.STANDARD;
+        Simulation simulation = createSimulation(startingPosition);
+        if (moveList != null) {
+            for (Move move : moveList) {
+                simulation.apply(simulation.getPlayer().getMoveInSimulation(simulation, move));
+            }
+        }
+        return simulation;
+    }
 
-	/**
-	 * Sets the increment for black.
-	 * @param incrementForBlack the increment for black
-	 */
-	@Override
-	public void setIncrementForBlack(int incrementForBlack) {
+    public static Simulation forkSimulationFrom(demo.chess.game.Game game)
+            throws NoMoveFoundException, IOException {
+        return game == null
+                ? createSimulation()
+                : forkSimulationFrom(game.getMoveList());
+    }
 
-	}
+    public static DummyChessGame forkDummyFrom(MoveList moveList) throws NoMoveFoundException, IOException {
+        ChessStartingPosition startingPosition = moveList != null
+                ? moveList.getStartingPosition()
+                : ChessStartingPosition.STANDARD;
+        DummyChessGame fork = createDummySimulation(startingPosition);
+        if (moveList != null) {
+            for (Move move : moveList) {
+                fork.apply(fork.getPlayer().getMoveInSimulation(fork, move));
+            }
+        }
+        return fork;
+    }
 
-	/**
-	 * Returns the san move list.
-	 * @return the san move list
-	 */
-	@Override
-	public List<String> getSanMoveList() {
-		return Collections.emptyList();
-	}
+    @Override
+    public int getTimeForEachPlayer() {
+        return 10000;
+    }
 
-	/**
-	 * Sets the san move list.
-	 * @param sanMoveList the san move list
-	 */
-	@Override
-	public void setSanMoveList(List<String> sanMoveList) {
-	}
+    @Override
+    public int getIncrementForWhite() {
+        return 0;
+    }
 
+    @Override
+    public void setIncrementForWhite(int incrementForWhite) {
+    }
+
+    @Override
+    public int getIncrementForBlack() {
+        return 0;
+    }
+
+    @Override
+    public void setIncrementForBlack(int incrementForBlack) {
+    }
+
+    @Override
+    public List<String> getSanMoveList() {
+        return Collections.emptyList();
+    }
+
+    @Override
+    public void setSanMoveList(List<String> sanMoveList) {
+    }
 }

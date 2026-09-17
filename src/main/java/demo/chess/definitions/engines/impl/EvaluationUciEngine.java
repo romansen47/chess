@@ -13,434 +13,264 @@ import demo.chess.definitions.Color;
 import demo.chess.definitions.engines.EngineConfig;
 import demo.chess.definitions.engines.EngineLine;
 import demo.chess.definitions.engines.EvaluationEngine;
-import demo.chess.definitions.moves.Move;
 import demo.chess.game.Game;
 
 public class EvaluationUciEngine extends ConsoleUciEngine implements EvaluationEngine {
 
-	private static final int MIN_LIVE_EVALUATION_DEPTH = 0;
+    private static final int MIN_LIVE_EVALUATION_DEPTH = 0;
 
-	String bestMove;
-	private Map<String, List<EngineLine>> cachedBestLines = new HashMap<>();
-	private String lastPositionHash = "";
-	private Thread evaluationThread;
-	private volatile BiConsumer<String, List<EngineLine>> evaluationUpdateListener;
-	private volatile long evaluationGeneration;
-	private int lastNotifiedDepth = -1;
+    String bestMove;
+    private Map<String, List<EngineLine>> cachedBestLines = new HashMap<>();
+    private String lastPositionHash = "";
+    private Thread evaluationThread;
+    private volatile BiConsumer<String, List<EngineLine>> evaluationUpdateListener;
+    private volatile long evaluationGeneration;
+    private int lastNotifiedDepth = -1;
 
-	/**
-	 * Creates a new EvaluationUciEngine instance.
-	 * @param path the path
-	 */
-	public EvaluationUciEngine(String path) throws Exception {
-		super(path);
-		logger.info("Creating new evaluation engine: {}", path);
-	}
+    public EvaluationUciEngine(String path) throws Exception {
+        super(path);
+        logger.info("Creating new evaluation engine: {}", path);
+    }
 
-	/**
-	 * Registers a listener that is called once for every newly completed search depth.
-	 * The listener runs on the engine reader thread and therefore must return quickly.
-	 *
-	 * @param listener position key plus immutable engine-line snapshot
-	 */
-	public void setEvaluationUpdateListener(BiConsumer<String, List<EngineLine>> listener) {
-		evaluationUpdateListener = listener;
-	}
+    public void setEvaluationUpdateListener(BiConsumer<String, List<EngineLine>> listener) {
+        evaluationUpdateListener = listener;
+    }
 
-	/**
-	 * Clears the chached lines.
-	 */
-	@Override
-	public void clearChachedLines() {
-		getCachedBestLines().clear();
-	}
+    @Override
+    public void clearChachedLines() {
+        getCachedBestLines().clear();
+    }
 
-	/**
-	 * Returns the best lines.
-	 * @param chessGame the chess game
-	 * @param config the config
-	 * @return the best lines
-	 */
-	@Override
-	public synchronized List<EngineLine> getBestLines(Game chessGame, EngineConfig config)
-			throws IOException, InterruptedException, ExecutionException {
-		if (chessGame.getState() != null) {
-			return new ArrayList<>();
-		}
-		String movelist = chessGame.getMoveList().toString();
-		List<EngineLine> cachedLines = getCachedBestLines().get(movelist);
-		if (cachedLines != null) {
-			return getCachedBestLines().get(movelist);
-		}
+    @Override
+    public synchronized List<EngineLine> getBestLines(Game chessGame, EngineConfig config)
+            throws IOException, InterruptedException, ExecutionException {
+        if (chessGame.getState() != null) return new ArrayList<>();
+        String movelist = chessGame.getMoveList().toString();
+        List<EngineLine> cachedLines = getCachedBestLines().get(movelist);
+        if (cachedLines != null) return cachedLines;
+        getCachedBestLines().put(movelist, new ArrayList<>());
+        startEvaluationEngine(chessGame, movelist, config);
+        return getCachedBestLines().get(movelist);
+    }
 
-		getCachedBestLines().put(chessGame.getMoveList().toString(), new ArrayList<>());
-		startEvaluationEngine(chessGame, movelist, config);
-		return getCachedBestLines().get(movelist);
-	}
+    @Override
+    protected StringBuilder getCommandLineOptions(StringBuilder command, EngineConfig config) {
+        return new StringBuilder(UciPositionCommand.build(command)).append("\ngo infinite ");
+    }
 
-	/**
-	 * Returns the command line options.
-	 * @param command the command
-	 * @param config the config
-	 * @return the command line options
-	 */
-	@Override
-	protected StringBuilder getCommandLineOptions(StringBuilder command, EngineConfig config) {
-		StringBuilder positionCommand = new StringBuilder();
-		positionCommand.append(UciPositionCommand.build(command));
-		positionCommand.append("\ngo infinite ");
-		return positionCommand;
-	}
+    protected boolean isPositionNew(Game chessGame) {
+        String currentPositionHash = chessGame.getMoveList().toString();
+        if (!currentPositionHash.equals(lastPositionHash)) {
+            lastPositionHash = currentPositionHash;
+            return true;
+        }
+        return false;
+    }
 
-	/**
-	 * Returns whether the position new.
-	 * @param chessGame the chess game
-	 * @return true when the condition is satisfied; otherwise false
-	 */
-	protected boolean isPositionNew(Game chessGame) {
-		String currentPositionHash = chessGame.getMoveList().toString();
-		if (!currentPositionHash.equals(lastPositionHash)) {
-			lastPositionHash = currentPositionHash;
-			return true;
-		}
-		return false;
-	}
+    protected List<EngineLine> parseBestLines(Color color, List<String> bestLines, EngineConfig config) {
+        return parseBestLines(color, bestLines, config, Math.max(0, config.getDepth()));
+    }
 
-	/**
-	 * Parses the best lines.
-	 * @param color the color
-	 * @param bestLines the best lines
-	 * @param config the config
-	 * @return the result of the operation
-	 */
-	protected List<EngineLine> parseBestLines(Color color, List<String> bestLines, EngineConfig config) {
-		return parseBestLines(color, bestLines, config, Math.max(0, config.getDepth()));
-	}
+    protected List<EngineLine> parseBestLinesAtHighestDepth(
+            Color color,
+            List<String> bestLines,
+            EngineConfig config) {
+        int maxDepth = bestLines.stream()
+                .filter(line -> line.contains("info") && line.contains("depth") && line.contains(" pv "))
+                .mapToInt(line -> Integer.parseInt(line.split("depth ")[1].split(" ")[0]))
+                .max()
+                .orElse(0);
+        if (maxDepth == 0) return new ArrayList<>();
+        List<String> highestDepthLines = bestLines.stream()
+                .filter(line -> line.contains("depth "))
+                .filter(line -> Integer.parseInt(line.split("depth ")[1].split(" ")[0]) == maxDepth)
+                .toList();
+        return parseBestLines(color, highestDepthLines, config, 0);
+    }
 
-	/**
-	 * Parses the best lines at highest depth.
-	 * @param color the color
-	 * @param bestLines the best lines
-	 * @param config the config
-	 * @return the result of the operation
-	 */
-	protected List<EngineLine> parseBestLinesAtHighestDepth(
-			Color color,
-			List<String> bestLines,
-			EngineConfig config) {
-		int maxDepth = bestLines.stream()
-				.filter(line -> line.contains("info") && line.contains("depth") && line.contains(" pv "))
-				.mapToInt(line -> Integer.parseInt(line.split("depth ")[1].split(" ")[0]))
-				.max()
-				.orElse(0);
+    private List<EngineLine> parseBestLines(
+            Color color,
+            List<String> bestLines,
+            EngineConfig config,
+            int minimumDepth) {
+        int requestedVariants = Math.max(1, config.getIntOption("MultiPV", 1));
+        TreeMap<Integer, Map<Integer, EngineLine>> linesByDepth = new TreeMap<>();
 
-		if (maxDepth == 0) {
-			return new ArrayList<>();
-		}
+        for (String chessLine : bestLines) {
+            if (!chessLine.contains("info") || !chessLine.contains("depth") || !chessLine.contains(" pv ")) continue;
+            int currentDepth = Integer.parseInt(chessLine.split("depth ")[1].split(" ")[0]);
+            if (currentDepth < minimumDepth) continue;
+            int multipv = chessLine.contains("multipv ")
+                    ? Integer.parseInt(chessLine.split("multipv ")[1].split(" ")[0])
+                    : 1;
+            if (multipv < 1 || multipv > requestedVariants) continue;
 
-		List<String> highestDepthLines = bestLines.stream()
-				.filter(line -> line.contains("depth "))
-				.filter(line -> Integer.parseInt(line.split("depth ")[1].split(" ")[0]) == maxDepth)
-				.toList();
+            Map<Integer, EngineLine> depthLines = linesByDepth.computeIfAbsent(currentDepth, ignored -> new TreeMap<>());
+            double parsedValue;
+            Integer mateDistance = null;
+            if (chessLine.contains(" score mate ")) {
+                int mateScore = Integer.parseInt(chessLine.split(" score mate ")[1].split(" ")[0]);
+                if (mateScore == 0) {
+                    depthLines.remove(multipv);
+                    logger.debug("Ignoring transient UCI score mate 0 at depth {} multipv {}", currentDepth, multipv);
+                    continue;
+                }
+                parsedValue = Integer.signum(mateScore) * 99d;
+                mateDistance = Math.abs(mateScore);
+            } else if (chessLine.contains(" score cp ")) {
+                parsedValue = Double.parseDouble(chessLine.split(" score cp ")[1].split(" ")[0]) / 100.0;
+            } else {
+                continue;
+            }
 
-		return parseBestLines(color, highestDepthLines, config, 0);
-	}
+            String uciEngineLine = chessLine.split(" pv ", 2)[1];
+            double factor = color.equals(Color.BLACK) ? -1 : 1;
+            depthLines.put(multipv, new EngineLine(
+                    factor * parsedValue,
+                    currentDepth,
+                    mateDistance,
+                    uciEngineLine));
+        }
 
-	/**
-	 * Parses the best lines.
-	 * @param color the color
-	 * @param bestLines the best lines
-	 * @param config the config
-	 * @param minimumDepth the minimum depth
-	 * @return the result of the operation
-	 */
-	private List<EngineLine> parseBestLines(
-			Color color,
-			List<String> bestLines,
-			EngineConfig config,
-			int minimumDepth) {
-		int requestedVariants = Math.max(1, config.getIntOption("MultiPV", 1));
-		TreeMap<Integer, Map<Integer, EngineLine>> linesByDepth = new TreeMap<>();
+        List<EngineLine> completeLines = selectHighestCompleteDepth(linesByDepth, requestedVariants);
+        if (!completeLines.isEmpty()) return completeLines;
 
-		for (String chessLine : bestLines) {
-			if (!chessLine.contains("info") || !chessLine.contains("depth") || !chessLine.contains(" pv ")) {
-				continue;
-			}
+        int largestCompletedVariantCount = 0;
+        for (Map<Integer, EngineLine> depthLines : linesByDepth.values()) {
+            largestCompletedVariantCount = Math.max(
+                    largestCompletedVariantCount,
+                    countContiguousVariants(depthLines, requestedVariants));
+        }
+        if (largestCompletedVariantCount == 0) return new ArrayList<>();
+        return selectHighestCompleteDepth(linesByDepth, largestCompletedVariantCount);
+    }
 
-			int currentDepth = Integer.parseInt(chessLine.split("depth ")[1].split(" ")[0]);
-			if (currentDepth < minimumDepth) {
-				continue;
-			}
+    private List<EngineLine> selectHighestCompleteDepth(
+            TreeMap<Integer, Map<Integer, EngineLine>> linesByDepth,
+            int expectedVariants) {
+        for (Map.Entry<Integer, Map<Integer, EngineLine>> depthEntry : linesByDepth.descendingMap().entrySet()) {
+            Map<Integer, EngineLine> depthLines = depthEntry.getValue();
+            if (countContiguousVariants(depthLines, expectedVariants) < expectedVariants) continue;
+            List<EngineLine> result = new ArrayList<>();
+            for (int multipv = 1; multipv <= expectedVariants; multipv++) result.add(depthLines.get(multipv));
+            return result;
+        }
+        return new ArrayList<>();
+    }
 
-			int multipv = chessLine.contains("multipv ")
-					? Integer.parseInt(chessLine.split("multipv ")[1].split(" ")[0])
-					: 1;
-			if (multipv < 1 || multipv > requestedVariants) {
-				continue;
-			}
+    private int countContiguousVariants(Map<Integer, EngineLine> depthLines, int maxVariants) {
+        int count = 0;
+        for (int multipv = 1; multipv <= maxVariants; multipv++) {
+            if (!depthLines.containsKey(multipv)) break;
+            count++;
+        }
+        return count;
+    }
 
-			Map<Integer, EngineLine> depthLines = linesByDepth.computeIfAbsent(
-					currentDepth,
-					ignored -> new TreeMap<>());
+    public synchronized void startEvaluationEngine(Game chessGame, String moveListAsString, EngineConfig config)
+            throws IOException {
+        if (evaluationThread != null) stopEvaluation();
+        if (chessGame.getState() != null) {
+            logger.info("Game is decided. Not starting new infinite analysis...");
+            return;
+        }
 
-			double parsedValue;
-			Integer mateDistance = null;
+        int moveCount = chessGame.getMoveList().size();
+        logger.info("{} is starting new infinite analysis for move list {}", this, chessGame.getMoveList());
+        long generation = ++evaluationGeneration;
+        lastNotifiedDepth = -1;
+        if (evaluationThread != null && !evaluationThread.isInterrupted()) evaluationThread.interrupt();
 
-			if (chessLine.contains(" score mate ")) {
-				int mateScore = Integer.parseInt(chessLine.split(" score mate ")[1].split(" ")[0]);
+        evaluationThread = new Thread(() -> {
+            try {
+                restartProcess();
+                applyConfig(config);
+                prepareForGame(chessGame);
+                final java.io.PrintWriter processWriter = writer;
+                final java.io.BufferedReader processReader = reader;
 
-				// Stockfish 8 can emit "mate 0" for an unfinished MultiPV root
-				// score when a search is stopped between variants. Such a value must
-				// not replace a real evaluation and must not make this depth look
-				// complete.
-				if (mateScore == 0) {
-					depthLines.remove(multipv);
-					logger.debug(
-							"Ignoring transient UCI score mate 0 at depth {} multipv {}",
-							currentDepth,
-							multipv);
-					continue;
-				}
+                String evaluationCommand = "stop\n" + UciPositionCommand.build(chessGame) + "\ngo infinite";
+                logger.info("Starting new infinite analysis with {} threads", config.getIntOption("Threads", 0));
+                processWriter.println(evaluationCommand);
+                processWriter.flush();
 
-				parsedValue = Integer.signum(mateScore) * 99d;
-				mateDistance = Math.abs(mateScore);
-			} else if (chessLine.contains(" score cp ")) {
-				parsedValue = Double.parseDouble(chessLine.split(" score cp ")[1].split(" ")[0]) / 100.0;
-			} else {
-				continue;
-			}
+                List<String> bestLines = new ArrayList<>();
+                int currentMaxDepth = MIN_LIVE_EVALUATION_DEPTH;
+                String line;
+                while ((line = processReader.readLine()) != null) {
+                    if (generation != evaluationGeneration || chessGame.getState() != null) return;
+                    if (line.contains("info") && line.contains("depth") && !(line.split(" ").length == 3)) {
+                        int depth = Integer.parseInt(line.split("depth ")[1].split(" ")[0]);
+                        if (depth >= currentMaxDepth) {
+                            currentMaxDepth = depth;
+                            bestLines.add(line);
+                            if (config.getIntOption("MultiPV", 1) == 1
+                                    || bestLines.stream().filter(l -> l.contains("multipv")).count()
+                                            >= config.getIntOption("MultiPV", 1)) {
+                                Color color = moveCount % 2 == 0 ? Color.WHITE : Color.BLACK;
+                                List<EngineLine> newLines = parseBestLines(color, bestLines, config);
+                                synchronized (getCachedBestLines()) {
+                                    getCachedBestLines().put(moveListAsString, newLines);
+                                }
+                                notifyEvaluationUpdate(generation, moveListAsString, newLines);
+                                bestLines.clear();
+                            }
+                        }
+                    }
+                }
+                processReader.close();
+            } catch (Exception e) {
+                logger.debug("Evaluation reader stopped: {}", e.getMessage());
+            }
+        });
 
-			String uciEngineLine = chessLine.split(" pv ", 2)[1];
-			double factor = color.equals(Color.BLACK) ? -1 : 1;
-			depthLines.put(
-					multipv,
-					new EngineLine(
-							factor * parsedValue,
-							currentDepth,
-							mateDistance,
-							uciEngineLine));
-		}
+        try {
+            evaluationThread.start();
+        } catch (NullPointerException ignored) {
+            logger.debug("Thread was cancelled...");
+        }
+    }
 
-		List<EngineLine> completeLines = selectHighestCompleteDepth(
-				linesByDepth,
-				requestedVariants);
-		if (!completeLines.isEmpty()) {
-			return completeLines;
-		}
+    private void notifyEvaluationUpdate(long generation, String positionKey, List<EngineLine> lines) {
+        if (generation != evaluationGeneration || lines == null || lines.isEmpty()) return;
+        BiConsumer<String, List<EngineLine>> listener;
+        int depth = lines.get(0).getDepth();
+        synchronized (this) {
+            if (generation != evaluationGeneration || depth <= lastNotifiedDepth) return;
+            lastNotifiedDepth = depth;
+            listener = evaluationUpdateListener;
+        }
+        if (listener == null) return;
+        try {
+            listener.accept(positionKey, List.copyOf(lines));
+        } catch (RuntimeException e) {
+            logger.debug("Evaluation update listener failed at depth {}: {}", depth, e.getMessage());
+        }
+    }
 
-		// A legal position can contain fewer moves than the configured MultiPV
-		// value. If no depth ever contained all requested variants, return the
-		// largest contiguous MultiPV prefix that was actually completed.
-		int largestCompletedVariantCount = 0;
-		for (Map<Integer, EngineLine> depthLines : linesByDepth.values()) {
-			largestCompletedVariantCount = Math.max(
-					largestCompletedVariantCount,
-					countContiguousVariants(depthLines, requestedVariants));
-		}
+    @Override
+    public void stopEvaluation() {
+        logger.info("{} stopping actual infinite analysis", this);
+        evaluationGeneration++;
+        if (evaluationThread != null && evaluationThread.isAlive()) {
+            getWriter().println("stop");
+            getWriter().flush();
+            evaluationThread.interrupt();
+        }
+    }
 
-		if (largestCompletedVariantCount == 0) {
-			return new ArrayList<>();
-		}
+    protected List<EngineLine> sortLinesByColor(Color color, List<EngineLine> moves) {
+        List<EngineLine> tmpLines = new ArrayList<>(moves);
+        if (color.equals(Color.WHITE)) {
+            tmpLines.sort((line1, line2) -> Double.compare(line2.getEvaluation(), line1.getEvaluation()));
+        } else {
+            tmpLines.sort((line1, line2) -> Double.compare(line1.getEvaluation(), line2.getEvaluation()));
+        }
+        return tmpLines;
+    }
 
-		return selectHighestCompleteDepth(linesByDepth, largestCompletedVariantCount);
-	}
-
-	/**
-	 * Performs the select highest complete depth operation.
-	 * @param linesByDepth the lines by depth
-	 * @param expectedVariants the expected variants
-	 * @return the result of the operation
-	 */
-	private List<EngineLine> selectHighestCompleteDepth(
-			TreeMap<Integer, Map<Integer, EngineLine>> linesByDepth,
-			int expectedVariants) {
-		for (Map.Entry<Integer, Map<Integer, EngineLine>> depthEntry : linesByDepth.descendingMap().entrySet()) {
-			Map<Integer, EngineLine> depthLines = depthEntry.getValue();
-			if (countContiguousVariants(depthLines, expectedVariants) < expectedVariants) {
-				continue;
-			}
-
-			List<EngineLine> result = new ArrayList<>();
-			for (int multipv = 1; multipv <= expectedVariants; multipv++) {
-				result.add(depthLines.get(multipv));
-			}
-			return result;
-		}
-
-		return new ArrayList<>();
-	}
-
-	/**
-	 * Performs the count contiguous variants operation.
-	 * @param depthLines the depth lines
-	 * @param maxVariants the max variants
-	 * @return the result of the operation
-	 */
-	private int countContiguousVariants(Map<Integer, EngineLine> depthLines, int maxVariants) {
-		int count = 0;
-		for (int multipv = 1; multipv <= maxVariants; multipv++) {
-			if (!depthLines.containsKey(multipv)) {
-				break;
-			}
-			count++;
-		}
-		return count;
-	}
-
-	/**
-	 * Starts the evaluation engine.
-	 * @param chessGame the chess game
-	 * @param moveListAsString the move list as string
-	 * @param config the config
-	 */
-	public synchronized void startEvaluationEngine(Game chessGame, String moveListAsString, EngineConfig config) throws IOException {
-	    if (evaluationThread != null) {
-	        stopEvaluation();
-	    }
-	    if (chessGame.getState() != null) {
-	        logger.info("Game is decided. Not starting new infinite analysis...");
-	        return;
-	    }
-
-	    List<Move> moveList = new ArrayList<>(chessGame.getMoveList());
-	    logger.info("{} is starting new infinite analysis for move list {}", this, moveList);
-	    long generation = ++evaluationGeneration;
-	    lastNotifiedDepth = -1;
-
-	    if (evaluationThread != null && !evaluationThread.isInterrupted()) {
-	    	evaluationThread.interrupt();
-	    }
-	    
-	    evaluationThread = new Thread(() -> {
-	        try {
-	            restartProcess();
-		            applyConfig(config);
-	            final java.io.PrintWriter processWriter = writer;
-	            final java.io.BufferedReader processReader = reader;
-
-	            StringBuilder command = new StringBuilder();
-	            for (Move move : moveList) {
-	                command.append(move.toString()).append(" ");
-	            }
-
-	            StringBuilder evaluationCommand = new StringBuilder(
-	                    "stop\n" + getCommandLineOptions(command, config).toString());
-	            logger.info("Starting new infinite analysis with {} threads", config.getIntOption("Threads", 0));
-	            processWriter.println(evaluationCommand.toString());
-	            processWriter.flush();
-
-	            List<String> bestLines = new ArrayList<>();
-	            int currentMaxDepth = MIN_LIVE_EVALUATION_DEPTH;
-	            String line;
-	            while ((line = processReader.readLine()) != null) {
-	                if (generation != evaluationGeneration || chessGame.getState() != null) {
-	                    return;
-	                }
-
-	                if (line.contains("info") && line.contains("depth") && !(line.split(" ").length == 3)) {
-	                    int depth = Integer.parseInt(line.split("depth ")[1].split(" ")[0]);
-
-	                    // Sammle nur Zeilen mit einer Tiefe >= currentMaxDepth
-	                    if (depth >= currentMaxDepth) {
-	                        currentMaxDepth = depth; // Aktualisiere die maximale Tiefe
-	                        bestLines.add(line);
-
-	                        // Verarbeite die Zeilen, wenn alle Varianten gesammelt wurden
-	                        if (config.getIntOption("MultiPV", 1) == 1 || bestLines.stream().filter(l -> l.contains("multipv")).count() >= config.getIntOption("MultiPV", 1)) {
-	                            Color color = moveList.size() % 2 == 0 ? Color.WHITE : Color.BLACK;
-	                            List<EngineLine> newLines = parseBestLines(color, bestLines, config);
-
-	                            synchronized (getCachedBestLines()) {
-	                                getCachedBestLines().put(moveListAsString, newLines);
-	                            }
-	                            notifyEvaluationUpdate(generation, moveListAsString, newLines);
-
-	                            bestLines.clear(); // Leere die Liste nach Verarbeitung
-	                        }
-	                    }
-	                }
-	            }
-	            processReader.close();
-	        } catch (Exception e) {
-	            logger.debug("Caught IOException since reader is not ready");
-	        }
-	    });
-
-	    try {
-	        evaluationThread.start();
-	    } catch (NullPointerException np) {
-	        logger.debug("Thread was cancelled...");
-	    }
-	}
-
-	/**
-	 * Notifies the registered listener once for each increasing completed depth.
-	 * @param generation search generation
-	 * @param positionKey move-list position key
-	 * @param lines parsed lines for one completed depth
-	 */
-	private void notifyEvaluationUpdate(long generation, String positionKey, List<EngineLine> lines) {
-		if (generation != evaluationGeneration || lines == null || lines.isEmpty()) {
-			return;
-		}
-
-		BiConsumer<String, List<EngineLine>> listener;
-		int depth = lines.get(0).getDepth();
-		synchronized (this) {
-			if (generation != evaluationGeneration || depth <= lastNotifiedDepth) {
-				return;
-			}
-			lastNotifiedDepth = depth;
-			listener = evaluationUpdateListener;
-		}
-
-		if (listener == null) {
-			return;
-		}
-
-		try {
-			listener.accept(positionKey, List.copyOf(lines));
-		} catch (RuntimeException e) {
-			logger.debug("Evaluation update listener failed at depth {}: {}", depth, e.getMessage());
-		}
-	}
-
-	/**
-	 * Stops the evaluation.
-	 */
-	@Override
-	public void stopEvaluation() {
-		logger.info("{} stopping actual infinite analysis", this);
-		evaluationGeneration++;
-		if (evaluationThread != null && evaluationThread.isAlive()) {
-			getWriter().println("stop");
-			getWriter().flush();
-			evaluationThread.interrupt();
-		}
-	}
-
-	/**
-	 * Performs the sort lines by color operation.
-	 * @param color the color
-	 * @param moves the moves
-	 * @return the result of the operation
-	 */
-	protected List<EngineLine> sortLinesByColor(Color color, List<EngineLine> moves) {
-		List<EngineLine> tmpLines = new ArrayList<>(moves);
-		if (color.equals(Color.WHITE)) {
-			tmpLines.sort((line1, line2) -> Double.compare(line2.getEvaluation(), line1.getEvaluation()));
-		} else {
-			tmpLines.sort((line1, line2) -> Double.compare(line1.getEvaluation(), line2.getEvaluation()));
-		}
-		return tmpLines;
-	}
-
-	/**
-	 * Returns the cached best lines.
-	 * @return the cached best lines
-	 */
-	@Override
-	public Map<String, List<EngineLine>> getCachedBestLines() {
-		return cachedBestLines;
-	}
+    @Override
+    public Map<String, List<EngineLine>> getCachedBestLines() {
+        return cachedBestLines;
+    }
 }

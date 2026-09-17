@@ -1,16 +1,17 @@
 package demo.chess.admin;
 
+import demo.chess.definitions.ChessStartingPosition;
 import demo.chess.game.Game;
 
-/**
- * Interface representing administrative functionalities for a chess game.
- */
+/** Interface representing administrative functionalities for a chess game. */
 public interface Admin {
 
-	/**
-	 * Performs the chess game operation.
-	 * @param time the time
-	 * @return the result of the operation
-	 */
-	Game chessGame(int time);
+    Game chessGame(int time);
+
+    default Game chessGame(int time, ChessStartingPosition startingPosition) {
+        if (startingPosition == null || startingPosition.isStandard()) {
+            return chessGame(time);
+        }
+        throw new UnsupportedOperationException("Admin does not support Chess960 starting positions");
+    }
 }

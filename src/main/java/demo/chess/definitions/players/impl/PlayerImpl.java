@@ -3,7 +3,6 @@ package demo.chess.definitions.players.impl;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.stream.Collectors;
 
 import demo.chess.definitions.Color;
 import demo.chess.definitions.board.Board;
@@ -31,376 +30,253 @@ import demo.chess.game.Game;
 import demo.chess.game.TerminalPositionEvaluator;
 import demo.chess.game.impl.Simulation;
 
-/**
- * Abstract class representing a chess player with common functionalities.
- */
-public abstract class PlayerImpl implements Player {
+/** Abstract player implementation. */
+public abstract class PlayerImpl extends PlayerSimulationBase implements Player {
 
-	private static final long SECOND_IN_MILLIS = 1000l;
+    private static final long SECOND_IN_MILLIS = 1000L;
 
-	private final List<Piece> pieces;
-	private final Color color;
-	private Piece king;
-	private MoveList moveList;
-	private ChessClock chessClock;
-	private final String name;
-	private int additionalTime;
+    private final List<Piece> pieces;
+    private final Color color;
+    private Piece king;
+    private MoveList moveList;
+    private ChessClock chessClock;
+    private final String name;
+    private int additionalTime;
 
-	/**
-	 * Creates a new PlayerImpl instance.
-	 * @param color the color
-	 * @param moveList the move list
-	 * @param string the string
-	 */
-	public PlayerImpl(Color color, MoveList moveList, String string) {
-		this.pieces = new ArrayList<>();
-		this.color = color;
-		this.moveList = moveList;
-		name = string;
-		this.chessClock = new ChessClock();
-	}
+    public PlayerImpl(Color color, MoveList moveList, String string) {
+        this.pieces = new ArrayList<>();
+        this.color = color;
+        this.moveList = moveList;
+        name = string;
+        this.chessClock = new ChessClock();
+    }
 
-	/**
-	 * Sets the up clock.
-	 * @param timeForEachPlayer the time for each player
-	 * @param incrementForWhite the increment for white
-	 * @param runnable the runnable
-	 */
-	@Override
-	public void setupClock(int timeForEachPlayer, int incrementForWhite, Runnable runnable) {
-		this.chessClock.setIncrementMillis(incrementForWhite * SECOND_IN_MILLIS);
-		this.chessClock.setTargetTimeMillis(timeForEachPlayer * SECOND_IN_MILLIS);
-		this.chessClock.setTimeUpAction(runnable);
-	}
+    @Override
+    public void setupClock(int timeForEachPlayer, int incrementForWhite, Runnable runnable) {
+        this.chessClock.setIncrementMillis(incrementForWhite * SECOND_IN_MILLIS);
+        this.chessClock.setTargetTimeMillis(timeForEachPlayer * SECOND_IN_MILLIS);
+        this.chessClock.setTimeUpAction(runnable);
+    }
 
-	/**
-	 * Returns the simple moves.
-	 * @return the simple moves
-	 */
-	@Override
-	public List<Move> getSimpleMoves() {
-		List<Move> possibleValidMoves = new ArrayList<>();
-		for (Piece piece : getPieces()) {
-			possibleValidMoves.addAll(piece.getSimpleUnvalidatedMoves());
-		}
-		return possibleValidMoves;
-	}
+    @Override
+    public List<Move> getSimpleMoves() {
+        List<Move> possibleValidMoves = new ArrayList<>();
+        for (Piece piece : getPieces()) possibleValidMoves.addAll(piece.getSimpleUnvalidatedMoves());
+        return possibleValidMoves;
+    }
 
-	/**
-	 * Returns the valid moves.
-	 * @param chessGame the chess game
-	 * @return the valid moves
-	 */
-	@Override
-	public List<Move> getValidMoves(Game chessGame) throws NoMoveFoundException, IOException {
-		List<Move> possibleUnvalidetMoves = new ArrayList<>();
-		List<Move> possibleValidMoves = new ArrayList<>();
-		for (Piece piece : getPieces()) {
-			possibleUnvalidetMoves.addAll(piece.getPossibleUnvalidatedMoves());
-		}
-		for (Move move : possibleUnvalidetMoves) {
-			{
-				if (simulate(chessGame, move)) {
-					possibleValidMoves.add(move);
-				}
-			}
-		}
-		return possibleValidMoves;
-	}
+    @Override
+    public List<Move> getValidMoves(Game chessGame) throws NoMoveFoundException, IOException {
+        List<Move> possibleUnvalidatedMoves = new ArrayList<>();
+        List<Move> possibleValidMoves = new ArrayList<>();
+        for (Piece piece : getPieces()) possibleUnvalidatedMoves.addAll(piece.getPossibleUnvalidatedMoves());
+        for (Move move : possibleUnvalidatedMoves) if (simulate(chessGame, move)) possibleValidMoves.add(move);
+        return possibleValidMoves;
+    }
 
-	/**
-	 * Performs the resign or stale mate operation.
-	 * @param chessGame the chess game
-	 */
-	@Override
-	public void resignOrStaleMate(Game chessGame) {
-		State terminalState = TerminalPositionEvaluator.determineStateWhenNoLegalMoves(chessGame);
-		if (terminalState != null) {
-			chessGame.setState(terminalState);
-		}
-		if (chessGame.getWhitePlayer().getChessClock().isStarted()) {
-			chessGame.getWhitePlayer().getChessClock().stop();
-		}
-		if (chessGame.getBlackPlayer().getChessClock().isStarted()) {
-			chessGame.getBlackPlayer().getChessClock().stop();
-		}
-	}
+    @Override
+    public void resignOrStaleMate(Game chessGame) {
+        State terminalState = TerminalPositionEvaluator.determineStateWhenNoLegalMoves(chessGame);
+        if (terminalState != null) chessGame.setState(terminalState);
+        if (chessGame.getWhitePlayer().getChessClock().isStarted()) chessGame.getWhitePlayer().getChessClock().stop();
+        if (chessGame.getBlackPlayer().getChessClock().isStarted()) chessGame.getBlackPlayer().getChessClock().stop();
+    }
 
-	/**
-	 * Performs the replace by valid move operation.
-	 * @param chessGame the chess game
-	 * @param move the move
-	 * @return the result of the operation
-	 */
-	@Override
-	public Move replaceByValidMove(Game chessGame, Move move) throws NoMoveFoundException, IOException {
-		List<Move> validMoves = getValidMoves(chessGame);
-		Move answer = null;
-		for (Move realMove : validMoves) {
-			if (answer == null && realMove.equals(move)) {
-				answer = realMove;
-			}
-		}
-		return answer;
-	}
+    @Override
+    public Move replaceByValidMove(Game chessGame, Move move) throws NoMoveFoundException, IOException {
+        for (Move realMove : getValidMoves(chessGame)) if (realMove.equals(move)) return realMove;
+        return null;
+    }
 
-	/**
-	 * Validates the castling.
-	 * @param chessGame the chess game
-	 * @param move the move
-	 * @return the result of the operation
-	 */
-	private boolean validateCastling(Game chessGame, Move move) {
-		if (!(move instanceof Castling)) {
-			return false;
-		}
-		Castling castling = (Castling) move;
-		Rook rook = castling.getRook();
+    private boolean validateCastling(Game chessGame, Move move) {
+        if (!(move instanceof Castling castling)) return false;
+        Rook rook = castling.getRook();
+        if (rook == null || king == null || king.getField() == null || rook.getField() == null) return false;
+        if (rook.getColor() != getColor()) return false;
 
-		List<Piece> listOfMovedPieces = chessGame.getMoveList().stream().map(Move::getPiece).distinct()
-				.collect(Collectors.toList());
+        Integer expectedRookFile = chessGame.getCastlingRights().getRookFile(getColor(), castling.getSide());
+        if (expectedRookFile == null || expectedRookFile != rook.getField().getFile()) return false;
 
-		List<Field> listOfAttackedFields = new ArrayList<>();
-		Player opponent = getColor().equals(Color.WHITE) ? chessGame.getBlackPlayer() : chessGame.getWhitePlayer();
-		listOfAttackedFields.addAll(
-				opponent.getSimpleMoves().stream().map(Move::getTarget).distinct().collect(Collectors.toList()));
+        boolean kingMoved = chessGame.getMoveList().stream().anyMatch(previous -> previous.getPiece() == king);
+        boolean rookMoved = chessGame.getMoveList().stream().anyMatch(previous -> previous.getPiece() == rook);
+        if (kingMoved || rookMoved) return false;
 
-		if (listOfAttackedFields.contains(king.getField()) || listOfMovedPieces.contains(king)
-				|| listOfMovedPieces.contains(rook)) {
-			return false;
-		}
+        Field kingSource = king.getField();
+        Field rookSource = rook.getField();
+        Field kingTarget = castling.getKingTarget();
+        Field rookTarget = castling.getRookTarget();
+        if (kingSource.getRank() != rookSource.getRank()
+                || kingSource.getRank() != kingTarget.getRank()
+                || kingSource.getRank() != rookTarget.getRank()) return false;
 
-		int rank = move.getPiece().getField().getRank();
-		int file = move.getPiece().getField().getFile();
-		boolean fieldsAreFree = true;
-		int rookFile = move.getTarget().getFile() == 1 ? 1 : 8;
-		if (rookFile == 1) {
-			for (int i = 2; i < file; i++) {
-				if (chessGame.getChessBoard().getField(i, rank).getPiece() != null) {
-					fieldsAreFree = false;
-				}
-			}
-		} else {
-			for (int i = file + 1; i < 7; i++) {
-				if (chessGame.getChessBoard().getField(i, rank).getPiece() != null) {
-					fieldsAreFree = false;
-				}
-			}
-		}
-		if (!fieldsAreFree) {
-			return false;
-		}
-		if (getColor().equals(Color.WHITE)) {
-			if (castling.getRook().equals(chessGame.getChessBoard().getField(1, 1).getPiece())) {
-				if (listOfAttackedFields.contains(chessGame.getChessBoard().getField(3, 1))
-						|| listOfAttackedFields.contains(chessGame.getChessBoard().getField(4, 1))) {
-					return false;
-				}
-			} else if (castling.getRook().equals(chessGame.getChessBoard().getField(8, 1).getPiece())) {
-				if (listOfAttackedFields.contains(chessGame.getChessBoard().getField(6, 1))
-						|| listOfAttackedFields.contains(chessGame.getChessBoard().getField(7, 1))) {
-					return false;
-				}
-			}
-		} else {
-			if (castling.getRook().equals(chessGame.getChessBoard().getField(1, 8).getPiece())) {
-				if (listOfAttackedFields.contains(chessGame.getChessBoard().getField(3, 8))
-						|| listOfAttackedFields.contains(chessGame.getChessBoard().getField(4, 8))) {
-					return false;
-				}
-			} else if (castling.getRook().equals(chessGame.getChessBoard().getField(8, 8).getPiece())) {
-				if (listOfAttackedFields.contains(chessGame.getChessBoard().getField(6, 8))
-						|| listOfAttackedFields.contains(chessGame.getChessBoard().getField(7, 8))) {
-					return false;
-				}
-			}
-		}
-		return true;
-	}
+        if (!pathClear(chessGame, kingSource, kingTarget, kingSource, rookSource)
+                || !pathClear(chessGame, rookSource, rookTarget, kingSource, rookSource)) return false;
 
-	/**
-	 * Performs the simulate operation.
-	 * @param chessGame the chess game
-	 * @param move the move
-	 * @return the result of the operation
-	 */
-	protected boolean simulate(Game chessGame, Move move) throws NoMoveFoundException, IOException {
-		if (move instanceof Castling && !validateCastling(chessGame, move)) {
-			return false;
-		}
-		Game simulation = Simulation.createSimulation();
-		for (Move m : getMoveList()) {
-			Move newMove = getMoveInSimulation(simulation, m);
-			simulation.apply(newMove);
-		}
-		Player originalPlayer = simulation.getPlayer();
-		simulation.apply(getMoveInSimulation(simulation, move));
-		Player otherPlayer = simulation.getPlayer();
-		List<Move> simpleMovesOfOtherPlayer = otherPlayer.getSimpleMoves();
-		List<Field> fieldsOfiecesPossibleToTakeBySimpleMoves = simpleMovesOfOtherPlayer.stream().map(Move::getTarget)
-				.distinct().collect(Collectors.toList());
-		return !fieldsOfiecesPossibleToTakeBySimpleMoves.contains(originalPlayer.getKing().getField());
-	}
+        Player opponent = getColor() == Color.WHITE ? chessGame.getBlackPlayer() : chessGame.getWhitePlayer();
+        int direction = Integer.compare(kingTarget.getFile(), kingSource.getFile());
+        if (direction == 0) return !isAttacked(kingSource, opponent);
+        for (int file = kingSource.getFile(); ; file += direction) {
+            if (isAttacked(chessGame.getChessBoard().getField(file, kingSource.getRank()), opponent)) return false;
+            if (file == kingTarget.getFile()) break;
+        }
+        return true;
+    }
 
-	/**
-	 * Returns the move in simulation.
-	 * @param simulation the simulation
-	 * @param m the m
-	 * @return the move in simulation
-	 */
-	@Override
-	public Move getMoveInSimulation(Game simulation, Move m) {
-		Board chessBoard = simulation.getChessBoard();
-		Field source = chessBoard.getField(m.getSource().getFile(), m.getSource().getRank());
-		Field target = chessBoard.getField(m.getTarget().getFile(), m.getTarget().getRank());
-		Piece piece = source.getPiece();
-		if (m instanceof Promotion) {
-			Piece promotedPiece = ((Promotion) m).getPromotedPiece();
-			Piece simulatedPromotedPiece = null;
-			switch (promotedPiece.getType()) {
-			case QUEEN:
-				simulatedPromotedPiece = new Queen(promotedPiece.getColor(), target, chessBoard, false);
-				break;
-			case ROOK:
-				simulatedPromotedPiece = new Rook(promotedPiece.getColor(), target, chessBoard, false);
-				break;
-			case KNIGHT:
-				simulatedPromotedPiece = new Knight(promotedPiece.getColor(), target, chessBoard, false);
-				break;
-			case BISHOP:
-				simulatedPromotedPiece = new Bishop(promotedPiece.getColor(), target, chessBoard, false);
-				break;
-			default:
-				break;
-			}
-			return new PromotionImpl(piece, source, target, simulatedPromotedPiece);
-		}
-		if (m instanceof EnPassant) {
-			EnPassant ep = (EnPassant) m;
-			Field fieldOfSlayedPawn = chessBoard.getField(ep.getSlayedPiece().getField().getFile(),
-					ep.getSlayedPiece().getField().getRank());
-			Pawn newPawn = (Pawn) fieldOfSlayedPawn.getPiece();
-			return new EnPassantImpl(piece, source, target, newPawn);
-		}
-		if (m instanceof Castling) {
-			return new CastlingImpl(piece, (Rook) target.getPiece());
-		}
-		return new ChessMove(piece, source, target);
-	}
+    private boolean pathClear(Game game, Field from, Field to, Field kingSource, Field rookSource) {
+        int min = Math.min(from.getFile(), to.getFile());
+        int max = Math.max(from.getFile(), to.getFile());
+        int rank = from.getRank();
+        for (int file = min; file <= max; file++) {
+            Field field = game.getChessBoard().getField(file, rank);
+            if (field.equals(kingSource) || field.equals(rookSource)) continue;
+            if (field.getPiece() != null) return false;
+        }
+        return true;
+    }
 
-	/**
-	 * Performs the reset operation.
-	 */
-	@Override
-	public void reset() {
-		pieces.clear();
-	}
+    private boolean isAttacked(Field target, Player opponent) {
+        for (Piece piece : opponent.getPieces()) {
+            if (piece == null || piece.getField() == null) continue;
+            if (piece instanceof Pawn pawn) {
+                int direction = pawn.getColor() == Color.WHITE ? 1 : -1;
+                if (target.getRank() == pawn.getField().getRank() + direction
+                        && Math.abs(target.getFile() - pawn.getField().getFile()) == 1) return true;
+                continue;
+            }
+            for (Move attack : piece.getSimpleUnvalidatedMoves()) {
+                if (attack instanceof Castling || attack.getTarget() == null) continue;
+                if (attack.getTarget().equals(target)) return true;
+            }
+        }
+        return false;
+    }
 
-	/**
-	 * Returns the king.
-	 * @return the king
-	 */
-	@Override
-	public Piece getKing() {
-		return king;
-	}
+    @Override
+    protected boolean simulate(Game chessGame, Move move) throws NoMoveFoundException, IOException {
+        if (move instanceof Castling && !validateCastling(chessGame, move)) return false;
+        Game simulation = Simulation.createSimulation(chessGame.getStartingPosition());
+        for (Move previous : getMoveList()) {
+            Move newMove = getMoveInSimulation(simulation, previous);
+            if (newMove == null) return false;
+            simulation.apply(newMove);
+        }
+        Player originalPlayer = simulation.getPlayer();
+        Move simulatedMove = getMoveInSimulation(simulation, move);
+        if (simulatedMove == null) return false;
+        simulation.apply(simulatedMove);
+        Player otherPlayer = simulation.getPlayer();
+        Field kingField = originalPlayer.getKing().getField();
+        for (Piece opponentPiece : otherPlayer.getPieces()) {
+            if (opponentPiece == null || opponentPiece.getField() == null) continue;
+            if (opponentPiece instanceof Pawn pawn) {
+                int direction = pawn.getColor() == Color.WHITE ? 1 : -1;
+                if (kingField.getRank() == pawn.getField().getRank() + direction
+                        && Math.abs(kingField.getFile() - pawn.getField().getFile()) == 1) return false;
+                continue;
+            }
+            boolean attacked = opponentPiece.getSimpleUnvalidatedMoves().stream()
+                    .filter(candidate -> !(candidate instanceof Castling))
+                    .map(Move::getTarget)
+                    .anyMatch(kingField::equals);
+            if (attacked) return false;
+        }
+        return true;
+    }
 
-	/**
-	 * Sets the king.
-	 * @param king the king
-	 */
-	@Override
-	public void setKing(Piece king) {
-		this.king = king;
-	}
+    @Override
+    public Move getMoveInSimulation(Game simulation, Move move) {
+        Board chessBoard = simulation.getChessBoard();
+        Field source = chessBoard.getField(move.getSource().getFile(), move.getSource().getRank());
+        Field target = chessBoard.getField(move.getTarget().getFile(), move.getTarget().getRank());
+        Piece piece = source.getPiece();
+        if (piece == null) return null;
 
-	/**
-	 * Returns the move list.
-	 * @return the move list
-	 */
-	@Override
-	public MoveList getMoveList() {
-		return moveList;
-	}
+        if (move instanceof Promotion promotion) {
+            Piece promotedPiece = promotion.getPromotedPiece();
+            Piece simulatedPromotedPiece = switch (promotedPiece.getType()) {
+                case QUEEN -> new Queen(promotedPiece.getColor(), target, chessBoard, false);
+                case ROOK -> new Rook(promotedPiece.getColor(), target, chessBoard, false);
+                case KNIGHT -> new Knight(promotedPiece.getColor(), target, chessBoard, false);
+                case BISHOP -> new Bishop(promotedPiece.getColor(), target, chessBoard, false);
+                default -> null;
+            };
+            return new PromotionImpl(piece, source, target, simulatedPromotedPiece);
+        }
+        if (move instanceof EnPassant ep) {
+            Field slayedField = chessBoard.getField(
+                    ep.getSlayedPiece().getField().getFile(),
+                    ep.getSlayedPiece().getField().getRank());
+            return new EnPassantImpl(piece, source, target, (Pawn) slayedField.getPiece());
+        }
+        if (move instanceof Castling castling) {
+            Piece targetPiece = target.getPiece();
+            if (!(targetPiece instanceof Rook rook)) return null;
+            return new CastlingImpl(piece, rook, castling.getSide());
+        }
+        return new ChessMove(piece, source, target);
+    }
 
-	/**
-	 * Sets the move list.
-	 * @param moveList the move list
-	 */
-	public void setMoveList(MoveList moveList) {
-		this.moveList = moveList;
-	}
+    @Override
+    public void reset() {
+        pieces.clear();
+    }
 
-	/**
-	 * Returns the chess clock.
-	 * @return the chess clock
-	 */
-	@Override
-	public ChessClock getChessClock() {
-		return chessClock;
-	}
+    @Override
+    public Piece getKing() {
+        return king;
+    }
 
-	/**
-	 * Sets the chess clock.
-	 * @param chessClock the chess clock
-	 */
-	@Override
-	public void setChessClock(ChessClock chessClock) {
-		this.chessClock = chessClock;
-	}
+    @Override
+    public void setKing(Piece king) {
+        this.king = king;
+    }
 
-	/**
-	 * Returns the color.
-	 * @return the color
-	 */
-	@Override
-	public Color getColor() {
-		return color;
-	}
+    @Override
+    public MoveList getMoveList() {
+        return moveList;
+    }
 
-	/**
-	 * Returns the name.
-	 * @return the name
-	 */
-	@Override
-	public String getName() {
-		return name;
-	}
+    public void setMoveList(MoveList moveList) {
+        this.moveList = moveList;
+    }
 
-	/**
-	 * Returns the pieces.
-	 * @return the pieces
-	 */
-	@Override
-	public List<Piece> getPieces() {
-		return pieces;
-	}
+    @Override
+    public ChessClock getChessClock() {
+        return chessClock;
+    }
 
-	/**
-	 * Returns the additional time.
-	 * @return the additional time
-	 */
-	@Override
-	public int getAdditionalTime() {
-		return additionalTime;
-	}
+    @Override
+    public void setChessClock(ChessClock chessClock) {
+        this.chessClock = chessClock;
+    }
 
-	/**
-	 * Sets the additional time.
-	 * @param additionalTime the additional time
-	 */
-	@Override
-	public void setAdditionalTime(int additionalTime) {
-		this.additionalTime = additionalTime;
-	}
+    @Override
+    public Color getColor() {
+        return color;
+    }
 
-	/**
-	 * Returns a string representation of this object.
-	 * @return the result of the operation
-	 */
-	@Override
-	public String toString() {
-		return " PLAYER: created for " + name;
-	}
+    @Override
+    public String getName() {
+        return name;
+    }
 
+    @Override
+    public List<Piece> getPieces() {
+        return pieces;
+    }
+
+    @Override
+    public int getAdditionalTime() {
+        return additionalTime;
+    }
+
+    @Override
+    public void setAdditionalTime(int additionalTime) {
+        this.additionalTime = additionalTime;
+    }
+
+    @Override
+    public String toString() {
+        return " PLAYER: created for " + name;
+    }
 }
