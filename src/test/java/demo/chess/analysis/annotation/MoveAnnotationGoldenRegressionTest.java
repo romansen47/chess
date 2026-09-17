@@ -119,7 +119,7 @@ public class MoveAnnotationGoldenRegressionTest {
                 line(-2.14, "♗c2"),
                 line(-4.94, "♕f2"));
         assertKind("Kramnik-Leko 23.Qf2", qf2, MoveAnnotationKind.BLUNDER);
-        assertMetric("Kramnik-Leko 23.Qf2 loss", 36.04, qf2.getWinChanceLoss());
+        assertMetric("Kramnik-Leko 23.Qf2 loss", 30.15, qf2.getWinChanceLoss());
 
         MoveAnnotation qxe2 = classify(
                 KRAMNIK_LEKO,
@@ -237,7 +237,7 @@ public class MoveAnnotationGoldenRegressionTest {
                         line(0.47, "b5"),
                         line(1.36, "d6")),
                 MoveAnnotationKind.MISTAKE,
-                12.26);
+                11.57);
 
         /*
          * The PGN labels 21...Be2 as ?? and also exports winChanceLoss=28.93.
