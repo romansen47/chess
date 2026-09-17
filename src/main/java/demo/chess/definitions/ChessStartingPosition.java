@@ -8,17 +8,17 @@ import java.util.Arrays;
  */
 public final class ChessStartingPosition {
 
-    public static final int MIN_ID = 0;
-    public static final int MAX_ID = 959;
-    public static final int STANDARD_ID = 518;
-    public static final ChessStartingPosition STANDARD = new ChessStartingPosition(STANDARD_ID);
-
     private static final int[] LIGHT_SQUARE_FILES = {2, 4, 6, 8};
     private static final int[] DARK_SQUARE_FILES = {1, 3, 5, 7};
     private static final int[][] KNIGHT_COMBINATIONS = {
             {0, 1}, {0, 2}, {0, 3}, {0, 4}, {1, 2},
             {1, 3}, {1, 4}, {2, 3}, {2, 4}, {3, 4}
     };
+
+    public static final int MIN_ID = 0;
+    public static final int MAX_ID = 959;
+    public static final int STANDARD_ID = 518;
+    public static final ChessStartingPosition STANDARD = new ChessStartingPosition(STANDARD_ID);
 
     private final int id;
     private final PieceType[] backRank;
