@@ -17,20 +17,40 @@ import demo.chess.game.DummyGame;
 import demo.chess.game.impl.Simulation;
 import demo.chess.notation.PgnMoveAnnotation;
 import demo.chess.notation.PgnNotation;
+import demo.chess.notation.UciMoveCodec;
 
+/**
+ * Serializes game histories into lightweight UCI move lists or PGN.
+ *
+ * <p>PGN is the self-describing persistence format and therefore carries the
+ * Chess960 setup tags and FEN. The UCI export is intentionally only a move list;
+ * consumers must already know the initial position. Move encoding itself is
+ * still variant-aware through {@link UciMoveCodec}.</p>
+ */
 public class GameSaver {
 
     private static final DateTimeFormatter PGN_DATE_FORMAT = DateTimeFormatter.ofPattern("yyyy.MM.dd");
 
+    /** Writes a variant-aware UCI move list to a UTF-8 file. */
     public void saveGame(MoveList moveList, String location) throws IOException {
         Files.writeString(Path.of(location), toUci(moveList), StandardCharsets.UTF_8);
     }
 
+    /**
+     * Serializes moves as one UCI move per line.
+     *
+     * <p>If {@code moveList} is a {@link MoveList}, its starting-position metadata
+     * is used so Chess960 castling is encoded as king-source to rook-source.
+     * For a generic iterable, classical chess is assumed.</p>
+     */
     public String toUci(Iterable<Move> moveList) {
         if (moveList == null) return "";
+        ChessStartingPosition startingPosition = startingPositionOf(moveList);
         StringBuilder result = new StringBuilder();
         for (Move move : moveList) {
-            if (move != null) result.append(move.toString()).append('\n');
+            if (move != null) {
+                result.append(UciMoveCodec.encode(startingPosition, move)).append('\n');
+            }
         }
         return result.toString();
     }
@@ -40,6 +60,10 @@ public class GameSaver {
         return toPgn(moveList, suppliedTags, Map.of());
     }
 
+    /**
+     * Serializes a move history as PGN, including Chess960 setup information when
+     * the starting position differs from classical position 518.
+     */
     public String toPgn(
             Iterable<Move> moveList,
             Map<String, String> suppliedTags,
