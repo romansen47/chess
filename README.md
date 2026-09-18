@@ -77,7 +77,7 @@ Chess960 UCI:          g1h1
 
 `GameSaver.toUci(...)`, legal-move resolution and engine position commands all use the UCI codec so this distinction is preserved.
 
-PGN is the self-describing persistence format. Non-standard Chess960 games are written with `Variant`, `SetUp` and initial `FEN` tags. The lightweight UCI export contains only moves; its consumer must already know the starting position.
+PGN is the self-describing persistence format. Non-standard Chess960 games are written with `Variant`, `SetUp` and initial `FEN` tags. `PgnHeaderParser` is the shared boundary for tag extraction and starting-position resolution; both main-line SAN loading and annotation parsing derive their replay board from that same header context. The lightweight UCI export contains only moves; its consumer must already know the starting position.
 
 ## UCI engines
 

@@ -36,6 +36,24 @@ class PgnAnnotationParserTest {
     }
 
     @Test
+    public void parsesChess960AnnotationsUsingHeaderStartingPosition() throws Exception {
+        String pgn = """
+                [Event "Chess960 import regression"]
+                [Variant "Chess960"]
+                [SetUp "1"]
+                [FEN "rqnbknbr/pppppppp/8/8/8/8/PPPPPPPP/RQNBKNBR w HAha - 0 1"]
+                [Result "*"]
+
+                1. h3 c6 2. Bh2 {[%eval 0.20]} Bc7 *
+                """;
+
+        Map<Integer, PgnMoveAnnotation> annotations =
+                new PgnAnnotationParser().parse(pgn);
+
+        assertEquals("0.20", annotations.get(3).evaluation());
+    }
+
+    @Test
     public void annotationExportRoundTripsThroughStandardPgn() throws Exception {
         List<String> moves = List.of("e2e4", "e7e5", "g1f3", "b8c6");
         Simulation simulation = Simulation.createSimulation();

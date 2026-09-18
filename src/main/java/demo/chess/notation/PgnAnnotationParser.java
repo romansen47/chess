@@ -8,6 +8,7 @@ import java.util.Map;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import demo.chess.definitions.ChessStartingPosition;
 import demo.chess.definitions.engines.impl.NoMoveFoundException;
 import demo.chess.definitions.moves.Move;
 import demo.chess.game.DummyGame;
@@ -27,7 +28,28 @@ public class PgnAnnotationParser {
     private static final Pattern MOVE_NUMBER_PREFIX = Pattern.compile("^\\d+\\.(?:\\.\\.)?");
     private static final Pattern SYMBOLIC_NAG_SUFFIX = Pattern.compile("(!!|\\?\\?|!\\?|\\?!|!|\\?)$");
 
+    /**
+     * Parses annotations using the starting position declared by the PGN header.
+     *
+     * <p>The complete PGN is self-describing: Chess960 {@code Variant/FEN}
+     * tags are resolved before SAN tokens are replayed, so annotation parsing
+     * cannot silently fall back to classical position 518.</p>
+     */
     public Map<Integer, PgnMoveAnnotation> parse(String content)
+            throws NoMoveFoundException, IOException {
+        return parse(content, PgnHeaderParser.resolveStartingPosition(content));
+    }
+
+    /**
+     * Parses annotations against an explicitly supplied starting position.
+     *
+     * @param content complete or movetext-only PGN content
+     * @param startingPosition position used to resolve SAN main-line moves
+     * @return annotations keyed by one-based ply
+     */
+    public Map<Integer, PgnMoveAnnotation> parse(
+            String content,
+            ChessStartingPosition startingPosition)
             throws NoMoveFoundException, IOException {
         Map<Integer, MutableAnnotation> annotations = new LinkedHashMap<>();
         if (content == null || content.isBlank()) {
@@ -35,7 +57,8 @@ public class PgnAnnotationParser {
         }
 
         String movetext = TAG_LINE.matcher(stripBom(content)).replaceAll(" ");
-        DummyGame game = Simulation.createDummySimulation();
+        DummyGame game = Simulation.createDummySimulation(
+                startingPosition != null ? startingPosition : ChessStartingPosition.STANDARD);
         StringBuilder token = new StringBuilder();
         int ply = 0;
 

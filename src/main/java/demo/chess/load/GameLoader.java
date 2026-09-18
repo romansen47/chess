@@ -5,7 +5,6 @@ import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
-import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
@@ -19,6 +18,7 @@ import demo.chess.game.DummyGame;
 import demo.chess.game.Game;
 import demo.chess.game.LegalMoveResolver;
 import demo.chess.game.impl.Simulation;
+import demo.chess.notation.PgnHeaderParser;
 import demo.chess.notation.PgnNotation;
 import demo.chess.notation.UciMoveCodec;
 
@@ -115,25 +115,7 @@ public class GameLoader {
 
     /** Resolves the Chess960 start position encoded by PGN tags. */
     public ChessStartingPosition parsePgnStartingPosition(String content) throws NoMoveFoundException {
-        Map<String, String> tags = parsePgnTags(content);
-        String fen = tags.get("FEN");
-        String variant = tags.get("Variant");
-        boolean chess960 = variant != null
-                && (variant.equalsIgnoreCase("Chess960")
-                        || variant.equalsIgnoreCase("FischerRandom")
-                        || variant.equalsIgnoreCase("Fischer Random"));
-
-        if (fen != null && !fen.isBlank()) {
-            try {
-                return ChessStartingPosition.fromInitialFen(fen);
-            } catch (IllegalArgumentException e) {
-                throw new NoMoveFoundException("Unsupported PGN initial FEN: " + e.getMessage());
-            }
-        }
-        if (chess960) {
-            throw new NoMoveFoundException("Chess960 PGN requires a FEN tag for the initial position");
-        }
-        return ChessStartingPosition.STANDARD;
+        return PgnHeaderParser.resolveStartingPosition(content);
     }
 
     public List<String> parsePgnMoveList(String content) throws NoMoveFoundException, IOException {
@@ -163,18 +145,7 @@ public class GameLoader {
     }
 
     public Map<String, String> parsePgnTags(String content) {
-        Map<String, String> tags = new LinkedHashMap<>();
-        if (content == null || content.isBlank()) return tags;
-        for (String line : stripBom(content).split("\\R", -1)) {
-            if (line.isBlank()) {
-                if (!tags.isEmpty()) break;
-                continue;
-            }
-            Matcher matcher = PGN_TAG_PATTERN.matcher(line);
-            if (!matcher.matches()) break;
-            tags.put(matcher.group(1), unescapePgnTagValue(matcher.group(2)));
-        }
-        return tags;
+        return PgnHeaderParser.parseTags(content);
     }
 
     public List<String> loadMoveList(String location) throws IOException {
@@ -269,21 +240,4 @@ public class GameLoader {
         return result.toString();
     }
 
-    private String unescapePgnTagValue(String value) {
-        StringBuilder result = new StringBuilder();
-        boolean escaped = false;
-        for (int i = 0; i < value.length(); i++) {
-            char current = value.charAt(i);
-            if (escaped) {
-                result.append(current);
-                escaped = false;
-            } else if (current == '\\') {
-                escaped = true;
-            } else {
-                result.append(current);
-            }
-        }
-        if (escaped) result.append('\\');
-        return result.toString();
-    }
 }
