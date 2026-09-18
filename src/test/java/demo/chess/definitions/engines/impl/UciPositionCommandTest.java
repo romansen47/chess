@@ -4,24 +4,27 @@ import static org.junit.Assert.assertEquals;
 
 import org.junit.Test;
 
+import demo.chess.definitions.ChessStartingPosition;
+
 public class UciPositionCommandTest {
 
-    /**
-     * Verifies that an empty move list produces the plain start position command.
-     */
+    private static final String POSITION_518_FEN =
+            ChessStartingPosition.STANDARD.initialFen();
+
     @Test
-    public void emptyMoveListUsesPlainStartPosition() {
-        assertEquals("position startpos", UciPositionCommand.build(new StringBuilder()));
-        assertEquals("position startpos", UciPositionCommand.build(new StringBuilder("   ")));
+    public void emptyMoveListUsesExplicitPosition518Fen() {
+        assertEquals(
+                "position fen " + POSITION_518_FEN,
+                UciPositionCommand.build(new StringBuilder()));
+        assertEquals(
+                "position fen " + POSITION_518_FEN,
+                UciPositionCommand.build(new StringBuilder("   ")));
     }
 
-    /**
-     * Verifies that existing moves are appended using valid UCI syntax.
-     */
     @Test
-    public void moveListUsesMovesClause() {
+    public void moveListUsesMovesClauseAfterExplicitFen() {
         assertEquals(
-                "position startpos moves e2e4 e7e5 g1f3",
+                "position fen " + POSITION_518_FEN + " moves e2e4 e7e5 g1f3",
                 UciPositionCommand.build(new StringBuilder("e2e4 e7e5 g1f3 ")));
     }
 }

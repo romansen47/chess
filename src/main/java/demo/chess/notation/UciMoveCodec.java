@@ -14,9 +14,10 @@ import demo.chess.game.Game;
  * Domain code must not rely on {@link Move#toString()} being identical to a
  * UCI move, because Chess960 castling has a protocol-specific representation.</p>
  *
- * <p>For standard chess, castling is encoded conventionally (for example
- * {@code e1g1}). In Chess960 UCI, castling is encoded as king source to the
- * original castling rook square (for example {@code g1h1}).</p>
+ * <p>The application uses Chess960 UCI semantics for all Scharnagl positions,
+ * including position 518. Castling is therefore always encoded as king source
+ * to the original castling rook square (for example {@code e1h1} in position
+ * 518 or {@code g1h1} when the king already starts on g1).</p>
  */
 public final class UciMoveCodec {
 
@@ -46,10 +47,7 @@ public final class UciMoveCodec {
      */
     public static String encode(ChessStartingPosition startingPosition, Move move) {
         if (move == null) return "";
-        ChessStartingPosition position = startingPosition != null
-                ? startingPosition
-                : ChessStartingPosition.STANDARD;
-        if (move instanceof Castling castling && !position.isStandard()) {
+        if (move instanceof Castling castling) {
             return castling.getSource().getName() + castling.getRookSource().getName();
         }
         return move.toString();

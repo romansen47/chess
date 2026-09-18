@@ -25,9 +25,9 @@ import demo.chess.game.Game;
  * Base adapter for native UCI engine processes.
  *
  * <p>The adapter owns protocol-level state that must not be stored in reusable
- * engine profiles. Chess960 mode is derived from the current game and is only
- * sent when the engine advertised the standard {@code UCI_Chess960} option
- * during its UCI handshake.</p>
+ * engine profiles. The application speaks Chess960 UCI for all 960 Scharnagl
+ * positions, including position 518, so every usable native engine must
+ * advertise the standard {@code UCI_Chess960} option.</p>
  */
 public abstract class ConsoleUciEngine implements ChessEngine {
 
@@ -40,7 +40,7 @@ public abstract class ConsoleUciEngine implements ChessEngine {
 
     private final String enginePath;
     private final String managementId;
-    private Boolean lastChess960Mode;
+    private boolean chess960ModeEnabled;
     private boolean chess960CapabilityAdvertised;
 
     public ConsoleUciEngine(String path) throws Exception {
@@ -89,36 +89,26 @@ public abstract class ConsoleUciEngine implements ChessEngine {
     }
 
     /**
-     * Configures Chess960 protocol mode from the domain game.
+     * Enables the single Chess960 UCI protocol mode used by the application.
      *
-     * <p>Engines that do not advertise {@code UCI_Chess960} remain perfectly
-     * valid for classical chess and are not sent an unknown option. A
-     * non-standard starting position, however, is rejected before a search is
-     * started because interpreting its FEN and castling moves as classical
-     * chess would be unsafe.</p>
+     * <p>Position 518 follows the same protocol path as every other Scharnagl
+     * position. Engines without {@code UCI_Chess960} are therefore rejected
+     * for every game instead of forming a separate classical mode.</p>
      */
     protected synchronized void prepareForGame(Game game) throws IOException, InterruptedException {
-        boolean chess960 = game != null
-                && game.getStartingPosition() != null
-                && !game.getStartingPosition().isStandard();
-
-        if (chess960 && !chess960CapabilityAdvertised) {
+        if (!chess960CapabilityAdvertised) {
             throw new IOException(
                     "Engine does not advertise " + UciSystemOptions.CHESS960
-                            + " and cannot be used for Chess960: " + enginePath);
+                            + " required by the unified Chess960 protocol: " + enginePath);
         }
-        if (!chess960CapabilityAdvertised) {
-            lastChess960Mode = Boolean.FALSE;
-            return;
-        }
-        if (lastChess960Mode != null && lastChess960Mode == chess960) return;
+        if (chess960ModeEnabled) return;
 
-        writer.println("setoption name " + UciSystemOptions.CHESS960 + " value " + chess960);
+        writer.println("setoption name " + UciSystemOptions.CHESS960 + " value true");
         writer.println("isready");
         writer.flush();
         try {
             awaitLine("readyok", UCI_HANDSHAKE_TIMEOUT_SECONDS);
-            lastChess960Mode = chess960;
+            chess960ModeEnabled = true;
         } catch (InterruptedException e) {
             Thread.currentThread().interrupt();
             throw e;
@@ -128,7 +118,7 @@ public abstract class ConsoleUciEngine implements ChessEngine {
     }
 
     private void startProcess() throws Exception {
-        lastChess960Mode = null;
+        chess960ModeEnabled = false;
         chess960CapabilityAdvertised = false;
         uciEngineProcess = new ProcessBuilder(enginePath).redirectErrorStream(true).start();
         UciEngineProcessManager.attachProcess(managementId, uciEngineProcess);
@@ -233,7 +223,7 @@ public abstract class ConsoleUciEngine implements ChessEngine {
 
     private void destroyCurrentProcess() {
         Process process = uciEngineProcess;
-        lastChess960Mode = null;
+        chess960ModeEnabled = false;
         chess960CapabilityAdvertised = false;
         closeStreams();
         if (process != null && process.isAlive()) {

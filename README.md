@@ -77,13 +77,13 @@ Chess960 UCI:          g1h1
 
 `GameSaver.toUci(...)`, legal-move resolution and engine position commands all use the UCI codec so this distinction is preserved.
 
-PGN is the self-describing persistence format. Non-standard Chess960 games are written with `Variant`, `SetUp` and initial `FEN` tags. `PgnHeaderParser` is the shared boundary for tag extraction and starting-position resolution; both main-line SAN loading and annotation parsing derive their replay board from that same header context. The lightweight UCI export contains only moves; its consumer must already know the starting position.
+PGN is the self-describing persistence format. Every exported game, including Scharnagl position 518, is written with `Variant "Chess960"`, `SetUp "1"` and its explicit initial `FEN`. `PgnHeaderParser` is the shared boundary for tag extraction and starting-position resolution; both main-line SAN loading and annotation parsing derive their replay board from that same header context. Plain external PGNs without setup tags still resolve to position 518 for import compatibility. The lightweight UCI export contains only moves; its consumer must already know the starting position.
 
 ## UCI engines
 
 The engine abstraction is based on the UCI protocol and is intended to support engines such as Stockfish and Leela Chess Zero (Lc0), rather than hard-coding the application to one engine implementation. Engine executables are external software and are not bundled with this module.
 
-Before a game is sent to an engine, `ConsoleUciEngine` configures `UCI_Chess960` from the game's starting-position context. Classical position 518 continues to use `position startpos`; non-standard positions use `position fen <initial-fen>` followed by the encoded move sequence.
+Before a game is sent to an engine, `ConsoleUciEngine` enables `UCI_Chess960`. Every position, including 518, is then sent as `position fen <initial-fen>` followed by the encoded move sequence. There is no `position startpos` execution path in the application.
 
 ### Engine capabilities and system-managed options
 
@@ -94,13 +94,10 @@ A successful UCI handshake only proves that an executable speaks UCI. Chess960 s
 The runtime rules are:
 
 ```text
-classical game + engine without UCI_Chess960
-    -> allowed; no unknown option is sent
-
-Chess960 game + engine advertising UCI_Chess960
+any Scharnagl position + engine advertising UCI_Chess960
     -> UCI_Chess960=true, then FEN + canonical Chess960 UCI moves
 
-Chess960 game + engine without UCI_Chess960
+any Scharnagl position + engine without UCI_Chess960
     -> rejected before search
 ```
 
@@ -113,7 +110,7 @@ Some engines need additional files next to the executable. Lc0, for example, nor
 When extending this module:
 
 1. Keep chess rules in the core domain rather than in the API or frontend.
-2. Treat position 518 as one `ChessStartingPosition`, not as a separate implementation path unless an external protocol requires it.
+2. Treat position 518 as one `ChessStartingPosition`, never as a separate runtime path. Compatibility translations, when unavoidable, belong only at explicit external-storage boundaries.
 3. Keep external notation/protocol details in codecs or adapters; do not overload `toString()` with protocol meaning.
 4. Preserve starting-position context whenever moves are replayed, analyzed, saved or sent to an engine.
 5. Keep system-managed UCI state out of reusable profile values; game context is authoritative for protocol mode.

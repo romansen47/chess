@@ -138,9 +138,9 @@ public final class ChessStartingPosition {
     /**
      * Returns the complete initial FEN.
      *
-     * <p>Position 518 uses the conventional {@code KQkq} castling field. Other
-     * positions use file-based Shredder-FEN castling rights because the rook
-     * files are part of the Chess960 position definition.</p>
+     * <p>All 960 positions, including Scharnagl 518, use file-based
+     * Shredder-FEN castling rights. Position 518 is represented by the same
+     * data model and serialization rules as every other starting position.</p>
      */
     public String initialFen() {
         return initialPiecePlacement() + " w " + initialCastlingFen() + " - 0 1";
@@ -155,7 +155,6 @@ public final class ChessStartingPosition {
 
     /** @return initial castling-rights FEN field */
     public String initialCastlingFen() {
-        if (isStandard()) return "KQkq";
         char whiteKingSide = fileLetter(kingSideRookFile, true);
         char whiteQueenSide = fileLetter(queenSideRookFile, true);
         char blackKingSide = fileLetter(kingSideRookFile, false);

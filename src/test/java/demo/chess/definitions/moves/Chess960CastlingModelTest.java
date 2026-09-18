@@ -1,15 +1,18 @@
 package demo.chess.definitions.moves;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertSame;
 
 import org.junit.Test;
 
 import demo.chess.definitions.ChessStartingPosition;
 import demo.chess.definitions.moves.impl.CastlingImpl;
+import demo.chess.definitions.moves.impl.ChessMove;
 import demo.chess.definitions.moves.impl.MoveListImpl;
 import demo.chess.definitions.pieces.impl.King;
 import demo.chess.definitions.pieces.impl.Rook;
+import demo.chess.game.MoveSimulationMapper;
 import demo.chess.game.impl.Simulation;
 import demo.chess.notation.UciMoveCodec;
 import demo.chess.save.GameSaver;
@@ -17,7 +20,7 @@ import demo.chess.save.GameSaver;
 public class Chess960CastlingModelTest {
 
     @Test
-    public void standardCastlingKeepsClassicalUciNotation() {
+    public void position518UsesChess960UciCastlingNotation() {
         Simulation game = Simulation.createSimulation(ChessStartingPosition.STANDARD);
         King king = (King) game.getChessBoard().getField(5, 1).getPiece();
         Rook rook = (Rook) game.getChessBoard().getField(8, 1).getPiece();
@@ -25,7 +28,7 @@ public class Chess960CastlingModelTest {
 
         assertEquals("e1g1", castling.toString());
         assertSame(game.getChessBoard().getField(8, 1), castling.getRookSource());
-        assertEquals("e1g1", UciMoveCodec.encode(game, castling));
+        assertEquals("e1h1", UciMoveCodec.encode(game, castling));
     }
 
     @Test
@@ -40,6 +43,18 @@ public class Chess960CastlingModelTest {
         assertSame(game.getChessBoard().getField(6, 1), castling.getRookTarget());
         assertEquals("g1g1", castling.toString());
         assertEquals("g1h1", UciMoveCodec.encode(game, castling));
+    }
+
+    @Test
+    public void rejectsReplayWhenStartingPositionProvidesDifferentPieceType() {
+        Simulation position0 = Simulation.createSimulation(ChessStartingPosition.of(0));
+        Simulation position518 = Simulation.createSimulation(ChessStartingPosition.STANDARD);
+        ChessMove bishopMove = new ChessMove(
+                position0.getChessBoard().getField(1, 1).getPiece(),
+                position0.getChessBoard().getField(1, 1),
+                position0.getChessBoard().getField(2, 2));
+
+        assertNull(MoveSimulationMapper.map(position518, bishopMove));
     }
 
     @Test

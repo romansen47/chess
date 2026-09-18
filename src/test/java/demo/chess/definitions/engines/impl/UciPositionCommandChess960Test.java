@@ -10,12 +10,15 @@ import demo.chess.game.impl.Simulation;
 public class UciPositionCommandChess960Test {
 
     @Test
-    public void standardGameUsesStartpos() {
-        assertEquals("position startpos", UciPositionCommand.build(Simulation.createSimulation()));
+    public void position518UsesInitialFenLikeEveryOtherPosition() {
+        Simulation game = Simulation.createSimulation(ChessStartingPosition.STANDARD);
+        assertEquals(
+                "position fen rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w HAha - 0 1",
+                UciPositionCommand.build(game));
     }
 
     @Test
-    public void chess960GameUsesInitialFen() {
+    public void position0UsesInitialFen() {
         Simulation game = Simulation.createSimulation(ChessStartingPosition.of(0));
         assertEquals(
                 "position fen bbqnnrkr/pppppppp/8/8/8/8/PPPPPPPP/BBQNNRKR w HFhf - 0 1",

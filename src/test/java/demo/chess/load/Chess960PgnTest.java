@@ -30,4 +30,17 @@ public class Chess960PgnTest {
         assertTrue(pgn.contains("[SetUp \"1\"]"));
         assertTrue(pgn.contains("[FEN \"bbqnnrkr/pppppppp/8/8/8/8/PPPPPPPP/BBQNNRKR w HFhf - 0 1\"]"));
     }
+
+    @Test
+    public void writesSetupTagsForPosition518AsWell() throws Exception {
+        MoveListImpl moves = new MoveListImpl();
+        moves.setStartingPosition(ChessStartingPosition.STANDARD);
+
+        String pgn = new GameSaver().toPgn(moves, Map.of("Result", "*"));
+
+        assertTrue(pgn.contains("[Variant \"Chess960\"]"));
+        assertTrue(pgn.contains("[SetUp \"1\"]"));
+        assertTrue(pgn.contains(
+                "[FEN \"rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w HAha - 0 1\"]"));
+    }
 }

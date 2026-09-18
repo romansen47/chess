@@ -23,7 +23,9 @@ import demo.chess.definitions.pieces.impl.Rook;
  * <p>A move object belongs to the board on which it was created. Replaying it on
  * a fork therefore requires rebuilding the move with the fork's field and piece
  * instances. Keeping that translation here prevents player state from also
- * becoming responsible for promotion, en-passant and castling reconstruction.</p>
+ * becoming responsible for promotion, en-passant and castling reconstruction.
+ * Mapping also verifies piece type and color so a lost starting-position
+ * context fails immediately instead of replaying an unrelated piece.</p>
  */
 public final class MoveSimulationMapper {
 
@@ -44,7 +46,13 @@ public final class MoveSimulationMapper {
         Field source = chessBoard.getField(move.getSource().getFile(), move.getSource().getRank());
         Field target = chessBoard.getField(move.getTarget().getFile(), move.getTarget().getRank());
         Piece piece = source.getPiece();
-        if (piece == null) return null;
+        Piece originalPiece = move.getPiece();
+        if (piece == null
+                || originalPiece == null
+                || piece.getType() != originalPiece.getType()
+                || piece.getColor() != originalPiece.getColor()) {
+            return null;
+        }
 
         if (move instanceof Promotion promotion) {
             Piece promotedPiece = promotion.getPromotedPiece();

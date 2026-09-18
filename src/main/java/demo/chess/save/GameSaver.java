@@ -23,7 +23,8 @@ import demo.chess.notation.UciMoveCodec;
  * Serializes game histories into lightweight UCI move lists or PGN.
  *
  * <p>PGN is the self-describing persistence format and therefore carries the
- * Chess960 setup tags and FEN. The UCI export is intentionally only a move list;
+ * Chess960 setup tags and FEN for every Scharnagl position, including 518. The
+ * UCI export is intentionally only a move list;
  * consumers must already know the initial position. Move encoding itself is
  * still variant-aware through {@link UciMoveCodec}.</p>
  */
@@ -61,8 +62,11 @@ public class GameSaver {
     }
 
     /**
-     * Serializes a move history as PGN, including Chess960 setup information when
-     * the starting position differs from classical position 518.
+     * Serializes a move history as a self-describing Chess960 PGN.
+     *
+     * <p>Variant, setup and FEN tags are written for all 960 positions. This
+     * intentionally includes position 518 so files produced by this application
+     * never depend on an implicit starting-position convention.</p>
      */
     public String toPgn(
             Iterable<Move> moveList,
@@ -71,11 +75,9 @@ public class GameSaver {
             throws NoMoveFoundException, IOException {
         ChessStartingPosition startingPosition = startingPositionOf(moveList);
         Map<String, String> tags = createTags(suppliedTags);
-        if (!startingPosition.isStandard()) {
-            tags.put("Variant", "Chess960");
-            tags.put("SetUp", "1");
-            tags.put("FEN", startingPosition.initialFen());
-        }
+        tags.put("Variant", "Chess960");
+        tags.put("SetUp", "1");
+        tags.put("FEN", startingPosition.initialFen());
         String resultToken = normalizeResult(tags.get("Result"));
         tags.put("Result", resultToken);
 

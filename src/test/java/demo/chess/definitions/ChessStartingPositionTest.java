@@ -17,7 +17,7 @@ public class ChessStartingPositionTest {
         assertSame(ChessStartingPosition.STANDARD, position);
         assertTrue(position.isStandard());
         assertEquals("RNBQKBNR", backRank(position));
-        assertEquals("rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1", position.initialFen());
+        assertEquals("rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w HAha - 0 1", position.initialFen());
     }
 
     @Test
