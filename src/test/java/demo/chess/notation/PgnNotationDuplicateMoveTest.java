@@ -39,8 +39,8 @@ public class PgnNotationDuplicateMoveTest {
                         "g7g6",
                         "f1g2",
                         "f8g7",
-                        "e1g1",
-                        "e8g8"),
+                        "e1h1",
+                        "e8h8"),
                 loader.parsePgnMoveList(pgn));
     }
 }

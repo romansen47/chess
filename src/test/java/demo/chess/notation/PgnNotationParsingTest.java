@@ -43,7 +43,7 @@ public class PgnNotationParsingTest {
                         "e2e3",
                         "f8e7",
                         "f1d3",
-                        "e8g8"),
+                        "e8h8"),
                 loader.parsePgnMoveList(pgn));
     }
 

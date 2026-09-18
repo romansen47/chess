@@ -25,11 +25,11 @@ public class MaterialInvestmentDetectorTest {
                 "f3d4", "g7g6",
                 "b1c3", "f8g7",
                 "c1e3", "g8f6",
-                "f1c4", "e8g8",
+                "f1c4", "e8h8",
                 "c4b3", "f6g4",
                 "d1g4", "c6d4",
                 "g4h4", "d8a5",
-                "e1g1", "g7f6");
+                "e1h1", "g7f6");
 
         EngineLine line = line(
                 0.0,
@@ -101,11 +101,11 @@ public class MaterialInvestmentDetectorTest {
                 "f3d4", "g7g6",
                 "b1c3", "f8g7",
                 "c1e3", "g8f6",
-                "f1c4", "e8g8",
+                "f1c4", "e8h8",
                 "c4b3", "f6g4",
                 "d1g4", "c6d4",
                 "g4h4", "d8a5",
-                "e1g1", "g7f6",
+                "e1h1", "g7f6",
                 "h4f6", "d4e2",
                 "c3e2", "e7f6",
                 "e2c3", "f8e8",
