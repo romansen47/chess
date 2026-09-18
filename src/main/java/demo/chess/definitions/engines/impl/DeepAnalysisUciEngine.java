@@ -17,21 +17,38 @@ import demo.chess.game.Game;
 
 public class DeepAnalysisUciEngine extends EvaluationUciEngine implements DeepAnalysisEngine {
 
+    /*
+     * Finite searches deliberately do not synchronize on the engine instance.
+     * ConsoleUciEngine.close()/stopEvaluation() must be able to acquire that
+     * monitor while analyze() is blocked in readLine(), so a game lifecycle
+     * transition can interrupt a running search.
+     */
+    private final Object finiteSearchLock = new Object();
+
     public DeepAnalysisUciEngine(String path) throws Exception {
         super(path);
     }
 
     @Override
-    public synchronized List<EngineLine> getBestLines(Game chessGame, EngineConfig config)
+    public List<EngineLine> getBestLines(Game chessGame, EngineConfig config)
             throws IOException, InterruptedException, ExecutionException {
-        String moveListAsString = chessGame.getMoveList().toString();
-        List<EngineLine> cachedLines = getCachedBestLines().get(moveListAsString);
-        if (cachedLines != null) return cachedLines;
-        return analyze(chessGame, config).getFinalLines();
+        synchronized (finiteSearchLock) {
+            String moveListAsString = chessGame.getMoveList().toString();
+            List<EngineLine> cachedLines = getCachedBestLines().get(moveListAsString);
+            if (cachedLines != null) return cachedLines;
+            return analyzeLocked(chessGame, config).getFinalLines();
+        }
     }
 
     @Override
-    public synchronized DeepAnalysisResult analyze(Game chessGame, EngineConfig config)
+    public DeepAnalysisResult analyze(Game chessGame, EngineConfig config)
+            throws IOException, InterruptedException, ExecutionException {
+        synchronized (finiteSearchLock) {
+            return analyzeLocked(chessGame, config);
+        }
+    }
+
+    private DeepAnalysisResult analyzeLocked(Game chessGame, EngineConfig config)
             throws IOException, InterruptedException, ExecutionException {
         applyConfig(config);
         prepareForGame(chessGame);

@@ -13,11 +13,13 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicLong;
 
 /**
- * Lightweight in-process registry for UCI engine instances.
+ * In-process registry for UCI engine instances.
  *
- * It intentionally does not own the chess-engine lifecycle. Existing engine classes keep
- * ownership; this registry only observes the current Process, records UCI traffic and offers
- * an emergency terminate operation for diagnostics.
+ * <p>The concrete engine adapter remains the lifecycle owner. The registry observes
+ * processes and protocol traffic, and stores a lifecycle callback supplied by that
+ * owner. Normal stop requests therefore delegate to the engine adapter first so it
+ * can send the UCI {@code quit} command and apply its normal timeout/escalation
+ * policy. Raw process termination remains available only as an emergency fallback.</p>
  */
 public final class UciEngineProcessManager {
 
@@ -53,6 +55,19 @@ public final class UciEngineProcessManager {
         ManagedEngine engine = ENGINES.get(id);
         if (engine != null && label != null && !label.isBlank()) {
             engine.label = label.trim();
+            engine.touch();
+        }
+    }
+
+    /**
+     * Registers the graceful lifecycle callback owned by the concrete engine adapter.
+     * @param id managed engine id
+     * @param gracefulCloser callback that closes the UCI engine through its owner
+     */
+    public static void setGracefulCloser(String id, Runnable gracefulCloser) {
+        ManagedEngine engine = ENGINES.get(id);
+        if (engine != null) {
+            engine.gracefulCloser = gracefulCloser;
             engine.touch();
         }
     }
@@ -96,6 +111,7 @@ public final class UciEngineProcessManager {
         ManagedEngine engine = ENGINES.get(id);
         if (engine != null) {
             engine.closed = true;
+            engine.gracefulCloser = null;
             engine.addLog("SYSTEM", "Engine instance closed");
         }
     }
@@ -147,7 +163,7 @@ public final class UciEngineProcessManager {
      * @param id the id
      * @return the result of the operation
      */
-    public static boolean terminate(String id) {
+    public static boolean stop(String id) {
         ManagedEngine engine = ENGINES.get(id);
         if (engine == null) {
             return false;
@@ -155,15 +171,78 @@ public final class UciEngineProcessManager {
 
         Process process = engine.process;
         if (process == null || !process.isAlive()) {
-            engine.addLog("SYSTEM", "Terminate requested, but no live process exists");
+            engine.addLog("SYSTEM", "Stop requested, but no live process exists");
             return true;
         }
 
-        engine.addLog("SYSTEM", "Terminate requested for PID " + safePid(process));
-        process.destroy();
+        Runnable gracefulCloser = engine.gracefulCloser;
+        if (gracefulCloser != null) {
+            engine.addLog("SYSTEM", "Graceful UCI stop requested for PID " + safePid(process));
+            try {
+                gracefulCloser.run();
+            } catch (RuntimeException e) {
+                engine.addLog("SYSTEM", "Graceful UCI stop failed: " + e.getMessage());
+            }
+
+            process = engine.process;
+            if (process == null || !process.isAlive()) {
+                engine.exitCode = exitCode(process);
+                engine.addLog("SYSTEM", "Graceful UCI stop completed" + formatExitCode(engine.exitCode));
+                return true;
+            }
+            engine.addLog("SYSTEM", "Graceful UCI stop did not end the process; escalating");
+        }
+
+        terminateProcess(engine, process, false);
+        return true;
+    }
+
+    /**
+     * Forcefully terminates the operating-system process without invoking the
+     * engine owner's UCI shutdown path. Intended only for diagnostics/recovery.
+     * @param id managed engine id
+     * @return whether the engine id exists
+     */
+    public static boolean forceTerminate(String id) {
+        ManagedEngine engine = ENGINES.get(id);
+        if (engine == null) {
+            return false;
+        }
+
+        Process process = engine.process;
+        if (process == null || !process.isAlive()) {
+            engine.addLog("SYSTEM", "Force termination requested, but no live process exists");
+            return true;
+        }
+
+        terminateProcess(engine, process, true);
+        return true;
+    }
+
+    /**
+     * Backward-compatible alias. Termination now prefers the graceful UCI owner
+     * callback and escalates only when necessary.
+     * @param id managed engine id
+     * @return whether the engine id exists
+     */
+    public static boolean terminate(String id) {
+        return stop(id);
+    }
+
+    private static void terminateProcess(ManagedEngine engine, Process process, boolean forceImmediately) {
+        engine.addLog(
+                "SYSTEM",
+                (forceImmediately ? "Force termination" : "Process termination")
+                        + " requested for PID " + safePid(process));
+        if (forceImmediately) {
+            process.destroyForcibly();
+        } else {
+            process.destroy();
+        }
+
         try {
             if (!process.waitFor(750, TimeUnit.MILLISECONDS)) {
-                engine.addLog("SYSTEM", "Graceful terminate timed out; forcing process termination");
+                engine.addLog("SYSTEM", "Process termination timed out; forcing process termination");
                 process.destroyForcibly();
                 process.waitFor(750, TimeUnit.MILLISECONDS);
             }
@@ -173,8 +252,7 @@ public final class UciEngineProcessManager {
         }
 
         engine.exitCode = exitCode(process);
-        engine.addLog("SYSTEM", "Terminate completed" + formatExitCode(engine.exitCode));
-        return true;
+        engine.addLog("SYSTEM", "Process termination completed" + formatExitCode(engine.exitCode));
     }
 
     /**
@@ -277,6 +355,7 @@ public final class UciEngineProcessManager {
         private volatile Instant lastActivityAt = createdAt;
         private volatile Integer exitCode;
         private volatile boolean closed;
+        private volatile Runnable gracefulCloser;
 
         /**
          * Creates a new ManagedEngine instance.

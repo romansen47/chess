@@ -47,6 +47,7 @@ public abstract class ConsoleUciEngine implements ChessEngine {
         this.enginePath = path;
         this.managementId = UciEngineProcessManager.register(getClass().getSimpleName(), path);
         startProcess();
+        UciEngineProcessManager.setGracefulCloser(managementId, this::close);
     }
 
     public final String getManagementId() {

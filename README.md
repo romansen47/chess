@@ -127,3 +127,17 @@ The test suite contains regression tests for standard chess as well as dedicated
 ## Role in the project
 
 The primary product is an analysis tool. Playing a normal game, including playing against an engine, is a supporting capability that provides positions and games for analysis rather than the sole purpose of the project.
+
+
+## Native engine process lifecycle
+
+Every native UCI adapter owns its operating-system process and registers a graceful
+close callback with the diagnostic process registry. Normal lifecycle transitions
+must close the adapter, which sends `quit` and then escalates through timed process
+termination only when the engine does not exit. The process manager's raw force
+termination path is reserved for diagnostics and recovery.
+
+Finite deep-analysis searches intentionally use a search lock that is separate from
+the engine-instance monitor. This allows `stopEvaluation()` / `close()` to interrupt
+a search that is blocked waiting for UCI output instead of waiting for that search to
+finish naturally.
