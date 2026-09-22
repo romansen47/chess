@@ -105,4 +105,38 @@ public class PgnNotationParsingTest {
                 List.of("b2b4", "c7c5", "b4c5"),
                 loader.parsePgnMoveList(pgn));
     }
+    /**
+     * Verifies that pseudo-legal dummy moves do not create false SAN ambiguity
+     * when one candidate is illegal because it exposes the king.
+     */
+    @Test
+    public void parsesPinnedKnightWithoutFalseSanAmbiguity() throws Exception {
+        GameLoader loader = new GameLoader();
+
+        String pgn = """
+                [Event "Yugoslavia ct  Rd: 3"]
+                [Site "Yugoslavia ct  Rd: 3"]
+                [Date "1959.??.??"]
+                [Round "?"]
+                [White "Mikhail Tal"]
+                [Black "Robert James Fischer"]
+                [Result "1-0"]
+                [ECO "E93"]
+
+                1. d4 Nf6 2. c4 g6 3. Nc3 Bg7 4. e4 d6 5. Be2 O-O 6. Nf3 e5
+                7. d5 Nbd7 8. Bg5 h6 9. Bh4 a6 10. O-O Qe8 11. Nd2 Nh7
+                12. b4 Bf6 13. Bxf6 Nhxf6 14. Nb3 Qe7 15. Qd2 Kh7 16. Qe3 Ng8
+                17. c5 f5 18. exf5 gxf5 19. f4 exf4 20. Qxf4 dxc5 21. Bd3 cxb4
+                22. Rae1 Qf6 23. Re6 Qxc3 24. Bxf5+ Rxf5 25. Qxf5+ Kh8
+                26. Rf3 Qb2 27. Re8 Nf6 28. Qxf6+ Qxf6 29. Rxf6 Kg7
+                30. Rff8 Ne7 31. Na5 h5 32. h4 Rb8 33. Nc4 b5 34. Ne5 1-0
+                """;
+
+        List<String> moves = loader.parsePgnMoveList(pgn);
+
+        assertEquals(67, moves.size());
+        assertEquals("d7f6", moves.get(53));
+        assertEquals("c4e5", moves.get(66));
+    }
+
 }

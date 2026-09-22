@@ -2,8 +2,10 @@ package demo.chess.notation;
 
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Locale;
+import java.util.Set;
 
 import demo.chess.definitions.Color;
 import demo.chess.definitions.PieceType;
@@ -109,7 +111,9 @@ public final class PgnNotation {
      * generated dummy move list instead of formatting every candidate back to
      * SAN. This is important for bulk PGN imports, where the source data is
      * replayed as trusted historical game data and full validation would be
-     * prohibitively expensive.</p>
+     * prohibitively expensive. If that lightweight list produces more than one
+     * distinct candidate, parsing escalates once to a normal simulation so
+     * king-safety constraints can remove pseudo-legal ambiguities.</p>
      *
      * @param game the trusted dummy replay
      * @param rawSan the raw SAN token
@@ -140,7 +144,9 @@ public final class PgnNotation {
                     matches.add(candidate);
                 }
             }
-            return requireSingleMatch(matches, rawSan);
+            return requireSingleMatch(
+                    filterFullyLegalMatchesIfAmbiguous(game, matches),
+                    rawSan);
         }
 
         SanDescriptor descriptor = parseSanDescriptor(wanted, rawSan);
@@ -150,7 +156,9 @@ public final class PgnNotation {
                 matches.add(candidate);
             }
         }
-        return requireSingleMatch(matches, rawSan);
+        return requireSingleMatch(
+                filterFullyLegalMatchesIfAmbiguous(game, matches),
+                rawSan);
     }
 
     /**
@@ -470,6 +478,50 @@ public final class PgnNotation {
             return false;
         }
         return promotion.getPromotedPiece().getType() == descriptor.promotionType();
+    }
+
+    private static List<Move> filterFullyLegalMatchesIfAmbiguous(
+            DummyGame game,
+            List<Move> matches) throws NoMoveFoundException, IOException {
+        if (!hasMultipleDistinctMoves(matches)) {
+            return matches;
+        }
+
+        Simulation validationGame = Simulation.forkSimulationFrom(game.getMoveList());
+        Set<String> legalUciMoves = new HashSet<>();
+        for (Move legalMove : validationGame.getPlayer().getValidMoves(validationGame)) {
+            if (legalMove != null) {
+                legalUciMoves.add(legalMove.toString().toLowerCase(Locale.ROOT));
+            }
+        }
+
+        List<Move> legalMatches = new ArrayList<>();
+        for (Move candidate : matches) {
+            if (candidate == null) {
+                continue;
+            }
+            String candidateUci = candidate.toString().toLowerCase(Locale.ROOT);
+            if (legalUciMoves.contains(candidateUci)) {
+                legalMatches.add(candidate);
+            }
+        }
+        return legalMatches;
+    }
+
+    private static boolean hasMultipleDistinctMoves(List<Move> matches) {
+        String firstUci = null;
+        for (Move candidate : matches) {
+            if (candidate == null) {
+                continue;
+            }
+            String candidateUci = candidate.toString().toLowerCase(Locale.ROOT);
+            if (firstUci == null) {
+                firstUci = candidateUci;
+            } else if (!candidateUci.equals(firstUci)) {
+                return true;
+            }
+        }
+        return false;
     }
 
     private static Move requireSingleMatch(List<Move> matches, String rawSan) throws NoMoveFoundException {
