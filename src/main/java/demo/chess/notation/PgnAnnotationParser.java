@@ -23,8 +23,8 @@ public class PgnAnnotationParser {
 
     private static final Pattern TAG_LINE = Pattern.compile(
             "(?m)^\\s*\\[[A-Za-z0-9_]+\\s+\"(?:\\\\.|[^\"])*\"\\]\\s*$");
-    private static final Pattern EVAL_TAG = Pattern.compile(
-            "(?i)\\[%eval\\s+([^\\]]+)]");
+    private static final Pattern COMMENT_TAG = Pattern.compile(
+            "(?i)\\[%(eval|clk|emt)\\s+([^\\]]+)]");
     private static final Pattern MOVE_NUMBER_PREFIX = Pattern.compile("^\\d+\\.(?:\\.\\.)?");
     private static final Pattern SYMBOLIC_NAG_SUFFIX = Pattern.compile("(!!|\\?\\?|!\\?|\\?!|!|\\?)$");
 
@@ -45,7 +45,7 @@ public class PgnAnnotationParser {
      *
      * @param content complete or movetext-only PGN content
      * @param startingPosition position used to resolve SAN main-line moves
-     * @return annotations keyed by one-based ply
+     * @return annotations keyed by one-based ply; key 0 contains the introductory comment
      */
     public Map<Integer, PgnMoveAnnotation> parse(
             String content,
@@ -56,7 +56,13 @@ public class PgnAnnotationParser {
             return Map.of();
         }
 
-        String movetext = TAG_LINE.matcher(stripBom(content)).replaceAll(" ");
+        String movetext = stripBom(content);
+        Matcher header = TAG_LINE.matcher(movetext);
+        int headerEnd = 0;
+        while (header.find() && movetext.substring(headerEnd, header.start()).isBlank()) {
+            headerEnd = header.end();
+        }
+        movetext = movetext.substring(headerEnd);
         DummyGame game = Simulation.createDummySimulation(
                 startingPosition != null ? startingPosition : ChessStartingPosition.STANDARD);
         StringBuilder token = new StringBuilder();
@@ -76,9 +82,7 @@ public class PgnAnnotationParser {
                 if (end < 0) {
                     end = movetext.length();
                 }
-                if (ply > 0) {
-                    addComment(annotations, ply, movetext.substring(index + 1, end));
-                }
+                addComment(annotations, ply, movetext.substring(index + 1, end));
                 index = end;
                 continue;
             }
@@ -89,9 +93,7 @@ public class PgnAnnotationParser {
                 if (end < 0) {
                     end = movetext.length();
                 }
-                if (ply > 0) {
-                    addComment(annotations, ply, movetext.substring(index + 1, end));
-                }
+                addComment(annotations, ply, movetext.substring(index + 1, end));
                 index = end;
                 continue;
             }
@@ -180,13 +182,21 @@ public class PgnAnnotationParser {
         }
 
         MutableAnnotation annotation = annotation(annotations, ply);
-        Matcher matcher = EVAL_TAG.matcher(rawComment);
+        Matcher matcher = COMMENT_TAG.matcher(rawComment);
         StringBuffer humanText = new StringBuffer();
 
         while (matcher.find()) {
-            String evaluation = matcher.group(1) == null ? null : matcher.group(1).trim();
-            if (evaluation != null && !evaluation.isEmpty()) {
-                annotation.evaluation = evaluation;
+            String value = matcher.group(2).trim();
+            String tag = matcher.group(1).toLowerCase(java.util.Locale.ROOT);
+            if (tag.equals("eval") && !value.isEmpty()) {
+                annotation.evaluation = value;
+            } else if (tag.equals("clk") || tag.equals("emt")) {
+                Long millis = PgnTime.parseMillis(value);
+                if (millis == null) continue; // Preserve malformed/unsupported values verbatim.
+                if (tag.equals("clk")) annotation.clockMillis = millis;
+                else annotation.elapsedMoveMillis = millis;
+            } else {
+                continue;
             }
             matcher.appendReplacement(humanText, " ");
         }
@@ -286,10 +296,12 @@ public class PgnAnnotationParser {
         private String nag;
         private String comment;
         private String evaluation;
+        private Long clockMillis;
+        private Long elapsedMoveMillis;
         private final List<String> variations = new ArrayList<>();
 
         private PgnMoveAnnotation toImmutable() {
-            return new PgnMoveAnnotation(nag, comment, evaluation, variations);
+            return new PgnMoveAnnotation(nag, comment, evaluation, variations, clockMillis, elapsedMoveMillis);
         }
     }
 

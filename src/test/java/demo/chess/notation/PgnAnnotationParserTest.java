@@ -13,10 +13,10 @@ import demo.chess.game.impl.Simulation;
 import demo.chess.load.GameLoader;
 import demo.chess.save.GameSaver;
 
-class PgnAnnotationParserTest {
+public class PgnAnnotationParserTest {
 
     @Test
-    void parsesCommentsNagsEvaluationsAndVariations() throws Exception {
+    public void parsesCommentsNagsEvaluationsAndVariations() throws Exception {
         String pgn = """
                 [Event "Annotations"]
                 [Result "*"]

@@ -17,6 +17,7 @@ import demo.chess.game.DummyGame;
 import demo.chess.game.impl.Simulation;
 import demo.chess.notation.PgnMoveAnnotation;
 import demo.chess.notation.PgnNotation;
+import demo.chess.notation.PgnTime;
 import demo.chess.notation.UciMoveCodec;
 
 /**
@@ -84,6 +85,10 @@ public class GameSaver {
         StringBuilder pgn = new StringBuilder();
         appendTags(pgn, tags);
         pgn.append('\n');
+        if (annotations != null && annotations.containsKey(0)) {
+            appendAnnotation(pgn, annotations.get(0));
+            pgn.append('\n');
+        }
 
         DummyGame dummyGame = Simulation.createDummySimulation(startingPosition);
         int ply = 0;
@@ -124,12 +129,18 @@ public class GameSaver {
 
         String comment = annotation.comment();
         String evaluation = annotation.evaluation();
-        if (comment != null || evaluation != null) {
+        if (comment != null || evaluation != null || annotation.clockMillis() != null || annotation.elapsedMoveMillis() != null) {
             pgn.append(" {");
             if (comment != null) pgn.append(sanitizeComment(comment));
             if (evaluation != null) {
                 if (comment != null) pgn.append(' ');
                 pgn.append("[%eval ").append(evaluation).append(']');
+            }
+            if (annotation.clockMillis() != null) {
+                pgn.append(" [%clk ").append(PgnTime.formatMillis(annotation.clockMillis())).append(']');
+            }
+            if (annotation.elapsedMoveMillis() != null) {
+                pgn.append(" [%emt ").append(PgnTime.formatMillis(annotation.elapsedMoveMillis())).append(']');
             }
             pgn.append('}');
         }

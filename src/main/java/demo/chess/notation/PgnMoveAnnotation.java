@@ -10,14 +10,25 @@ import java.util.List;
  * @param comment free user comment without surrounding braces
  * @param evaluation optional PGN eval payload without the [%eval ...] wrapper
  * @param variations raw PGN recursive-annotation variations without outer parentheses
+ * @param clockMillis remaining time after this move, in milliseconds; null if unknown
+ * @param elapsedMoveMillis time spent on this move, in milliseconds; null if unknown
  */
 public record PgnMoveAnnotation(
         String nag,
         String comment,
         String evaluation,
-        List<String> variations) {
+        List<String> variations,
+        Long clockMillis,
+        Long elapsedMoveMillis) {
+
+    public PgnMoveAnnotation(String nag, String comment, String evaluation, List<String> variations) {
+        this(nag, comment, evaluation, variations, null, null);
+    }
 
     public PgnMoveAnnotation {
+        if (clockMillis != null && clockMillis < 0 || elapsedMoveMillis != null && elapsedMoveMillis < 0) {
+            throw new IllegalArgumentException("PGN times must not be negative");
+        }
         nag = normalizeNag(nag);
         comment = normalizeText(comment);
         evaluation = normalizeText(evaluation);
@@ -38,7 +49,9 @@ public record PgnMoveAnnotation(
         return nag == null
                 && comment == null
                 && evaluation == null
-                && variations.isEmpty();
+                && variations.isEmpty()
+                && clockMillis == null
+                && elapsedMoveMillis == null;
     }
 
     private static String normalizeNag(String value) {
