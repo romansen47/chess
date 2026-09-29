@@ -15,11 +15,10 @@ import demo.chess.game.LegalMoveResolver;
 import demo.chess.game.impl.Simulation;
 
 /**
- * Diagnostic-only bounded proof search for short-term material compensation.
+ * Bounded proof search for short-term material compensation.
  *
- * <p>This class deliberately does not participate in move classification.
- * It only refines the explanation of an already detected passive material
- * offer. To keep the diagnosis causal and conservative, only forcing moves
+ * <p>A proven compensation excludes a passive material offer from sacrifice
+ * classification. To keep the diagnosis causal and conservative, only forcing moves
  * by the piece that played the extraordinary candidate move are considered
  * as compensation. The defender may choose any legal reply.</p>
  */
@@ -80,8 +79,7 @@ final class MaterialCompensationAnalyzer {
                     : null;
         } catch (Exception ignored) {
             /*
-             * This is explanation-only diagnostics. A replay/search problem
-             * must never change or break the underlying annotation.
+             * A replay/search problem is not proof of compensation.
              */
             return null;
         }

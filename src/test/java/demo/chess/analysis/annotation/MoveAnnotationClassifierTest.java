@@ -218,6 +218,44 @@ public class MoveAnnotationClassifierTest {
         assertNull(annotation);
     }
 
+
+    @Test
+    public void recoveredInvestmentFallsThroughToOnlyMove() throws Exception {
+        Game root = positionAfter("g1f3", "g8f6", "c2c4", "g7g6");
+        String pv = "b1c3 d7d5 c4d5 f6d5 h2h4 d5c3 h4h5 g6g5 b2c3";
+        MoveAnnotation annotation = classifier.classify(root, "b1c3",
+                result(List.of(line(3, 20, pv), line(0, 20, "d2d4"),
+                        line(-1, 20, "h2h4")), Map.of()), 3);
+        assertNotNull(annotation);
+        assertEquals(MoveAnnotationKind.ONLY_MOVE, annotation.getKind());
+    }
+
+    @Test
+    public void recoveredInvestmentWithoutOtherReasonIsUnannotated() throws Exception {
+        Game root = positionAfter("g1f3", "g8f6", "c2c4", "g7g6");
+        MoveAnnotation annotation = classifier.classify(root, "b1c3",
+                result(List.of(
+                        line(0.4, 20, "b1c3 d7d5 c4d5 f6d5 h2h4 d5c3 h4h5 g6g5 b2c3"),
+                        line(0.3, 20, "d2d4"), line(0.2, 20, "h2h4")), Map.of()), 0.4);
+        assertNull(annotation);
+    }
+
+    @Test
+    public void recoveredInvestmentPreservesIndependentDiscovery() throws Exception {
+        Game root = positionAfter("g1f3", "g8f6", "c2c4", "g7g6");
+        MoveAnnotation annotation = classifier.classify(root, "b1c3",
+                result(List.of(
+                        line(2.2, 20, "b1c3 d7d5 c4d5 f6d5 h2h4 d5c3 h4h5 g6g5 b2c3"),
+                        line(0.8, 20, "d2d4"), line(0.6, 20, "h2h4")),
+                        history(depth(5, line(0.6, 5, "d2d4"), line(-1, 5, "b1c3"), line(-1.2, 5, "h2h4")),
+                                depth(8, line(0.7, 8, "d2d4"), line(-0.8, 8, "b1c3"), line(-1, 8, "h2h4")))),
+                2.2);
+        assertNotNull(annotation);
+        assertEquals(MoveAnnotationKind.EXTRAORDINARY, annotation.getKind());
+        assertEquals(ExtraordinaryReason.DEEP_DISCOVERY, annotation.getExtraordinaryReason());
+        assertNull(annotation.getMaterialInvestment());
+    }
+
     private Game positionAfter(String... moves) throws Exception {
         Game game = Simulation.createSimulation();
         for (String uci : moves) {

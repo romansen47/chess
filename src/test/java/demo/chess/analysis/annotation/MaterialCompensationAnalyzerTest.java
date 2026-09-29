@@ -52,6 +52,11 @@ public class MaterialCompensationAnalyzerTest {
 
         assertNotNull(compensation);
         assertEquals(2, compensation.plies());
+        // Even when the principal variation declines the offer (or is only
+        // a root prefix), the bounded proof rules out sacrifice credit.
+        assertNull(new MaterialSacrificeDetector().find(root,
+                new demo.chess.definitions.engines.EngineLine(0, 20, null, "d4e6"),
+                "d4e6", true));
     }
 
     @Test
