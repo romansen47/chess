@@ -33,7 +33,8 @@ public class MaterialTrajectoryAnalyzerTest {
         Game root = position("e2e4", "g8f6", "b1c3");
         var trajectory = analyzer.analyze(root, line("f6e4 c3e4"), false);
         assertNotNull(trajectory);
-        assertEquals(List.of(0d, 1d, -2d), trajectory.balances());
+        assertArrayEquals(new double[] {0d, 1d, -2d},
+                trajectory.balances().stream().mapToDouble(Double::doubleValue).toArray(), 0.001);
         assertEquals(2d, trajectory.persistentDeficit(), 0.001);
         assertNull(trajectory.recoveryPly(2));
         assertNotNull(new MaterialSacrificeDetector().find(root, line("f6e4 c3e4"), "f6e4", false));

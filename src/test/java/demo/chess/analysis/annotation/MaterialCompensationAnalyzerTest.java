@@ -52,6 +52,14 @@ public class MaterialCompensationAnalyzerTest {
 
         assertNotNull(compensation);
         assertEquals(2, compensation.plies());
+        var acceptedPv = new demo.chess.definitions.engines.EngineLine(
+                0, 20, null, "d4e6 c8c2 e6d8 f8d8");
+        var trajectory = new MaterialTrajectoryAnalyzer().analyze(root, acceptedPv, true);
+        assertNotNull(trajectory);
+        assertEquals(6.0, trajectory.maximumDeficit(), 0.001);
+        assertEquals(0.0, trajectory.persistentDeficit(), 0.001);
+        assertEquals(Integer.valueOf(3), trajectory.recoveryPly(2));
+        assertNull(new MaterialSacrificeDetector().find(root, acceptedPv, "d4e6", true));
         // Even when the principal variation declines the offer (or is only
         // a root prefix), the bounded proof rules out sacrifice credit.
         assertNull(new MaterialSacrificeDetector().find(root,
