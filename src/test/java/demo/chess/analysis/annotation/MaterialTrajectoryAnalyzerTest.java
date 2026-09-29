@@ -37,7 +37,8 @@ public class MaterialTrajectoryAnalyzerTest {
                 trajectory.balances().stream().mapToDouble(Double::doubleValue).toArray(), 0.001);
         assertEquals(2d, trajectory.persistentDeficit(), 0.001);
         assertNull(trajectory.recoveryPly(2));
-        assertNotNull(new MaterialSacrificeDetector().find(root, line("f6e4 c3e4"), "f6e4", false));
+        // Two points remain below the established three-point annotation threshold.
+        assertNull(new MaterialSacrificeDetector().find(root, line("f6e4 c3e4"), "f6e4", false));
 
         Game unequal = position("e2e4", "d7d5", "e4d5");
         var unchanged = analyzer.analyze(unequal, line("g8f6"), false);
