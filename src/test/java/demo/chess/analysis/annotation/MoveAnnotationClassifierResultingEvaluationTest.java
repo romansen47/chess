@@ -12,6 +12,7 @@ import org.junit.Test;
 import demo.chess.definitions.engines.DeepAnalysisResult;
 import demo.chess.definitions.engines.EngineLine;
 import demo.chess.game.Game;
+import demo.chess.game.LegalMoveResolver;
 import demo.chess.game.impl.Simulation;
 
 public class MoveAnnotationClassifierResultingEvaluationTest {
@@ -77,6 +78,39 @@ public class MoveAnnotationClassifierResultingEvaluationTest {
                 2.9);
 
         assertNull(annotation);
+    }
+
+    @Test
+    public void forcedReplyExtensionCanRevealMateBeyondShallowRoot() throws Exception {
+        Game root = Simulation.createSimulation();
+        root.apply(LegalMoveResolver.resolveUci(root, "e2e4"));
+
+        DeepAnalysisResult analysisBeforeMove = new DeepAnalysisResult(
+                List.of(
+                        line(-2.88, "g8f6"),
+                        line(-0.20, "b8c6"),
+                        line(1.70, "h7h5")),
+                Map.of());
+
+        MoveAnnotation shallowAnnotation = classifier.classify(
+                root,
+                "h7h5",
+                analysisBeforeMove,
+                1.58);
+
+        assertNotNull(shallowAnnotation);
+        assertEquals(
+                MoveAnnotationKind.BLUNDER,
+                shallowAnnotation.getKind());
+
+        MoveAnnotation extendedAnnotation = classifier.classify(
+                root,
+                "h7h5",
+                analysisBeforeMove,
+                1.58,
+                -99.0);
+
+        assertNull(extendedAnnotation);
     }
 
     @Test

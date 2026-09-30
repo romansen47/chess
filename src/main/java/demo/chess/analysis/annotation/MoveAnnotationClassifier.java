@@ -27,6 +27,26 @@ public final class MoveAnnotationClassifier {
             String playedMoveUci,
             DeepAnalysisResult analysisBeforeMove,
             double resultingEvaluation) {
+        return classify(
+                positionBeforeMove,
+                playedMoveUci,
+                analysisBeforeMove,
+                resultingEvaluation,
+                null);
+    }
+
+    /**
+     * Classifies a move and optionally includes the evaluation after one
+     * forced reply. Some engines stop a one-legal-move root before seeing the
+     * tactic beyond that reply. The extension is additional evidence only:
+     * it may improve the played move's score, but never make it worse.
+     */
+    public MoveAnnotation classify(
+            Game positionBeforeMove,
+            String playedMoveUci,
+            DeepAnalysisResult analysisBeforeMove,
+            double resultingEvaluation,
+            Double forcedReplyEvaluation) {
         if (positionBeforeMove == null
                 || playedMoveUci == null
                 || playedMoveUci.isBlank()
@@ -63,6 +83,16 @@ public final class MoveAnnotationClassifier {
                 EvaluationScoring.moverScore(
                         resultingEvaluation,
                         whiteMover);
+        if (forcedReplyEvaluation != null
+                && Double.isFinite(forcedReplyEvaluation)) {
+            double forcedReplyScore =
+                    EvaluationScoring.moverScore(
+                            forcedReplyEvaluation,
+                            whiteMover);
+            resultingScore = Math.max(
+                    resultingScore,
+                    forcedReplyScore);
+        }
         double resultingWinPercent =
                 EvaluationScoring.winPercentFromMoverScore(
                         resultingScore);
