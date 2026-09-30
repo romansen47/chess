@@ -55,20 +55,54 @@ public final class MoveAnnotationClassifier {
                 EvaluationScoring.moverScore(
                         best.getEvaluation(),
                         whiteMover);
-        double playedScore =
-                EvaluationScoring.moverScore(
-                        resultingEvaluation,
-                        whiteMover);
         double bestWinPercent =
                 EvaluationScoring.winPercentFromMoverScore(
                         bestScore);
-        double playedWinPercent =
+
+        double resultingScore =
+                EvaluationScoring.moverScore(
+                        resultingEvaluation,
+                        whiteMover);
+        double resultingWinPercent =
                 EvaluationScoring.winPercentFromMoverScore(
-                        playedScore);
-        double winChanceLoss =
+                        resultingScore);
+        double resultingWinChanceLoss =
                 Math.max(
                         0.0,
-                        bestWinPercent - playedWinPercent);
+                        bestWinPercent - resultingWinPercent);
+
+        /*
+         * The resulting-position search may discover that the played move was
+         * better than its finite root MultiPV score suggested. In that case it
+         * is useful evidence and may reduce the move-quality loss.
+         *
+         * It must not make a move worse than the common root search did,
+         * however. A separate search after the move has a different search
+         * tree/horizon, so treating a later drop as additional player error can
+         * produce contradictions such as the root best move being marked "?".
+         *
+         * If the played move is outside MultiPV, the resulting-position score
+         * remains the only available quality estimate and therefore the
+         * fallback.
+         */
+        double winChanceLoss = resultingWinChanceLoss;
+        if (playedIndex >= 0) {
+            double rootPlayedScore =
+                    EvaluationScoring.moverScore(
+                            candidates.get(playedIndex).getEvaluation(),
+                            whiteMover);
+            double rootPlayedWinPercent =
+                    EvaluationScoring.winPercentFromMoverScore(
+                            rootPlayedScore);
+            double rootWinChanceLoss =
+                    Math.max(
+                            0.0,
+                            bestWinPercent - rootPlayedWinPercent);
+            winChanceLoss =
+                    Math.min(
+                            rootWinChanceLoss,
+                            resultingWinChanceLoss);
+        }
 
         ObjectiveMoveQuality quality =
                 qualityEvaluator.evaluate(winChanceLoss);

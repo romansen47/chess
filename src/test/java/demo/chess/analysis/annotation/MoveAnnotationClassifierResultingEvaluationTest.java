@@ -2,6 +2,7 @@ package demo.chess.analysis.annotation;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNull;
 
 import java.util.List;
 import java.util.Map;
@@ -19,7 +20,7 @@ public class MoveAnnotationClassifierResultingEvaluationTest {
             new MoveAnnotationClassifier();
 
     @Test
-    public void resultingPositionEvaluationOverridesPlayedMultiPvLineForQuality() {
+    public void rootBestMoveCannotBecomeMistakeFromPostMoveSearchDrop() {
         Game root = Simulation.createSimulation();
 
         DeepAnalysisResult analysisBeforeMove = new DeepAnalysisResult(
@@ -27,6 +28,66 @@ public class MoveAnnotationClassifierResultingEvaluationTest {
                         line(0.5, "e2e4 e7e5"),
                         line(0.4, "d2d4 d7d5"),
                         line(0.3, "g1f3 g8f6")),
+                Map.of());
+
+        MoveAnnotation annotation = classifier.classify(
+                root,
+                "e2e4",
+                analysisBeforeMove,
+                -3.0);
+
+        assertNull(annotation);
+    }
+
+    @Test
+    public void postMoveSearchCannotIncreaseLossBeyondPlayedMultiPvLine() {
+        Game root = Simulation.createSimulation();
+
+        DeepAnalysisResult analysisBeforeMove = new DeepAnalysisResult(
+                List.of(
+                        line(0.5, "e2e4 e7e5"),
+                        line(0.4, "d2d4 d7d5"),
+                        line(0.3, "g1f3 g8f6")),
+                Map.of());
+
+        MoveAnnotation annotation = classifier.classify(
+                root,
+                "d2d4",
+                analysisBeforeMove,
+                -3.0);
+
+        assertNull(annotation);
+    }
+
+    @Test
+    public void postMoveSearchCanReduceLossFromPlayedMultiPvLine() {
+        Game root = Simulation.createSimulation();
+
+        DeepAnalysisResult analysisBeforeMove = new DeepAnalysisResult(
+                List.of(
+                        line(3.0, "e2e4 e7e5"),
+                        line(0.0, "d2d4 d7d5"),
+                        line(-1.0, "g1f3 g8f6")),
+                Map.of());
+
+        MoveAnnotation annotation = classifier.classify(
+                root,
+                "d2d4",
+                analysisBeforeMove,
+                2.9);
+
+        assertNull(annotation);
+    }
+
+    @Test
+    public void resultingPositionRemainsFallbackOutsideMultiPv() {
+        Game root = Simulation.createSimulation();
+
+        DeepAnalysisResult analysisBeforeMove = new DeepAnalysisResult(
+                List.of(
+                        line(0.5, "e2e4 e7e5"),
+                        line(0.3, "g1f3 g8f6"),
+                        line(0.2, "c2c4 e7e5")),
                 Map.of());
 
         MoveAnnotation annotation = classifier.classify(

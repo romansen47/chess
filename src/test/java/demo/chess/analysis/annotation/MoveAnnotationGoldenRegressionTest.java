@@ -281,7 +281,7 @@ public class MoveAnnotationGoldenRegressionTest {
                         line(4.88, "♝xf1"),
                         line(6.96, "♝g4")),
                 MoveAnnotationKind.MISTAKE,
-                22.53);
+                20.12);
 
         assertQuality(
                 "Nezhmetdinov-Chernikov 25.Kxf1",
@@ -308,10 +308,10 @@ public class MoveAnnotationGoldenRegressionTest {
                 19.80);
 
         /*
-         * With move quality derived from the resulting position, the exported
-         * post-move evaluation 3.91 gives 26.Bd4 a win-chance loss of 8.80.
-         * That is below the 10-point mistake threshold, so it is intentionally
-         * no longer annotated as a mistake.
+         * The root MultiPV score gives 26.Bd4 a 22.02-point loss, while the
+         * exported post-move evaluation 3.91 reduces that to 8.80. The hybrid
+         * quality rule keeps the lower supported loss, so the move remains
+         * below the 10-point mistake threshold and is intentionally unannotated.
          */
         MoveAnnotation bd4 = classify(
                 NEZHMETDINOV_CHERNIKOV,
