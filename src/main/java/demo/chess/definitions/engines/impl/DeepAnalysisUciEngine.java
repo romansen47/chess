@@ -61,7 +61,7 @@ public class DeepAnalysisUciEngine extends EvaluationUciEngine implements DeepAn
 
         String line;
         while ((line = reader.readLine()) != null) {
-            if (line.startsWith("info ") && line.contains(" depth ") && line.contains(" pv ")) {
+            if (isPrincipalVariationInfoLine(line)) {
                 rawInfoLines.add(line);
             }
             if (line.startsWith("bestmove")) break;

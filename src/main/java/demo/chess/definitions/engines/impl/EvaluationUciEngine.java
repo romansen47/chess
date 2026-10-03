@@ -199,7 +199,7 @@ public class EvaluationUciEngine extends ConsoleUciEngine implements EvaluationE
                 String line;
                 while ((line = processReader.readLine()) != null) {
                     if (generation != evaluationGeneration || chessGame.getState() != null) return;
-                    if (line.contains("info") && line.contains("depth") && !(line.split(" ").length == 3)) {
+                    if (isPrincipalVariationInfoLine(line)) {
                         int depth = Integer.parseInt(line.split("depth ")[1].split(" ")[0]);
                         if (depth >= currentMaxDepth) {
                             currentMaxDepth = depth;
@@ -229,6 +229,24 @@ public class EvaluationUciEngine extends ConsoleUciEngine implements EvaluationE
         } catch (NullPointerException ignored) {
             logger.debug("Thread was cancelled...");
         }
+    }
+
+    /**
+     * Returns whether a raw UCI line contains a principal-variation search result.
+     *
+     * <p>Only lines with an actual {@code pv} field are evaluation snapshots.
+     * Diagnostic output such as Berserk's
+     * {@code info string ... depth 127 ...} and {@code currmove} progress lines
+     * must not advance the live search depth.</p>
+     *
+     * @param line raw UCI output line
+     * @return whether the line is a principal-variation info line
+     */
+    protected static boolean isPrincipalVariationInfoLine(String line) {
+        return line != null
+                && line.startsWith("info ")
+                && line.contains(" depth ")
+                && line.contains(" pv ");
     }
 
     private void notifyEvaluationUpdate(long generation, String positionKey, List<EngineLine> lines) {
