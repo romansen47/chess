@@ -2,7 +2,6 @@ package demo.chess.definitions.engines;
 
 import java.io.IOException;
 import java.util.List;
-import java.util.Map;
 import java.util.concurrent.ExecutionException;
 
 import demo.chess.game.Game;
@@ -19,13 +18,17 @@ public interface EvaluationEngine extends ChessEngine {
             throws IOException, InterruptedException, ExecutionException;
 
     /**
-     * Clears the chached lines.
+     * Clears all cached evaluation snapshots owned by this engine instance.
      */
-    void clearChachedLines();
+    void clearCachedLines();
 
     /**
-     * Returns the cached best lines.
-     * @return the cached best lines
+     * Compatibility alias for callers compiled against the former misspelled API.
+     *
+     * @deprecated use {@link #clearCachedLines()}
      */
-    Map<String, List<EngineLine>> getCachedBestLines();
+    @Deprecated
+    default void clearChachedLines() {
+        clearCachedLines();
+    }
 }

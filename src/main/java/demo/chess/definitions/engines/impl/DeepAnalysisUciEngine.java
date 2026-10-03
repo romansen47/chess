@@ -13,9 +13,11 @@ import demo.chess.definitions.engines.DeepAnalysisEngine;
 import demo.chess.definitions.engines.DeepAnalysisResult;
 import demo.chess.definitions.engines.EngineConfig;
 import demo.chess.definitions.engines.EngineLine;
+import demo.chess.definitions.engines.uci.UciInfoLine;
+import demo.chess.definitions.engines.uci.UciInfoParser;
 import demo.chess.game.Game;
 
-public class DeepAnalysisUciEngine extends EvaluationUciEngine implements DeepAnalysisEngine {
+public class DeepAnalysisUciEngine extends AbstractUciAnalysisEngine implements DeepAnalysisEngine {
 
     /*
      * Finite searches deliberately do not synchronize on the engine instance.
@@ -33,10 +35,10 @@ public class DeepAnalysisUciEngine extends EvaluationUciEngine implements DeepAn
     public List<EngineLine> getBestLines(Game chessGame, EngineConfig config)
             throws IOException, InterruptedException, ExecutionException {
         synchronized (finiteSearchLock) {
-            String moveListAsString = chessGame.getMoveList().toString();
-            List<EngineLine> cachedLines = getCachedBestLines().get(moveListAsString);
+            String key = positionKey(chessGame);
+            List<EngineLine> cachedLines = getCachedLines(key);
             if (cachedLines != null) return cachedLines;
-            return analyzeLocked(chessGame, config).getFinalLines();
+            return analyzeLocked(chessGame, key, config).getFinalLines();
         }
     }
 
@@ -44,81 +46,87 @@ public class DeepAnalysisUciEngine extends EvaluationUciEngine implements DeepAn
     public DeepAnalysisResult analyze(Game chessGame, EngineConfig config)
             throws IOException, InterruptedException, ExecutionException {
         synchronized (finiteSearchLock) {
-            return analyzeLocked(chessGame, config);
+            return analyzeLocked(
+                    chessGame,
+                    positionKey(chessGame),
+                    config);
         }
     }
 
-    private DeepAnalysisResult analyzeLocked(Game chessGame, EngineConfig config)
+    private DeepAnalysisResult analyzeLocked(
+            Game chessGame,
+            String positionKey,
+            EngineConfig config)
             throws IOException, InterruptedException, ExecutionException {
         applyConfig(config);
         prepareForGame(chessGame);
 
-        List<String> rawInfoLines = new ArrayList<>();
+        List<UciInfoLine> infoLines = new ArrayList<>();
         String command = buildDeepAnalysisCommand(chessGame, config);
-        logger.info("{} is starting finite deep analysis for move list {}", this, chessGame.getMoveList());
+        logger.info(
+                "{} is starting finite deep analysis for position {}",
+                this,
+                positionKey);
         getWriter().println(command);
         getWriter().flush();
 
         String line;
         while ((line = reader.readLine()) != null) {
-            if (isPrincipalVariationInfoLine(line)) {
-                rawInfoLines.add(line);
-            }
+            UciInfoParser.parsePrincipalVariation(line).ifPresent(infoLines::add);
             if (line.startsWith("bestmove")) break;
         }
 
         Color sideToMove = chessGame.getPlayer() != null
                 ? chessGame.getPlayer().getColor()
                 : (chessGame.getMoveList().size() % 2 == 0 ? Color.WHITE : Color.BLACK);
-        Map<Integer, List<EngineLine>> depthHistory = buildDepthHistory(sideToMove, rawInfoLines, config);
-        List<EngineLine> finalLines = parseBestLinesAtHighestDepth(sideToMove, rawInfoLines, config);
-        getCachedBestLines().put(chessGame.getMoveList().toString(), finalLines);
+
+        Map<Integer, List<EngineLine>> depthHistory =
+                buildDepthHistory(sideToMove, infoLines, config);
+        List<EngineLine> finalLines =
+                parseBestLinesAtHighestDepth(sideToMove, infoLines, config);
+        cacheLines(positionKey, finalLines);
         return new DeepAnalysisResult(finalLines, depthHistory);
     }
 
     private Map<Integer, List<EngineLine>> buildDepthHistory(
             Color color,
-            List<String> rawInfoLines,
+            List<UciInfoLine> infoLines,
             EngineConfig config) {
-        TreeMap<Integer, List<String>> rawByDepth = new TreeMap<>();
-        for (String rawLine : rawInfoLines) {
-            if (!rawLine.contains(" depth ") || !rawLine.contains(" pv ")) continue;
-            int depth;
-            try {
-                depth = Integer.parseInt(rawLine.split("depth ")[1].split(" ")[0]);
-            } catch (RuntimeException ignored) {
-                continue;
-            }
-            rawByDepth.computeIfAbsent(depth, ignored -> new ArrayList<>()).add(rawLine);
+        TreeMap<Integer, List<UciInfoLine>> byDepth = new TreeMap<>();
+        for (UciInfoLine info : infoLines) {
+            byDepth.computeIfAbsent(
+                    info.depth(),
+                    ignored -> new ArrayList<>()).add(info);
         }
 
         Map<Integer, List<EngineLine>> result = new LinkedHashMap<>();
-        for (Map.Entry<Integer, List<String>> entry : rawByDepth.entrySet()) {
-            List<EngineLine> parsed = parseBestLinesAtHighestDepth(color, entry.getValue(), config);
-            if (!parsed.isEmpty()) result.put(entry.getKey(), List.copyOf(parsed));
+        for (Map.Entry<Integer, List<UciInfoLine>> entry : byDepth.entrySet()) {
+            List<EngineLine> parsed =
+                    parseBestLinesAtHighestDepth(
+                            color,
+                            entry.getValue(),
+                            config);
+            if (!parsed.isEmpty()) {
+                result.put(entry.getKey(), List.copyOf(parsed));
+            }
         }
         return Map.copyOf(result);
     }
 
-    private String buildDeepAnalysisCommand(Game game, EngineConfig config) {
+    private String buildDeepAnalysisCommand(
+            Game game,
+            EngineConfig config) {
         StringBuilder command = new StringBuilder();
         command.append("ucinewgame\n");
         command.append(UciPositionCommand.build(game)).append('\n');
         if (config.getDepth() > 0) {
             command.append("go depth ").append(config.getDepth()).append('\n');
         } else {
-            int moveTimeMillis = Math.max(1, config.getMoveTimeSeconds()) * 1000;
+            int moveTimeMillis =
+                    Math.max(1, config.getMoveTimeSeconds()) * 1000;
             command.append("go movetime ").append(moveTimeMillis).append('\n');
         }
         return command.toString();
-    }
-
-    @Override
-    protected StringBuilder getCommandLineOptions(StringBuilder command, EngineConfig config) {
-        StringBuilder result = new StringBuilder(UciPositionCommand.build(command)).append('\n');
-        if (config.getDepth() > 0) result.append("go depth ").append(config.getDepth()).append('\n');
-        else result.append("go movetime ").append(Math.max(1, config.getMoveTimeSeconds()) * 1000).append('\n');
-        return result;
     }
 
     @Override

@@ -98,7 +98,7 @@ public class UciOptionTest {
 
         assertEquals("", stringOption.getDefaultValue());
         assertEquals("", stringOption.getValue());
-        assertEquals("setoption name SyzygyPath value", stringOption.toSetOptionCommand("SyzygyPath"));
+        assertEquals("setoption name SyzygyPath value" + " ", stringOption.toSetOptionCommand("SyzygyPath"));
 
         assertFalse(buttonOption.isConfigurable());
         assertEquals("", buttonOption.toSetOptionCommand("Clear Hash"));

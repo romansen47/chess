@@ -141,10 +141,13 @@ public class UciOption {
 
         StringBuilder command = new StringBuilder("setoption name ").append(name);
         if (value != null) {
-            command.append(" value");
-            if (!value.isEmpty()) {
-                command.append(' ').append(value);
-            }
+            /*
+             * Keep the separator after "value" even for an empty string.
+             * Some engines (notably PlentyChess) distinguish
+             * "setoption name X value " from the malformed token sequence
+             * ending directly at "value".
+             */
+            command.append(" value ").append(value);
         }
         return command.toString();
     }

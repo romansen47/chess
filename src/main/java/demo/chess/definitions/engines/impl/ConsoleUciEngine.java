@@ -16,7 +16,6 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
 import demo.chess.definitions.engines.ChessEngine;
-import demo.chess.definitions.engines.EngineConfig;
 import demo.chess.definitions.engines.UciSystemOptions;
 import demo.chess.definitions.engines.management.UciEngineProcessManager;
 import demo.chess.game.Game;
@@ -255,7 +254,6 @@ public abstract class ConsoleUciEngine implements ChessEngine {
         }
     }
 
-    protected abstract StringBuilder getCommandLineOptions(StringBuilder command, EngineConfig config);
 
     protected PrintWriter getWriter() {
         return writer;

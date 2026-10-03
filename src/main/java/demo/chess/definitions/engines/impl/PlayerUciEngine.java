@@ -52,13 +52,6 @@ public class PlayerUciEngine extends ConsoleUciEngine implements PlayerEngine {
         throw new NoMoveFoundException("No valid move found");
     }
 
-    @Override
-    protected StringBuilder getCommandLineOptions(StringBuilder command, EngineConfig config) {
-        StringBuilder result = new StringBuilder(UciPositionCommand.build(command)).append('\n');
-        appendGoCommand(result, config, 0L, 0L, 0L, 0L);
-        return result;
-    }
-
     private void appendGoCommand(
             StringBuilder command,
             EngineConfig config,
