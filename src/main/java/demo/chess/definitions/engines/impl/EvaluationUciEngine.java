@@ -9,6 +9,7 @@ import java.util.function.BiConsumer;
 import demo.chess.definitions.Color;
 import demo.chess.definitions.engines.EngineConfig;
 import demo.chess.definitions.engines.EngineLine;
+import demo.chess.definitions.engines.UciPositionKey;
 import demo.chess.definitions.engines.uci.UciInfoLine;
 import demo.chess.definitions.engines.uci.UciInfoParser;
 import demo.chess.game.Game;
@@ -16,7 +17,7 @@ import demo.chess.game.Game;
 public class EvaluationUciEngine extends AbstractUciAnalysisEngine {
 
     private Thread evaluationThread;
-    private volatile BiConsumer<String, List<EngineLine>> evaluationUpdateListener;
+    private volatile BiConsumer<UciPositionKey, List<EngineLine>> evaluationUpdateListener;
     private volatile long evaluationGeneration;
     private int lastNotifiedDepth = -1;
 
@@ -25,7 +26,7 @@ public class EvaluationUciEngine extends AbstractUciAnalysisEngine {
         logger.info("Creating new evaluation engine: {}", path);
     }
 
-    public void setEvaluationUpdateListener(BiConsumer<String, List<EngineLine>> listener) {
+    public void setEvaluationUpdateListener(BiConsumer<UciPositionKey, List<EngineLine>> listener) {
         evaluationUpdateListener = listener;
     }
 
@@ -34,7 +35,7 @@ public class EvaluationUciEngine extends AbstractUciAnalysisEngine {
             throws IOException, InterruptedException, ExecutionException {
         if (chessGame.getState() != null) return List.of();
 
-        String key = positionKey(chessGame);
+        UciPositionKey key = positionKey(chessGame);
         List<EngineLine> cachedLines = getCachedLines(key);
         if (cachedLines != null) return cachedLines;
 
@@ -46,7 +47,7 @@ public class EvaluationUciEngine extends AbstractUciAnalysisEngine {
 
     public synchronized void startEvaluationEngine(
             Game chessGame,
-            String positionKey,
+            UciPositionKey positionKey,
             EngineConfig config) throws IOException {
         if (evaluationThread != null) stopEvaluation();
         if (chessGame.getState() != null) {
@@ -124,11 +125,11 @@ public class EvaluationUciEngine extends AbstractUciAnalysisEngine {
 
     private void notifyEvaluationUpdate(
             long generation,
-            String positionKey,
+            UciPositionKey positionKey,
             List<EngineLine> lines) {
         if (generation != evaluationGeneration || lines == null || lines.isEmpty()) return;
 
-        BiConsumer<String, List<EngineLine>> listener;
+        BiConsumer<UciPositionKey, List<EngineLine>> listener;
         int depth = lines.get(0).getDepth();
         synchronized (this) {
             if (generation != evaluationGeneration || depth <= lastNotifiedDepth) return;

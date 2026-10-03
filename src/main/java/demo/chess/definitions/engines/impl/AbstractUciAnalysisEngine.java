@@ -10,6 +10,7 @@ import demo.chess.definitions.Color;
 import demo.chess.definitions.engines.EngineConfig;
 import demo.chess.definitions.engines.EngineLine;
 import demo.chess.definitions.engines.EvaluationEngine;
+import demo.chess.definitions.engines.UciPositionKey;
 import demo.chess.definitions.engines.uci.UciInfoLine;
 import demo.chess.game.Game;
 
@@ -22,7 +23,7 @@ import demo.chess.game.Game;
  */
 public abstract class AbstractUciAnalysisEngine extends ConsoleUciEngine implements EvaluationEngine {
 
-    private final Map<String, List<EngineLine>> cachedBestLines = new ConcurrentHashMap<>();
+    private final Map<UciPositionKey, List<EngineLine>> cachedBestLines = new ConcurrentHashMap<>();
 
     protected AbstractUciAnalysisEngine(String path) throws Exception {
         super(path);
@@ -33,21 +34,21 @@ public abstract class AbstractUciAnalysisEngine extends ConsoleUciEngine impleme
         cachedBestLines.clear();
     }
 
-    protected final String positionKey(Game game) {
-        return UciPositionCommand.build(game);
+    protected final UciPositionKey positionKey(Game game) {
+        return UciPositionKey.from(game);
     }
 
-    protected final List<EngineLine> getCachedLines(String positionKey) {
+    protected final List<EngineLine> getCachedLines(UciPositionKey positionKey) {
         return cachedBestLines.get(positionKey);
     }
 
-    protected final void cacheLines(String positionKey, List<EngineLine> lines) {
+    protected final void cacheLines(UciPositionKey positionKey, List<EngineLine> lines) {
         cachedBestLines.put(
                 positionKey,
                 lines == null ? List.of() : List.copyOf(lines));
     }
 
-    protected final void cacheEmptyLines(String positionKey) {
+    protected final void cacheEmptyLines(UciPositionKey positionKey) {
         cachedBestLines.put(positionKey, List.of());
     }
 

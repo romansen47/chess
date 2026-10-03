@@ -13,6 +13,7 @@ import demo.chess.definitions.engines.DeepAnalysisEngine;
 import demo.chess.definitions.engines.DeepAnalysisResult;
 import demo.chess.definitions.engines.EngineConfig;
 import demo.chess.definitions.engines.EngineLine;
+import demo.chess.definitions.engines.UciPositionKey;
 import demo.chess.definitions.engines.uci.UciInfoLine;
 import demo.chess.definitions.engines.uci.UciInfoParser;
 import demo.chess.game.Game;
@@ -35,7 +36,7 @@ public class DeepAnalysisUciEngine extends AbstractUciAnalysisEngine implements 
     public List<EngineLine> getBestLines(Game chessGame, EngineConfig config)
             throws IOException, InterruptedException, ExecutionException {
         synchronized (finiteSearchLock) {
-            String key = positionKey(chessGame);
+            UciPositionKey key = positionKey(chessGame);
             List<EngineLine> cachedLines = getCachedLines(key);
             if (cachedLines != null) return cachedLines;
             return analyzeLocked(chessGame, key, config).getFinalLines();
@@ -55,7 +56,7 @@ public class DeepAnalysisUciEngine extends AbstractUciAnalysisEngine implements 
 
     private DeepAnalysisResult analyzeLocked(
             Game chessGame,
-            String positionKey,
+            UciPositionKey positionKey,
             EngineConfig config)
             throws IOException, InterruptedException, ExecutionException {
         applyConfig(config);
