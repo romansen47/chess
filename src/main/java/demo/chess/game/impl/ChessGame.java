@@ -2,7 +2,9 @@ package demo.chess.game.impl;
 
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.concurrent.TimeUnit;
 
 import demo.chess.admin.Admin;
@@ -31,6 +33,9 @@ public class ChessGame extends ChessGameTemplate {
     private volatile Color timedOutColor;
     protected List<String> sanMoveList = new ArrayList<>();
     protected final List<Long> moveHashes = new ArrayList<>();
+    private final Map<Integer, MoveTiming> moveTimings = new LinkedHashMap<>();
+    private long whiteElapsedAtLastMoveMillis;
+    private long blackElapsedAtLastMoveMillis;
 
     public ChessGame(
             Board chessBoard,
@@ -70,6 +75,11 @@ public class ChessGame extends ChessGameTemplate {
     @Override
     public Color getTimedOutColor() {
         return timedOutColor;
+    }
+
+    @Override
+    public Map<Integer, MoveTiming> getMoveTimings() {
+        return Map.copyOf(moveTimings);
     }
 
     private void configureClock(Player player, Color color) {
@@ -205,10 +215,37 @@ public class ChessGame extends ChessGameTemplate {
             loseOnTime(expiredColor);
             return;
         }
+        Player movingPlayer = getPlayer();
         sanMoveList.add(getShortAlgebraicNotatedMove(move));
         super.apply(move);
+        recordMoveTiming(movingPlayer);
         moveHashes.add(positionHash());
         checkForGameEnd();
+    }
+
+    private void recordMoveTiming(Player movingPlayer) {
+        if (movingPlayer == null || movingPlayer.getChessClock() == null) return;
+
+        long cumulativeElapsedMillis =
+                movingPlayer.getChessClock().getElapsedThinkingTimeMillis();
+        long previousElapsedMillis = movingPlayer.getColor() == Color.WHITE
+                ? whiteElapsedAtLastMoveMillis
+                : blackElapsedAtLastMoveMillis;
+        long elapsedMoveMillis = Math.max(
+                0L,
+                cumulativeElapsedMillis - previousElapsedMillis);
+
+        if (movingPlayer.getColor() == Color.WHITE) {
+            whiteElapsedAtLastMoveMillis = cumulativeElapsedMillis;
+        } else {
+            blackElapsedAtLastMoveMillis = cumulativeElapsedMillis;
+        }
+
+        moveTimings.put(
+                getMoveList().size(),
+                new MoveTiming(
+                        movingPlayer.getChessClock().getRemainingTimeMillis(),
+                        elapsedMoveMillis));
     }
 
     protected long hashOf(Piece piece) {
