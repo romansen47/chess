@@ -2,6 +2,7 @@ package demo.chess.game;
 
 import java.io.IOException;
 import java.util.List;
+import java.util.Map;
 
 import demo.chess.definitions.CastlingRights;
 import demo.chess.definitions.ChessStartingPosition;
@@ -52,6 +53,17 @@ public interface Game {
 
     default Color getTimedOutColor() {
         return null;
+    }
+
+    /**
+     * Returns clock snapshots captured for completed live-game plies.
+     *
+     * <p>Simulations and imported replay games do not synthesize timing data.</p>
+     *
+     * @return move timings keyed by one-based ply
+     */
+    default Map<Integer, MoveTiming> getMoveTimings() {
+        return Map.of();
     }
 
     List<String> getSanMoveList();
