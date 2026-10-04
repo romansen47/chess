@@ -100,6 +100,19 @@ public class ChessClock extends StopWatch {
 
 
 	/**
+	 * Returns the cumulative wall-clock time for which this clock has actively run.
+	 *
+	 * <p>Unlike {@link #getTime(TimeUnit)}, this value is not adjusted by
+	 * increments and can therefore be differenced between two completed moves
+	 * to obtain the thinking time spent on the latest move.</p>
+	 *
+	 * @return cumulative active clock time in milliseconds
+	 */
+	public long getElapsedThinkingTimeMillis() {
+		return super.getTime(TimeUnit.MILLISECONDS);
+	}
+
+	/**
 	 * Returns the remaining clock time in milliseconds.
 	 *
 	 * @return remaining milliseconds, never negative
