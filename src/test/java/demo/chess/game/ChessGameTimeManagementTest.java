@@ -1,6 +1,7 @@
 package demo.chess.game;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 
@@ -42,6 +43,26 @@ public class ChessGameTimeManagementTest {
         assertEquals(Color.WHITE, game.getTimedOutColor());
         assertTrue(game.getMoveList().isEmpty());
         assertTrue(game.getSanMoveList().isEmpty());
+    }
+
+    @Test
+    public void capturesRemainingAndElapsedTimeForCompletedMoves() throws Exception {
+        Game game = new ChessAdmin().chessGame(300);
+        game.configureTimeControl(30, 30, 0);
+        game.getWhitePlayer().getChessClock().start();
+
+        game.apply(LegalMoveResolver.resolveUci(game, "e2e4"));
+        game.apply(LegalMoveResolver.resolveUci(game, "e7e5"));
+
+        MoveTiming whiteTiming = game.getMoveTimings().get(1);
+        MoveTiming blackTiming = game.getMoveTimings().get(2);
+
+        assertNotNull(whiteTiming);
+        assertNotNull(blackTiming);
+        assertTrue(whiteTiming.clockMillis() > 300_000L);
+        assertTrue(blackTiming.clockMillis() > 300_000L);
+        assertTrue(whiteTiming.elapsedMoveMillis() >= 0L);
+        assertTrue(blackTiming.elapsedMoveMillis() >= 0L);
     }
 
     @Test
