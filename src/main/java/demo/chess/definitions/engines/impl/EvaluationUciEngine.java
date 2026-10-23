@@ -1,7 +1,6 @@
 package demo.chess.definitions.engines.impl;
 
 import java.io.IOException;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.ExecutionException;
 import java.util.function.BiConsumer;
@@ -12,6 +11,7 @@ import demo.chess.definitions.engines.EngineLine;
 import demo.chess.definitions.engines.UciPositionKey;
 import demo.chess.definitions.engines.uci.UciInfoLine;
 import demo.chess.definitions.engines.uci.UciInfoParser;
+import demo.chess.definitions.engines.uci.UciMultiPvSnapshotCollector;
 import demo.chess.game.Game;
 
 public class EvaluationUciEngine extends AbstractUciAnalysisEngine {
@@ -83,9 +83,10 @@ public class EvaluationUciEngine extends AbstractUciAnalysisEngine {
                 processWriter.println(evaluationCommand);
                 processWriter.flush();
 
-                List<UciInfoLine> bestLines = new ArrayList<>();
-                int currentMaxDepth = 0;
-                int requestedVariants = Math.max(1, config.getIntOption("MultiPV", 1));
+                int expectedVariants = determineExpectedVariants(chessGame, config);
+                UciMultiPvSnapshotCollector snapshotCollector =
+                        new UciMultiPvSnapshotCollector(expectedVariants);
+                Color color = moveCount % 2 == 0 ? Color.WHITE : Color.BLACK;
 
                 String line;
                 while ((line = processReader.readLine()) != null) {
@@ -95,23 +96,17 @@ public class EvaluationUciEngine extends AbstractUciAnalysisEngine {
                     if (parsed.isEmpty()) continue;
 
                     UciInfoLine info = parsed.get();
-                    int depth = info.depth();
-                    if (depth < currentMaxDepth) continue;
+                    var snapshot = snapshotCollector.accept(info);
+                    if (snapshot.isEmpty()) continue;
 
-                    currentMaxDepth = depth;
-                    bestLines.add(info);
-                    if (requestedVariants == 1 || bestLines.size() >= requestedVariants) {
-                        Color color = moveCount % 2 == 0 ? Color.WHITE : Color.BLACK;
-                        List<EngineLine> newLines =
-                                parseBestLines(color, bestLines, config);
-                        if (!newLines.isEmpty()) {
-                            cacheLines(positionKey, newLines);
-                            notifyEvaluationUpdate(
-                                    generation,
-                                    positionKey,
-                                    newLines);
-                            bestLines.clear();
-                        }
+                    List<EngineLine> newLines =
+                            parseBestLines(color, snapshot.get(), config);
+                    if (!newLines.isEmpty()) {
+                        cacheLines(positionKey, newLines);
+                        notifyEvaluationUpdate(
+                                generation,
+                                positionKey,
+                                newLines);
                     }
                 }
                 processReader.close();
@@ -121,6 +116,26 @@ public class EvaluationUciEngine extends AbstractUciAnalysisEngine {
         }, "uci-live-evaluation");
 
         evaluationThread.start();
+    }
+
+
+    private int determineExpectedVariants(Game chessGame, EngineConfig config) {
+        int requestedVariants = Math.max(1, config.getIntOption("MultiPV", 1));
+        if (chessGame == null || chessGame.getPlayer() == null) {
+            return requestedVariants;
+        }
+
+        try {
+            int legalMoves = chessGame.getPlayer().getValidMoves(chessGame).size();
+            if (legalMoves > 0) {
+                return Math.min(requestedVariants, legalMoves);
+            }
+        } catch (NoMoveFoundException | IOException e) {
+            logger.debug(
+                    "Could not determine legal root move count for live MultiPV: {}",
+                    e.getMessage());
+        }
+        return requestedVariants;
     }
 
     private void notifyEvaluationUpdate(

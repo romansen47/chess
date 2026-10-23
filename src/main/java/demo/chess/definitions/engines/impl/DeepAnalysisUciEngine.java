@@ -81,12 +81,37 @@ public class DeepAnalysisUciEngine extends AbstractUciAnalysisEngine implements 
                 ? chessGame.getPlayer().getColor()
                 : (chessGame.getMoveList().size() % 2 == 0 ? Color.WHITE : Color.BLACK);
 
+        List<UciInfoLine> acceptedInfoLines =
+                capInfoLinesAtRequestedDepth(infoLines, config.getDepth());
+
         Map<Integer, List<EngineLine>> depthHistory =
-                buildDepthHistory(sideToMove, infoLines, config);
+                buildDepthHistory(sideToMove, acceptedInfoLines, config);
         List<EngineLine> finalLines =
-                parseBestLinesAtHighestDepth(sideToMove, infoLines, config);
+                parseBestLinesAtHighestDepth(sideToMove, acceptedInfoLines, config);
         cacheLines(positionKey, finalLines);
         return new DeepAnalysisResult(finalLines, depthHistory);
+    }
+
+    /*
+     * Fixed-depth analysis is a CAT search contract, not merely a hint to the
+     * engine. Some SMP engines can report completed helper-thread iterations
+     * beyond the requested main-thread depth. Accepting those lines would make
+     * the final result deeper than requested and would also distort annotation
+     * depth history. Time-based searches (depth <= 0) deliberately remain
+     * unbounded.
+     */
+    static List<UciInfoLine> capInfoLinesAtRequestedDepth(
+            List<UciInfoLine> infoLines,
+            int requestedDepth) {
+        if (infoLines == null || infoLines.isEmpty()) {
+            return List.of();
+        }
+        if (requestedDepth <= 0) {
+            return List.copyOf(infoLines);
+        }
+        return infoLines.stream()
+                .filter(info -> info.depth() <= requestedDepth)
+                .toList();
     }
 
     private Map<Integer, List<EngineLine>> buildDepthHistory(

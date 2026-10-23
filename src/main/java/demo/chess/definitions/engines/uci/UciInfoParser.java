@@ -33,6 +33,7 @@ public final class UciInfoParser {
         Integer centipawnScore = null;
         Integer mateScore = null;
         String pv = null;
+        boolean boundedScore = false;
 
         for (int index = 1; index < tokens.length; index++) {
             String token = tokens[index];
@@ -58,6 +59,7 @@ public final class UciInfoParser {
                             centipawnScore = null;
                         }
                     }
+                    case "lowerbound", "upperbound" -> boundedScore = true;
                     case "pv" -> {
                         if (index + 1 >= tokens.length) return Optional.empty();
                         StringBuilder moves = new StringBuilder();
@@ -81,6 +83,12 @@ public final class UciInfoParser {
             return Optional.empty();
         }
         if (centipawnScore == null && mateScore == null) {
+            return Optional.empty();
+        }
+        if (mateScore != null && mateScore == 0) {
+            return Optional.empty();
+        }
+        if (boundedScore) {
             return Optional.empty();
         }
 

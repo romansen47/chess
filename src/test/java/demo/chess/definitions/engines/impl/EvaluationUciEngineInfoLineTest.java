@@ -57,6 +57,20 @@ public class EvaluationUciEngineInfoLineTest {
     }
 
     @Test
+    public void transientMateZeroIsNotStablePrincipalVariation() {
+        assertTrue(UciInfoParser.parsePrincipalVariation(
+                "info depth 1 score mate 0 pv e2e4").isEmpty());
+    }
+
+    @Test
+    public void boundedAspirationScoresAreNotStablePrincipalVariations() {
+        assertTrue(UciInfoParser.parsePrincipalVariation(
+                "info depth 18 multipv 2 score cp 31 lowerbound pv e2e4 e7e5").isEmpty());
+        assertTrue(UciInfoParser.parsePrincipalVariation(
+                "info depth 18 multipv 2 score cp 27 upperbound pv e2e4 e7e5").isEmpty());
+    }
+
+    @Test
     public void malformedNumericFieldsAreIgnored() {
         assertTrue(UciInfoParser.parsePrincipalVariation(
                 "info depth many score cp 20 pv e2e4").isEmpty());
