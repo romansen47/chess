@@ -26,14 +26,16 @@ public final class MoveAnnotationPolicy {
     public static final double EXTRAORDINARY_MAX_FINAL_REGRET_WIN_PERCENT = 10.0;
 
     /*
-     * Deep discovery is intentionally simple and engine-relative:
-     * - look at an early search window relative to the engine's own final depth;
+     * Deep discovery is intentionally human-oriented:
+     * - inspect one fixed shallow search window;
      * - require the move to have been measurably inferior/uncertain there;
-     * - require the move itself to gain substantial practical strength by the
-     *   final search.
+     * - require the move itself to gain substantial practical strength later.
+     *
+     * The fixed window is independent of the configured final depth or think
+     * time: a 30-second run must not redefine what "early" means.
      */
-    public static final double EXTRAORDINARY_DISCOVERY_EARLY_START_RATIO = 0.25;
-    public static final double EXTRAORDINARY_DISCOVERY_EARLY_END_RATIO = 0.40;
+    public static final int EXTRAORDINARY_DISCOVERY_EARLY_START_DEPTH = 5;
+    public static final int EXTRAORDINARY_DISCOVERY_EARLY_END_DEPTH = 8;
     public static final int EXTRAORDINARY_DISCOVERY_MIN_EARLY_SNAPSHOTS = 2;
     public static final double EXTRAORDINARY_DISCOVERY_MIN_EARLY_REGRET_WIN_PERCENT = 1.0;
     public static final double EXTRAORDINARY_DISCOVERY_MIN_STRENGTH_GAIN_WIN_PERCENT = 20.0;

@@ -60,6 +60,21 @@ final class SearchTimeline {
                 .toList();
     }
 
+
+    List<Map.Entry<Integer, List<EngineLine>>> fixedWindow(
+            int minimumLines,
+            int startDepth,
+            int endDepth) {
+        if (startDepth <= 0 || endDepth < startDepth) {
+            return List.of();
+        }
+
+        return usableSnapshots(minimumLines).stream()
+                .filter(entry -> entry.getKey() >= startDepth
+                        && entry.getKey() <= endDepth)
+                .toList();
+    }
+
     List<Map.Entry<Integer, List<EngineLine>>> usableSnapshots(
             int minimumLines) {
         List<Map.Entry<Integer, List<EngineLine>>> snapshots =

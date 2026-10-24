@@ -256,6 +256,83 @@ public class MoveAnnotationClassifierTest {
         assertNull(annotation.getMaterialInvestment());
     }
 
+
+    @Test
+    public void deepDiscoveryWindowDoesNotMoveWithFinalSearchDepth() {
+        Game root = Simulation.createSimulation();
+
+        DeepAnalysisResult result = result(
+                List.of(
+                        line(2.20, 30, "e2e4 e7e5"),
+                        line(0.80, 30, "d2d4 d7d5"),
+                        line(0.60, 30, "g1f3 g8f6")),
+                history(
+                        depth(5,
+                                line(0.60, 5, "d2d4"),
+                                line(-1.00, 5, "e2e4"),
+                                line(-1.20, 5, "g1f3")),
+                        depth(8,
+                                line(0.70, 8, "d2d4"),
+                                line(-0.80, 8, "e2e4"),
+                                line(-1.00, 8, "g1f3")),
+                        depth(30,
+                                line(2.20, 30, "e2e4"),
+                                line(0.80, 30, "d2d4"),
+                                line(0.60, 30, "g1f3"))));
+
+        MoveAnnotationAssessment assessment =
+                classifier.assess(root, "e2e4", result, 2.20);
+
+        assertNotNull(assessment.annotation());
+        assertEquals(
+                MoveAnnotationKind.EXTRAORDINARY,
+                assessment.annotation().getKind());
+        assertNotNull(assessment.diagnostics());
+        assertEquals(
+                MoveAnnotationPolicy.EXTRAORDINARY_DISCOVERY_EARLY_START_DEPTH,
+                assessment.diagnostics().getEarlyWindowStartDepth());
+        assertEquals(
+                MoveAnnotationPolicy.EXTRAORDINARY_DISCOVERY_EARLY_END_DEPTH,
+                assessment.diagnostics().getEarlyWindowEndDepth());
+        assertEquals(2, assessment.diagnostics().getEarlySampleCount());
+    }
+
+    @Test
+    public void rejectedDeepDiscoveryKeepsDiagnosticReason() {
+        Game root = Simulation.createSimulation();
+
+        DeepAnalysisResult result = result(
+                List.of(
+                        line(0.70, 30, "e2e4 e7e5"),
+                        line(0.60, 30, "d2d4 d7d5"),
+                        line(0.50, 30, "g1f3 g8f6")),
+                history(
+                        depth(5,
+                                line(0.40, 5, "d2d4"),
+                                line(0.30, 5, "e2e4"),
+                                line(0.20, 5, "g1f3")),
+                        depth(8,
+                                line(0.45, 8, "d2d4"),
+                                line(0.35, 8, "e2e4"),
+                                line(0.25, 8, "g1f3")),
+                        depth(30,
+                                line(0.70, 30, "e2e4"),
+                                line(0.60, 30, "d2d4"),
+                                line(0.50, 30, "g1f3"))));
+
+        MoveAnnotationAssessment assessment =
+                classifier.assess(root, "e2e4", result, 0.70);
+
+        assertNull(assessment.annotation());
+        assertNotNull(assessment.diagnostics());
+        assertEquals(
+                DeepDiscoveryRejectionReason.EARLY_REGRET_TOO_SMALL,
+                assessment.diagnostics().getDeepDiscoveryRejectedBy());
+        assertEquals(2, assessment.diagnostics().getEarlySampleCount());
+        assertNotNull(assessment.diagnostics().getEarlyRegret());
+        assertNotNull(assessment.diagnostics().getStrengthGain());
+    }
+
     private Game positionAfter(String... moves) throws Exception {
         Game game = Simulation.createSimulation();
         for (String uci : moves) {

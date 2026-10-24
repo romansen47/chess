@@ -27,7 +27,19 @@ public final class MoveAnnotationClassifier {
             String playedMoveUci,
             DeepAnalysisResult analysisBeforeMove,
             double resultingEvaluation) {
-        return classify(
+        return assess(
+                positionBeforeMove,
+                playedMoveUci,
+                analysisBeforeMove,
+                resultingEvaluation).annotation();
+    }
+
+    public MoveAnnotationAssessment assess(
+            Game positionBeforeMove,
+            String playedMoveUci,
+            DeepAnalysisResult analysisBeforeMove,
+            double resultingEvaluation) {
+        return assess(
                 positionBeforeMove,
                 playedMoveUci,
                 analysisBeforeMove,
@@ -47,12 +59,30 @@ public final class MoveAnnotationClassifier {
             DeepAnalysisResult analysisBeforeMove,
             double resultingEvaluation,
             Double forcedReplyEvaluation) {
+        return assess(
+                positionBeforeMove,
+                playedMoveUci,
+                analysisBeforeMove,
+                resultingEvaluation,
+                forcedReplyEvaluation).annotation();
+    }
+
+    /**
+     * Returns both the user-facing annotation and debug diagnostics explaining
+     * why a sound best move did or did not qualify for extraordinary status.
+     */
+    public MoveAnnotationAssessment assess(
+            Game positionBeforeMove,
+            String playedMoveUci,
+            DeepAnalysisResult analysisBeforeMove,
+            double resultingEvaluation,
+            Double forcedReplyEvaluation) {
         if (positionBeforeMove == null
                 || playedMoveUci == null
                 || playedMoveUci.isBlank()
                 || analysisBeforeMove == null
                 || analysisBeforeMove.getFinalLines().isEmpty()) {
-            return null;
+            return emptyAssessment();
         }
 
         boolean whiteMover =
@@ -62,7 +92,7 @@ public final class MoveAnnotationClassifier {
                         analysisBeforeMove.getFinalLines(),
                         whiteMover);
         if (candidates.isEmpty()) {
-            return null;
+            return emptyAssessment();
         }
 
         EngineLine best = candidates.get(0);
@@ -137,49 +167,59 @@ public final class MoveAnnotationClassifier {
         ObjectiveMoveQuality quality =
                 qualityEvaluator.evaluate(winChanceLoss);
         if (quality == ObjectiveMoveQuality.BLUNDER) {
-            return new MoveAnnotation(
-                    MoveAnnotationKind.BLUNDER,
-                    best.getEvaluation(),
-                    winChanceLoss,
+            return annotationAssessment(
+                    new MoveAnnotation(
+                            MoveAnnotationKind.BLUNDER,
+                            best.getEvaluation(),
+                            winChanceLoss,
+                            null),
                     null);
         }
 
         if (quality == ObjectiveMoveQuality.MISTAKE) {
-            return new MoveAnnotation(
-                    MoveAnnotationKind.MISTAKE,
-                    best.getEvaluation(),
-                    winChanceLoss,
+            return annotationAssessment(
+                    new MoveAnnotation(
+                            MoveAnnotationKind.MISTAKE,
+                            best.getEvaluation(),
+                            winChanceLoss,
+                            null),
                     null);
         }
 
-        ExtraordinaryMoveDetector.ExtraordinaryEvidence extraordinary =
-                extraordinaryMoveDetector.find(
+        ExtraordinaryMoveDetector.Assessment extraordinaryAssessment =
+                extraordinaryMoveDetector.assess(
                         positionBeforeMove,
                         analysisBeforeMove,
                         candidates,
                         playedMoveUci,
                         whiteMover);
+        ExtraordinaryMoveDetector.ExtraordinaryEvidence extraordinary =
+                extraordinaryAssessment.evidence();
+        MoveAnnotationDiagnostics diagnostics =
+                extraordinaryAssessment.diagnostics();
 
         if (extraordinary != null) {
-            return new MoveAnnotation(
-                    MoveAnnotationKind.EXTRAORDINARY,
-                    best.getEvaluation(),
-                    null,
-                    null,
-                    extraordinary.getReason(),
-                    extraordinary.getMaterialInvestment(),
-                    extraordinary.getSacrificeType(),
-                    extraordinary.getEarlyDepth(),
-                    extraordinary.getEarlyRank(),
-                    extraordinary.getFinalDepth(),
-                    extraordinary.getFinalRank(),
-                    extraordinary.givesCheck(),
-                    extraordinary.getEarlyRegret(),
-                    extraordinary.getEarlyStrength(),
-                    extraordinary.getFinalStrength(),
-                    extraordinary.getShortTermMaterialCompensated(),
-                    extraordinary.getMaterialCompensationPlies(),
-                    extraordinary.getForcedMateDistance());
+            return annotationAssessment(
+                    new MoveAnnotation(
+                            MoveAnnotationKind.EXTRAORDINARY,
+                            best.getEvaluation(),
+                            null,
+                            null,
+                            extraordinary.getReason(),
+                            extraordinary.getMaterialInvestment(),
+                            extraordinary.getSacrificeType(),
+                            extraordinary.getEarlyDepth(),
+                            extraordinary.getEarlyRank(),
+                            extraordinary.getFinalDepth(),
+                            extraordinary.getFinalRank(),
+                            extraordinary.givesCheck(),
+                            extraordinary.getEarlyRegret(),
+                            extraordinary.getEarlyStrength(),
+                            extraordinary.getFinalStrength(),
+                            extraordinary.getShortTermMaterialCompensated(),
+                            extraordinary.getMaterialCompensationPlies(),
+                            extraordinary.getForcedMateDistance()),
+                    diagnostics);
         }
 
         if (playedIndex == 0 && candidates.size() > 1) {
@@ -201,14 +241,26 @@ public final class MoveAnnotationClassifier {
                             analysisBeforeMove,
                             playedMoveUci,
                             whiteMover)) {
-                return new MoveAnnotation(
-                        MoveAnnotationKind.ONLY_MOVE,
-                        best.getEvaluation(),
-                        null,
-                        second.getEvaluation());
+                return annotationAssessment(
+                        new MoveAnnotation(
+                                MoveAnnotationKind.ONLY_MOVE,
+                                best.getEvaluation(),
+                                null,
+                                second.getEvaluation()),
+                        diagnostics);
             }
         }
 
-        return null;
+        return annotationAssessment(null, diagnostics);
+    }
+
+    private MoveAnnotationAssessment emptyAssessment() {
+        return new MoveAnnotationAssessment(null, null);
+    }
+
+    private MoveAnnotationAssessment annotationAssessment(
+            MoveAnnotation annotation,
+            MoveAnnotationDiagnostics diagnostics) {
+        return new MoveAnnotationAssessment(annotation, diagnostics);
     }
 }

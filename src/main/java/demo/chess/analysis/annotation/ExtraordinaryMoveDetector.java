@@ -35,9 +35,23 @@ final class ExtraordinaryMoveDetector {
             List<EngineLine> finalCandidates,
             String playedMoveUci,
             boolean whiteMover) {
+        return assess(
+                rootPosition,
+                result,
+                finalCandidates,
+                playedMoveUci,
+                whiteMover).evidence();
+    }
+
+    Assessment assess(
+            Game rootPosition,
+            DeepAnalysisResult result,
+            List<EngineLine> finalCandidates,
+            String playedMoveUci,
+            boolean whiteMover) {
         if (finalCandidates.size()
                 < MoveAnnotationPolicy.EXTRAORDINARY_MAX_FINAL_RANK) {
-            return null;
+            return new Assessment(null, null);
         }
 
         int finalPlayedIndex =
@@ -47,7 +61,7 @@ final class ExtraordinaryMoveDetector {
         if (finalPlayedIndex < 0
                 || finalPlayedIndex
                         >= MoveAnnotationPolicy.EXTRAORDINARY_MAX_FINAL_RANK) {
-            return null;
+            return new Assessment(null, null);
         }
 
         EngineLine finalBest = finalCandidates.get(0);
@@ -61,15 +75,17 @@ final class ExtraordinaryMoveDetector {
         if (finalRegret
                 > MoveAnnotationPolicy
                         .EXTRAORDINARY_MAX_FINAL_REGRET_WIN_PERCENT) {
-            return null;
+            return new Assessment(null, null);
         }
 
-        DeepDiscoveryDetector.Evidence discovery =
-                deepDiscoveryDetector.find(
+        DeepDiscoveryDetector.Assessment discoveryAssessment =
+                deepDiscoveryDetector.assess(
                         result,
                         finalCandidates,
                         playedMoveUci,
                         whiteMover);
+        DeepDiscoveryDetector.Evidence discovery =
+                discoveryAssessment.evidence();
 
         MaterialSacrificeEvidence sacrifice =
                 materialSacrificeDetector.find(
@@ -94,7 +110,9 @@ final class ExtraordinaryMoveDetector {
                         : null;
 
         if (discovery == null && sacrifice == null) {
-            return null;
+            return new Assessment(
+                    null,
+                    discoveryAssessment.diagnostics());
         }
 
         ExtraordinaryReason reason;
@@ -114,26 +132,31 @@ final class ExtraordinaryMoveDetector {
                         finalPlayed.getDepth(),
                         new SearchTimeline(result).finalDepth());
 
-        return new ExtraordinaryEvidence(
-                reason,
-                sacrifice != null ? sacrifice.getValue() : null,
-                sacrifice != null ? sacrifice.getType() : null,
-                discovery != null ? discovery.earlyDepth() : null,
-                discovery != null ? discovery.earlyRank() : null,
-                finalDepth,
-                finalPlayedIndex + 1,
-                givesCheck(
-                        rootPosition,
-                        playedMoveUci,
-                        whiteMover),
-                discovery != null ? discovery.earlyRegret() : null,
-                discovery != null ? discovery.earlyStrength() : null,
-                discovery != null ? discovery.finalStrength() : null,
-                compensation != null ? Boolean.TRUE : null,
-                compensation != null ? compensation.plies() : null,
-                sacrifice != null
-                        ? forcedMateDistance(finalPlayed, whiteMover)
-                        : null);
+        ExtraordinaryEvidence evidence =
+                new ExtraordinaryEvidence(
+                        reason,
+                        sacrifice != null ? sacrifice.getValue() : null,
+                        sacrifice != null ? sacrifice.getType() : null,
+                        discovery != null ? discovery.earlyDepth() : null,
+                        discovery != null ? discovery.earlyRank() : null,
+                        finalDepth,
+                        finalPlayedIndex + 1,
+                        givesCheck(
+                                rootPosition,
+                                playedMoveUci,
+                                whiteMover),
+                        discovery != null ? discovery.earlyRegret() : null,
+                        discovery != null ? discovery.earlyStrength() : null,
+                        discovery != null ? discovery.finalStrength() : null,
+                        compensation != null ? Boolean.TRUE : null,
+                        compensation != null ? compensation.plies() : null,
+                        sacrifice != null
+                                ? forcedMateDistance(finalPlayed, whiteMover)
+                                : null);
+
+        return new Assessment(
+                evidence,
+                discoveryAssessment.diagnostics());
     }
 
     private boolean materialContextIsMeaningful(
@@ -212,6 +235,11 @@ final class ExtraordinaryMoveDetector {
         } catch (Exception ignored) {
             return false;
         }
+    }
+
+    record Assessment(
+            ExtraordinaryEvidence evidence,
+            MoveAnnotationDiagnostics diagnostics) {
     }
 
     static final class ExtraordinaryEvidence {

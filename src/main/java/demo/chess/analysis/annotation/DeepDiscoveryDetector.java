@@ -10,14 +10,14 @@ import demo.chess.definitions.engines.EngineLine;
 /**
  * Detects the deliberately narrow "deep discovery" extraordinary signal.
  *
- * <p>The question is no longer whether the move climbs relative to worsening
- * alternatives. The move itself must become substantially stronger as search
- * deepens, and it must not already have been an obvious zero-regret best move
- * in the early search window.</p>
+ * <p>The human-oriented question is whether the move looked materially less
+ * convincing in one fixed shallow search window and only became clearly
+ * strong later. The shallow window is deliberately independent of the final
+ * search depth or thinking time.</p>
  */
 final class DeepDiscoveryDetector {
 
-    Evidence find(
+    Assessment assess(
             DeepAnalysisResult result,
             List<EngineLine> finalCandidates,
             String playedMoveUci,
@@ -27,22 +27,27 @@ final class DeepDiscoveryDetector {
                         finalCandidates,
                         playedMoveUci);
         if (finalPlayedIndex != 0) {
-            return null;
+            return new Assessment(null, null);
         }
 
         SearchTimeline timeline = new SearchTimeline(result);
         int finalDepth = timeline.finalDepth();
         if (finalDepth <= 0) {
-            return null;
+            return new Assessment(null, null);
         }
 
+        int earlyStart =
+                MoveAnnotationPolicy
+                        .EXTRAORDINARY_DISCOVERY_EARLY_START_DEPTH;
+        int earlyEnd =
+                MoveAnnotationPolicy
+                        .EXTRAORDINARY_DISCOVERY_EARLY_END_DEPTH;
+
         List<Map.Entry<Integer, List<EngineLine>>> early =
-                timeline.relativeWindow(
+                timeline.fixedWindow(
                         MoveAnnotationPolicy.EXTRAORDINARY_MAX_FINAL_RANK,
-                        MoveAnnotationPolicy
-                                .EXTRAORDINARY_DISCOVERY_EARLY_START_RATIO,
-                        MoveAnnotationPolicy
-                                .EXTRAORDINARY_DISCOVERY_EARLY_END_RATIO);
+                        earlyStart,
+                        earlyEnd);
 
         List<SnapshotSample> samples = new ArrayList<>();
         for (Map.Entry<Integer, List<EngineLine>> snapshot : early) {
@@ -71,10 +76,30 @@ final class DeepDiscoveryDetector {
                     strength));
         }
 
+        EngineLine finalPlayed = finalCandidates.get(0);
+        double finalStrength =
+                winningChance(finalPlayed, whiteMover);
+
+        SnapshotSample representative =
+                samples.isEmpty()
+                        ? null
+                        : samples.get(samples.size() - 1);
+
         if (samples.size()
                 < MoveAnnotationPolicy
                         .EXTRAORDINARY_DISCOVERY_MIN_EARLY_SNAPSHOTS) {
-            return null;
+            return rejected(
+                    DeepDiscoveryRejectionReason
+                            .INSUFFICIENT_EARLY_SNAPSHOTS,
+                    earlyStart,
+                    earlyEnd,
+                    samples,
+                    representative,
+                    finalDepth,
+                    finalStrength,
+                    null,
+                    null,
+                    null);
         }
 
         double earlyRegret = median(
@@ -85,28 +110,43 @@ final class DeepDiscoveryDetector {
                 samples.stream()
                         .map(SnapshotSample::strength)
                         .toList());
-
-        EngineLine finalPlayed = finalCandidates.get(0);
-        double finalStrength =
-                winningChance(finalPlayed, whiteMover);
         double strengthGain = finalStrength - earlyStrength;
 
         if (earlyRegret
                 < MoveAnnotationPolicy
                         .EXTRAORDINARY_DISCOVERY_MIN_EARLY_REGRET_WIN_PERCENT) {
-            return null;
+            return rejected(
+                    DeepDiscoveryRejectionReason
+                            .EARLY_REGRET_TOO_SMALL,
+                    earlyStart,
+                    earlyEnd,
+                    samples,
+                    representative,
+                    finalDepth,
+                    finalStrength,
+                    earlyRegret,
+                    earlyStrength,
+                    strengthGain);
         }
 
         if (strengthGain
                 < MoveAnnotationPolicy
                         .EXTRAORDINARY_DISCOVERY_MIN_STRENGTH_GAIN_WIN_PERCENT) {
-            return null;
+            return rejected(
+                    DeepDiscoveryRejectionReason
+                            .STRENGTH_GAIN_TOO_SMALL,
+                    earlyStart,
+                    earlyEnd,
+                    samples,
+                    representative,
+                    finalDepth,
+                    finalStrength,
+                    earlyRegret,
+                    earlyStrength,
+                    strengthGain);
         }
 
-        SnapshotSample representative =
-                samples.get(samples.size() - 1);
-
-        return new Evidence(
+        Evidence evidence = new Evidence(
                 representative.depth(),
                 representative.rank(),
                 finalDepth,
@@ -114,6 +154,79 @@ final class DeepDiscoveryDetector {
                 earlyRegret,
                 earlyStrength,
                 finalStrength);
+
+        MoveAnnotationDiagnostics diagnostics =
+                diagnostics(
+                        null,
+                        earlyStart,
+                        earlyEnd,
+                        samples,
+                        representative,
+                        finalDepth,
+                        finalStrength,
+                        earlyRegret,
+                        earlyStrength,
+                        strengthGain);
+
+        return new Assessment(evidence, diagnostics);
+    }
+
+    private Assessment rejected(
+            DeepDiscoveryRejectionReason reason,
+            int earlyStart,
+            int earlyEnd,
+            List<SnapshotSample> samples,
+            SnapshotSample representative,
+            int finalDepth,
+            double finalStrength,
+            Double earlyRegret,
+            Double earlyStrength,
+            Double strengthGain) {
+        return new Assessment(
+                null,
+                diagnostics(
+                        reason,
+                        earlyStart,
+                        earlyEnd,
+                        samples,
+                        representative,
+                        finalDepth,
+                        finalStrength,
+                        earlyRegret,
+                        earlyStrength,
+                        strengthGain));
+    }
+
+    private MoveAnnotationDiagnostics diagnostics(
+            DeepDiscoveryRejectionReason reason,
+            int earlyStart,
+            int earlyEnd,
+            List<SnapshotSample> samples,
+            SnapshotSample representative,
+            int finalDepth,
+            double finalStrength,
+            Double earlyRegret,
+            Double earlyStrength,
+            Double strengthGain) {
+        return new MoveAnnotationDiagnostics(
+                true,
+                reason,
+                earlyStart,
+                earlyEnd,
+                samples.size(),
+                representative != null
+                        ? representative.depth()
+                        : null,
+                representative != null
+                        ? representative.rank()
+                        : null,
+                finalDepth,
+                1,
+                0.0,
+                earlyRegret,
+                earlyStrength,
+                finalStrength,
+                strengthGain);
     }
 
     private double winningChance(
@@ -135,6 +248,11 @@ final class DeepDiscoveryDetector {
         }
         return (sorted.get(middle - 1)
                 + sorted.get(middle)) / 2.0;
+    }
+
+    record Assessment(
+            Evidence evidence,
+            MoveAnnotationDiagnostics diagnostics) {
     }
 
     record Evidence(
