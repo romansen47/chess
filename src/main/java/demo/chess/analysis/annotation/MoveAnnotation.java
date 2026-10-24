@@ -9,6 +9,8 @@ public final class MoveAnnotation {
     private final double bestEvaluation;
     private final Double winChanceLoss;
     private final Double secondBestEvaluation;
+    private final String bestMoveUci;
+    private final String secondBestMoveUci;
 
     private final ExtraordinaryReason extraordinaryReason;
     private final Double materialInvestment;
@@ -49,7 +51,40 @@ public final class MoveAnnotation {
                 null,
                 null,
                 null,
+                null,
+                null,
                 null);
+    }
+
+
+    public MoveAnnotation(
+            MoveAnnotationKind kind,
+            double bestEvaluation,
+            Double winChanceLoss,
+            Double secondBestEvaluation,
+            String bestMoveUci,
+            String secondBestMoveUci) {
+        this(
+                kind,
+                bestEvaluation,
+                winChanceLoss,
+                secondBestEvaluation,
+                null,
+                null,
+                null,
+                null,
+                null,
+                null,
+                null,
+                null,
+                null,
+                null,
+                null,
+                null,
+                null,
+                null,
+                bestMoveUci,
+                secondBestMoveUci);
     }
 
     public MoveAnnotation(
@@ -71,10 +106,56 @@ public final class MoveAnnotation {
             Boolean shortTermMaterialCompensated,
             Integer materialCompensationPlies,
             Integer forcedMateDistance) {
+        this(
+                kind,
+                bestEvaluation,
+                winChanceLoss,
+                secondBestEvaluation,
+                extraordinaryReason,
+                materialInvestment,
+                sacrificeType,
+                earlyDepth,
+                earlyRank,
+                finalDepth,
+                finalRank,
+                givesCheck,
+                earlyRegret,
+                earlyStrength,
+                finalStrength,
+                shortTermMaterialCompensated,
+                materialCompensationPlies,
+                forcedMateDistance,
+                null,
+                null);
+    }
+
+    public MoveAnnotation(
+            MoveAnnotationKind kind,
+            double bestEvaluation,
+            Double winChanceLoss,
+            Double secondBestEvaluation,
+            ExtraordinaryReason extraordinaryReason,
+            Double materialInvestment,
+            MaterialSacrificeType sacrificeType,
+            Integer earlyDepth,
+            Integer earlyRank,
+            Integer finalDepth,
+            Integer finalRank,
+            Boolean givesCheck,
+            Double earlyRegret,
+            Double earlyStrength,
+            Double finalStrength,
+            Boolean shortTermMaterialCompensated,
+            Integer materialCompensationPlies,
+            Integer forcedMateDistance,
+            String bestMoveUci,
+            String secondBestMoveUci) {
         this.kind = kind;
         this.bestEvaluation = bestEvaluation;
         this.winChanceLoss = winChanceLoss;
         this.secondBestEvaluation = secondBestEvaluation;
+        this.bestMoveUci = bestMoveUci;
+        this.secondBestMoveUci = secondBestMoveUci;
         this.extraordinaryReason = extraordinaryReason;
         this.materialInvestment = materialInvestment;
         this.sacrificeType = sacrificeType;
@@ -107,6 +188,14 @@ public final class MoveAnnotation {
 
     public Double getSecondBestEvaluation() {
         return secondBestEvaluation;
+    }
+
+    public String getBestMoveUci() {
+        return bestMoveUci;
+    }
+
+    public String getSecondBestMoveUci() {
+        return secondBestMoveUci;
     }
 
     public ExtraordinaryReason getExtraordinaryReason() {

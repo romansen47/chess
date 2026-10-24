@@ -41,6 +41,7 @@ public class MoveAnnotationClassifierTest {
         assertEquals(
                 MoveAnnotationKind.BLUNDER,
                 annotation.getKind());
+        assertEquals("e2e4", annotation.getBestMoveUci());
     }
 
     @Test
@@ -228,6 +229,8 @@ public class MoveAnnotationClassifierTest {
                         line(-1, 20, "h2h4")), Map.of()), 3);
         assertNotNull(annotation);
         assertEquals(MoveAnnotationKind.ONLY_MOVE, annotation.getKind());
+        assertEquals("b1c3", annotation.getBestMoveUci());
+        assertEquals("d2d4", annotation.getSecondBestMoveUci());
     }
 
     @Test

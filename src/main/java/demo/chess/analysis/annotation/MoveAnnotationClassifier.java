@@ -96,6 +96,10 @@ public final class MoveAnnotationClassifier {
         }
 
         EngineLine best = candidates.get(0);
+        String bestMoveUci = EvaluationScoring.firstMove(best);
+        EngineLine secondBest = candidates.size() > 1 ? candidates.get(1) : null;
+        String secondBestMoveUci =
+                secondBest != null ? EvaluationScoring.firstMove(secondBest) : null;
         int playedIndex =
                 EvaluationScoring.findMoveIndex(
                         candidates,
@@ -172,7 +176,9 @@ public final class MoveAnnotationClassifier {
                             MoveAnnotationKind.BLUNDER,
                             best.getEvaluation(),
                             winChanceLoss,
-                            null),
+                            null,
+                            bestMoveUci,
+                            secondBestMoveUci),
                     null);
         }
 
@@ -182,7 +188,9 @@ public final class MoveAnnotationClassifier {
                             MoveAnnotationKind.MISTAKE,
                             best.getEvaluation(),
                             winChanceLoss,
-                            null),
+                            null,
+                            bestMoveUci,
+                            secondBestMoveUci),
                     null);
         }
 
@@ -218,7 +226,9 @@ public final class MoveAnnotationClassifier {
                             extraordinary.getFinalStrength(),
                             extraordinary.getShortTermMaterialCompensated(),
                             extraordinary.getMaterialCompensationPlies(),
-                            extraordinary.getForcedMateDistance()),
+                            extraordinary.getForcedMateDistance(),
+                            bestMoveUci,
+                            secondBestMoveUci),
                     diagnostics);
         }
 
@@ -246,7 +256,9 @@ public final class MoveAnnotationClassifier {
                                 MoveAnnotationKind.ONLY_MOVE,
                                 best.getEvaluation(),
                                 null,
-                                second.getEvaluation()),
+                                second.getEvaluation(),
+                                bestMoveUci,
+                                secondBestMoveUci),
                         diagnostics);
             }
         }
