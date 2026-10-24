@@ -51,6 +51,17 @@ public interface Game {
         getBlackPlayer().setAdditionalTime(additionalTimeSeconds);
     }
 
+    /**
+     * Resets only the live clock/timing state while preserving the complete
+     * chess position and move history.
+     *
+     * <p>Simulations have no live clock state and therefore use this no-op
+     * default. Live games override it.</p>
+     */
+    default void resetClocks() {
+        // no live clock state
+    }
+
     default Color getTimedOutColor() {
         return null;
     }

@@ -11,6 +11,7 @@ import demo.chess.admin.Admin;
 import demo.chess.definitions.ChessStartingPosition;
 import demo.chess.definitions.Color;
 import demo.chess.definitions.PieceType;
+import demo.chess.definitions.clocks.impl.ChessClock;
 import demo.chess.definitions.board.Board;
 import demo.chess.definitions.engines.impl.NoMoveFoundException;
 import demo.chess.definitions.moves.Move;
@@ -71,6 +72,30 @@ public class ChessGame extends ChessGameTemplate {
 
     public void setAdmin(Admin admin) {
         this.admin = admin;
+    }
+
+    @Override
+    public synchronized void resetClocks() {
+        stopClock(getWhitePlayer());
+        stopClock(getBlackPlayer());
+
+        getWhitePlayer().setChessClock(new ChessClock());
+        getBlackPlayer().setChessClock(new ChessClock());
+        configureClock(getWhitePlayer(), Color.WHITE);
+        configureClock(getBlackPlayer(), Color.BLACK);
+        setIncrementForWhite(incrementForWhite);
+        setIncrementForBlack(incrementForBlack);
+
+        moveTimings.clear();
+        whiteElapsedAtLastMoveMillis = 0L;
+        blackElapsedAtLastMoveMillis = 0L;
+        timedOutColor = null;
+    }
+
+    private void stopClock(Player player) {
+        if (player != null && player.getChessClock() != null) {
+            player.getChessClock().stop();
+        }
     }
 
     @Override

@@ -66,6 +66,31 @@ public class ChessGameTimeManagementTest {
     }
 
     @Test
+    public void resettingClocksPreservesMoveHistoryButClearsOpeningTiming() throws Exception {
+        Game game = new ChessAdmin().chessGame(300);
+        game.configureTimeControl(2, 3, 30);
+
+        game.apply(LegalMoveResolver.resolveUci(game, "e2e4"));
+        game.apply(LegalMoveResolver.resolveUci(game, "e7e5"));
+
+        assertEquals(2, game.getMoveList().size());
+        assertEquals(2, game.getSanMoveList().size());
+        assertEquals(2, game.getMoveTimings().size());
+
+        game.resetClocks();
+
+        assertEquals(2, game.getMoveList().size());
+        assertEquals(2, game.getSanMoveList().size());
+        assertTrue(game.getMoveTimings().isEmpty());
+        assertTrue(!game.getWhitePlayer().getChessClock().isStarted());
+        assertTrue(!game.getBlackPlayer().getChessClock().isStarted());
+        assertEquals(300_000L, game.getWhitePlayer().getChessClock().getRemainingTimeMillis());
+        assertEquals(300_000L, game.getBlackPlayer().getChessClock().getRemainingTimeMillis());
+        assertEquals(2, game.getIncrementForWhite());
+        assertEquals(3, game.getIncrementForBlack());
+    }
+
+    @Test
     public void clockCallbackEndsGameInsideCore() throws Exception {
         Game game = new ChessAdmin().chessGame(300);
         game.configureTimeControl(0, 0, 0);
