@@ -15,6 +15,7 @@ public class ChessGameDrawRulesTest {
 
     private Game game;
 
+    /** Stops test clocks after each game. */
     @After
     public void stopClocks() {
         if (game == null) return;
@@ -22,6 +23,7 @@ public class ChessGameDrawRulesTest {
         if (game.getBlackPlayer().getChessClock() != null) game.getBlackPlayer().getChessClock().stop();
     }
 
+    /** Verifies that the third occurrence of a complete position ends the game. */
     @Test
     public void thirdOccurrenceOfTheSameCompletePositionEndsTheGame() throws Exception {
         game = new ChessAdmin().chessGame(300);
