@@ -15,6 +15,15 @@ public final class LegalMoveResolver {
     private LegalMoveResolver() {
     }
 
+    /**
+     * Resolves one UCI move against the current legal-move set.
+     *
+     * @param game current game
+     * @param rawUci UCI move text
+     * @return matching canonical legal move
+     * @throws NoMoveFoundException when no legal move matches
+     * @throws IOException when legal move generation fails
+     */
     public static Move resolveUci(Game game, String rawUci)
             throws NoMoveFoundException, IOException {
         Player player = requireCurrentPlayer(game);
@@ -27,6 +36,17 @@ public final class LegalMoveResolver {
         throw new NoMoveFoundException("No legal move for UCI " + rawUci);
     }
 
+    /**
+     * Resolves board coordinates and an optional promotion into a legal move.
+     *
+     * @param game current game
+     * @param from algebraic source square
+     * @param to algebraic target square
+     * @param promotion optional promotion label or piece letter
+     * @return matching canonical legal move
+     * @throws NoMoveFoundException when no legal move matches the request
+     * @throws IOException when legal move generation fails
+     */
     public static Move resolveCoordinates(
             Game game,
             String from,
