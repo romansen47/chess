@@ -10,18 +10,18 @@ import java.util.concurrent.TimeUnit;
 import demo.chess.admin.Admin;
 import demo.chess.definitions.ChessStartingPosition;
 import demo.chess.definitions.Color;
-import demo.chess.definitions.PieceType;
 import demo.chess.definitions.clocks.impl.ChessClock;
 import demo.chess.definitions.board.Board;
 import demo.chess.definitions.engines.impl.NoMoveFoundException;
 import demo.chess.definitions.moves.Move;
 import demo.chess.definitions.moves.MoveList;
-import demo.chess.definitions.pieces.Piece;
 import demo.chess.definitions.players.BlackPlayer;
 import demo.chess.definitions.players.Player;
 import demo.chess.definitions.players.WhitePlayer;
 import demo.chess.definitions.states.State;
+import demo.chess.game.HalfmoveClock;
 import demo.chess.game.MoveTiming;
+import demo.chess.game.PositionIdentity;
 import demo.chess.game.TerminalPositionEvaluator;
 import demo.chess.notation.PgnNotation;
 
@@ -34,7 +34,8 @@ public class ChessGame extends ChessGameTemplate {
     int incrementForBlack;
     private volatile Color timedOutColor;
     protected List<String> sanMoveList = new ArrayList<>();
-    protected final List<Long> moveHashes = new ArrayList<>();
+    private final HalfmoveClock halfmoveClock = new HalfmoveClock();
+    private final List<PositionIdentity> positionHistory = new ArrayList<>();
     private final Map<Integer, MoveTiming> moveTimings = new LinkedHashMap<>();
     private long whiteElapsedAtLastMoveMillis;
     private long blackElapsedAtLastMoveMillis;
@@ -63,7 +64,7 @@ public class ChessGame extends ChessGameTemplate {
         this.timeForEachPlayer = timeForEachPlayer;
         configureClock(getWhitePlayer(), Color.WHITE);
         configureClock(getBlackPlayer(), Color.BLACK);
-        moveHashes.add(0L);
+        positionHistory.add(PositionIdentity.from(this));
     }
 
     public Admin getAdmin() {
@@ -160,39 +161,37 @@ public class ChessGame extends ChessGameTemplate {
             getPlayer().resignOrStaleMate(this);
             return true;
         }
-        if (getState() == null) {
-            if (getMoveList().size() > 180) gameEnd = checkFor50MovesRule();
-            gameEnd = checkForThreefoldRepetition(0);
+        if (getState() == null && checkFor50MovesRule()) {
+            return true;
+        }
+        if (getState() == null && checkForThreefoldRepetition(0)) {
+            return true;
         }
         return gameEnd;
     }
 
     protected boolean checkFor50MovesRule() {
-        boolean gameEnd = false;
-        List<Move> reducedMoveList = getMoveList().subList(getMoveList().size() - 100, getMoveList().size());
-        List<PieceType> piecesMoved = new ArrayList<>();
-        reducedMoveList.forEach(move -> piecesMoved.add(move.getPiece().getType()));
-        if (!piecesMoved.contains(PieceType.PAWN)) {
-            setState(State.DRAW_BY_50_MOVES_RULE);
-            gameEnd = true;
+        if (!halfmoveClock.isFiftyMoveRuleReached()) {
+            return false;
         }
-        return gameEnd;
+        setState(State.DRAW_BY_50_MOVES_RULE);
+        return true;
     }
 
     protected boolean checkForThreefoldRepetition(int movesBeforeRule) {
-        boolean gameEnd = false;
-        List<Long> reducedMoveList = moveHashes.subList(movesBeforeRule, getMoveList().size());
-        for (Long hash : reducedMoveList) {
-            int count = 0;
-            for (Long otherHash : moveHashes) {
-                if (otherHash.equals(hash)) count++;
-            }
-            if (count > 2) {
-                setState(State.DRAW_BY_THREEFOLD_REPETITION);
-                gameEnd = true;
-            }
+        if (positionHistory.isEmpty()) {
+            return false;
         }
-        return gameEnd;
+        PositionIdentity current = positionHistory.get(positionHistory.size() - 1);
+        int startIndex = Math.max(0, Math.min(movesBeforeRule, positionHistory.size() - 1));
+        long occurrences = positionHistory.subList(startIndex, positionHistory.size()).stream()
+                .filter(current::equals)
+                .count();
+        if (occurrences < 3) {
+            return false;
+        }
+        setState(State.DRAW_BY_THREEFOLD_REPETITION);
+        return true;
     }
 
     @Override
@@ -243,9 +242,10 @@ public class ChessGame extends ChessGameTemplate {
         }
         Player movingPlayer = getPlayer();
         sanMoveList.add(getShortAlgebraicNotatedMove(move));
+        halfmoveClock.record(move);
         super.apply(move);
         recordMoveTiming(movingPlayer);
-        moveHashes.add(positionHash());
+        positionHistory.add(PositionIdentity.from(this));
         checkForGameEnd();
     }
 
@@ -272,21 +272,6 @@ public class ChessGame extends ChessGameTemplate {
                 new MoveTiming(
                         movingPlayer.getChessClock().getRemainingTimeMillis(),
                         elapsedMoveMillis));
-    }
-
-    protected long hashOf(Piece piece) {
-        final long primeBiggerThanProductOfAll = 11;
-        final long color = piece.getColor().equals(Color.WHITE) ? 1 : 2;
-        return (long) (color + primeBiggerThanProductOfAll * piece.getType().hash()
-                + Math.pow(primeBiggerThanProductOfAll, 2) * piece.getField().getFile()
-                + Math.pow(primeBiggerThanProductOfAll, 3) * piece.getField().getRank());
-    }
-
-    protected Long positionHash() {
-        long hash = 1;
-        for (Piece piece : getWhitePlayer().getPieces()) hash *= hashOf(piece);
-        for (Piece piece : getBlackPlayer().getPieces()) hash *= hashOf(piece);
-        return hash * getWhitePlayer().getPieces().size() * getBlackPlayer().getPieces().size();
     }
 
     public String getShortAlgebraicNotatedMove(Move moveToExecute)
