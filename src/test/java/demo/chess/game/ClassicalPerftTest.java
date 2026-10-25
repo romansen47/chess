@@ -19,6 +19,7 @@ import demo.chess.game.impl.Simulation;
  */
 public class ClassicalPerftTest {
 
+    /** Verifies the standard reference perft node counts through depth three. */
     @Test
     public void matchesReferenceNodeCountsThroughDepthThree() throws Exception {
         Simulation game = Simulation.createSimulation();
