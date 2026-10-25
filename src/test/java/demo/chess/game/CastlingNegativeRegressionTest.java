@@ -14,7 +14,7 @@ public class CastlingNegativeRegressionTest {
         Simulation game = Simulation.createSimulation();
         apply(game,
                 "e2e4", "e7e5",
-                "g1f3", "f8c5",
+                "g1h3", "f8c5",
                 "f1e2", "d7d6",
                 "f2f3", "a7a6");
 
