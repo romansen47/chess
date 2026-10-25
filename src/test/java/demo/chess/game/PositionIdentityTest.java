@@ -9,6 +9,7 @@ import demo.chess.game.impl.Simulation;
 
 public class PositionIdentityTest {
 
+    /** Verifies that a reversible knight cycle restores the complete position identity. */
     @Test
     public void reversibleKnightCycleReturnsToTheSamePositionIdentity() throws Exception {
         Simulation game = Simulation.createSimulation();
@@ -19,6 +20,7 @@ public class PositionIdentityTest {
         assertEquals(initial, PositionIdentity.from(game));
     }
 
+    /** Verifies that castling rights are part of repetition position identity. */
     @Test
     public void equalPiecePlacementWithDifferentCastlingRightsIsNotTheSamePosition() throws Exception {
         Simulation rookMoved = Simulation.createSimulation();
