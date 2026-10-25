@@ -16,6 +16,7 @@ import demo.chess.game.impl.Simulation;
 
 public class HalfmoveClockTest {
 
+    /** Verifies that one hundred reversible half-moves trigger the rule threshold. */
     @Test
     public void reachesFiftyMoveRuleAfterOneHundredReversibleHalfmoves() {
         Simulation game = Simulation.createSimulation();
@@ -33,6 +34,7 @@ public class HalfmoveClockTest {
         assertEquals(100, clock.getPliesSincePawnMoveOrCapture());
     }
 
+    /** Verifies that both pawn moves and captures reset the half-move clock. */
     @Test
     public void pawnMovesAndCapturesResetTheClock() {
         Simulation game = Simulation.createSimulation();
@@ -60,6 +62,7 @@ public class HalfmoveClockTest {
         assertEquals(0, clock.getPliesSincePawnMoveOrCapture());
     }
 
+    /** Verifies that castling counts as a reversible non-pawn move. */
     @Test
     public void castlingDoesNotResetTheHalfmoveClock() {
         Simulation game = Simulation.createSimulation();
