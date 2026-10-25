@@ -96,6 +96,7 @@ public final class ChessStartingPosition {
         throw new IllegalArgumentException("FEN is not a Chess960 initial position: " + fen);
     }
 
+    /** @return Scharnagl identifier in the inclusive range 0..959 */
     public int getId() {
         return id;
     }
@@ -123,14 +124,17 @@ public final class ChessStartingPosition {
         return Arrays.copyOf(backRank, backRank.length);
     }
 
+    /** @return one-based initial king file */
     public int getKingFile() {
         return kingFile;
     }
 
+    /** @return one-based initial queen-side rook file */
     public int getQueenSideRookFile() {
         return queenSideRookFile;
     }
 
+    /** @return one-based initial king-side rook file */
     public int getKingSideRookFile() {
         return kingSideRookFile;
     }
