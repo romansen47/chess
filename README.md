@@ -79,6 +79,14 @@ Chess960 UCI:          g1h1
 
 PGN is the self-describing persistence format. Every exported game, including Scharnagl position 518, is written with `Variant "Chess960"`, `SetUp "1"` and its explicit initial `FEN`. `PgnHeaderParser` is the shared boundary for tag extraction and starting-position resolution; both main-line SAN loading and annotation parsing derive their replay board from that same header context. Plain external PGNs without setup tags still resolve to position 518 for import compatibility. The lightweight UCI export contains only moves; its consumer must already know the starting position.
 
+## Draw rules and position identity
+
+Rule state that determines whether two positions are the same belongs to the core. `PositionIdentity` is the canonical repetition identity and includes piece placement, side to move, castling rights and any currently legal en-passant target. Higher layers must not implement their own repetition equality.
+
+`HalfmoveClock` owns the fifty-move counter. Pawn moves and captures reset it; other completed moves increment it. `ChessGame` uses these domain components for threefold repetition and the fifty-move rule.
+
+The rule suite also contains classical perft regression through depth 3, plus focused negative castling and draw-rule tests.
+
 ## UCI engines
 
 The engine abstraction is based on the UCI protocol and is intended to support engines such as Stockfish and Leela Chess Zero (Lc0), rather than hard-coding the application to one engine implementation. Engine executables are external software and are not bundled with this module.
