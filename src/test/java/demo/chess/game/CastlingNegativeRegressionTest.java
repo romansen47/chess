@@ -9,6 +9,7 @@ import demo.chess.game.impl.Simulation;
 
 public class CastlingNegativeRegressionTest {
 
+    /** Verifies that castling is rejected when the king destination is attacked. */
     @Test
     public void cannotCastleOntoAnAttackedKingDestination() throws Exception {
         Simulation game = Simulation.createSimulation();
