@@ -77,6 +77,10 @@ public class DeepAnalysisUciEngine extends AbstractUciAnalysisEngine implements 
             if (line.startsWith("bestmove")) break;
         }
 
+        if (line == null) {
+            throw new IOException("UCI engine terminated before bestmove for position " + positionKey);
+        }
+
         Color sideToMove = chessGame.getPlayer() != null
                 ? chessGame.getPlayer().getColor()
                 : (chessGame.getMoveList().size() % 2 == 0 ? Color.WHITE : Color.BLACK);
@@ -152,7 +156,7 @@ public class DeepAnalysisUciEngine extends AbstractUciAnalysisEngine implements 
                     Math.max(1, config.getMoveTimeSeconds()) * 1000;
             command.append("go movetime ").append(moveTimeMillis).append('\n');
         }
-        return command.toString();
+        return command.toString().stripTrailing();
     }
 
     @Override
