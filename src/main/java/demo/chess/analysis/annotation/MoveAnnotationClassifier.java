@@ -81,51 +81,46 @@ public final class MoveAnnotationClassifier {
             DeepAnalysisResult analysisBeforeMove,
             double resultingEvaluation,
             Double forcedReplyEvaluation) {
-        if (positionBeforeMove == null
-                || playedMoveUci == null
-                || playedMoveUci.isBlank()
-                || analysisBeforeMove == null
-                || analysisBeforeMove.getFinalLines().isEmpty()) {
+        MoveAssessmentContext context = MoveAssessmentContext.from(
+                positionBeforeMove,
+                playedMoveUci,
+                analysisBeforeMove);
+        if (context == null) {
             return emptyAssessment();
         }
 
-        boolean whiteMover =
-                positionBeforeMove.getMoveList().size() % 2 == 0;
-        List<EngineLine> candidates =
-                EvaluationScoring.orderedLines(
-                        analysisBeforeMove.getFinalLines());
-        if (candidates.isEmpty()) {
-            return emptyAssessment();
+        MoveAnnotation objectiveError = classifyObjectiveError(
+                context,
+                resultingEvaluation,
+                forcedReplyEvaluation);
+        if (objectiveError != null) {
+            return annotationAssessment(objectiveError, null);
         }
 
-        EngineLine best = candidates.get(0);
-        String bestMoveUci = EvaluationScoring.firstMove(best);
-        EngineLine secondBest = candidates.size() > 1 ? candidates.get(1) : null;
-        String secondBestMoveUci =
-                secondBest != null ? EvaluationScoring.firstMove(secondBest) : null;
-        int playedIndex =
-                EvaluationScoring.findMoveIndex(
-                        candidates,
-                        playedMoveUci);
+        return classifyPositiveAnnotation(context);
+    }
 
-        double bestScore =
-                EvaluationScoring.moverScore(
-                        best.getEvaluation(),
-                        whiteMover);
-        double bestWinPercent =
-                EvaluationScoring.winPercentFromMoverScore(
-                        bestScore);
+    private MoveAnnotation classifyObjectiveError(
+            MoveAssessmentContext context,
+            double resultingEvaluation,
+            Double forcedReplyEvaluation) {
+        EngineLine best = context.objectiveBest();
+        int playedIndex = context.objectivePlayedIndex();
+
+        double bestWinPercent = EvaluationScoring.winningChance(
+                best,
+                context.whiteMover());
 
         double resultingScore =
                 EvaluationScoring.moverScore(
                         resultingEvaluation,
-                        whiteMover);
+                        context.whiteMover());
         if (forcedReplyEvaluation != null
                 && Double.isFinite(forcedReplyEvaluation)) {
             double forcedReplyScore =
                     EvaluationScoring.moverScore(
                             forcedReplyEvaluation,
-                            whiteMover);
+                            context.whiteMover());
             resultingScore = Math.max(
                     resultingScore,
                     forcedReplyScore);
@@ -154,17 +149,10 @@ public final class MoveAnnotationClassifier {
          */
         double winChanceLoss = resultingWinChanceLoss;
         if (playedIndex >= 0) {
-            double rootPlayedScore =
-                    EvaluationScoring.moverScore(
-                            candidates.get(playedIndex).getEvaluation(),
-                            whiteMover);
-            double rootPlayedWinPercent =
-                    EvaluationScoring.winPercentFromMoverScore(
-                            rootPlayedScore);
-            double rootWinChanceLoss =
-                    Math.max(
-                            0.0,
-                            bestWinPercent - rootPlayedWinPercent);
+            double rootWinChanceLoss = EvaluationScoring.regret(
+                    best,
+                    context.objectiveCandidates().get(playedIndex),
+                    context.whiteMover());
             winChanceLoss =
                     Math.min(
                             rootWinChanceLoss,
@@ -174,136 +162,134 @@ public final class MoveAnnotationClassifier {
         ObjectiveMoveQuality quality =
                 qualityEvaluator.evaluate(winChanceLoss);
         if (quality == ObjectiveMoveQuality.BLUNDER) {
-            return annotationAssessment(
-                    new MoveAnnotation(
-                            MoveAnnotationKind.BLUNDER,
-                            best.getEvaluation(),
-                            winChanceLoss,
-                            null,
-                            bestMoveUci,
-                            secondBestMoveUci),
-                    null);
+            return MoveAnnotation.blunder(
+                    best.getEvaluation(),
+                    winChanceLoss,
+                    context.objectiveBestMoveUci(),
+                    context.objectiveSecondBestMoveUci());
         }
 
         if (quality == ObjectiveMoveQuality.MISTAKE) {
-            return annotationAssessment(
-                    new MoveAnnotation(
-                            MoveAnnotationKind.MISTAKE,
-                            best.getEvaluation(),
-                            winChanceLoss,
-                            null,
-                            bestMoveUci,
-                            secondBestMoveUci),
-                    null);
+            return MoveAnnotation.mistake(
+                    best.getEvaluation(),
+                    winChanceLoss,
+                    context.objectiveBestMoveUci(),
+                    context.objectiveSecondBestMoveUci());
         }
 
-        HumanAnnotationHorizon.Selection humanSelection =
+        return null;
+    }
+
+    private MoveAnnotationAssessment classifyPositiveAnnotation(
+            MoveAssessmentContext context) {
+        HumanAnnotationHorizon.DecisionPoint humanDecision =
                 humanAnnotationHorizon.select(
-                        analysisBeforeMove,
-                        playedMoveUci,
-                        whiteMover);
-        List<EngineLine> humanCandidates = humanSelection.lines();
+                        context.analysisBeforeMove(),
+                        context.playedMoveUci(),
+                        context.whiteMover());
+        List<EngineLine> humanCandidates = humanDecision.lines();
         if (humanCandidates.isEmpty()) {
             return annotationAssessment(null, null);
         }
 
-        EngineLine humanBest = humanCandidates.get(0);
-        EngineLine humanSecond = humanCandidates.size() > 1
-                ? humanCandidates.get(1)
-                : null;
-        String humanBestMoveUci = EvaluationScoring.firstMove(humanBest);
-        String humanSecondBestMoveUci = humanSecond != null
-                ? EvaluationScoring.firstMove(humanSecond)
-                : null;
-        int humanPlayedIndex = EvaluationScoring.findMoveIndex(
-                humanCandidates,
-                playedMoveUci);
-        boolean routineMove = routineMoveDetector.isRoutine(
-                positionBeforeMove,
-                playedMoveUci,
-                whiteMover);
+        RoutineMoveReason routineReason = routineMoveDetector.detect(
+                context.positionBeforeMove(),
+                context.playedMoveUci(),
+                context.whiteMover());
 
         ExtraordinaryMoveDetector.Assessment extraordinaryAssessment =
                 extraordinaryMoveDetector.assess(
-                        positionBeforeMove,
-                        analysisBeforeMove,
+                        context.positionBeforeMove(),
+                        context.analysisBeforeMove(),
                         humanCandidates,
-                        playedMoveUci,
-                        whiteMover);
+                        context.playedMoveUci(),
+                        context.whiteMover());
         ExtraordinaryMoveDetector.ExtraordinaryEvidence extraordinary =
                 extraordinaryAssessment.evidence();
         MoveAnnotationDiagnostics diagnostics =
                 extraordinaryAssessment.diagnostics();
 
-        if (humanSelection.certified()
-                && extraordinary != null
-                && (!routineMove
-                        || extraordinary.getMaterialInvestment() != null)) {
+        MoveAnnotation extraordinaryAnnotation = classifyExtraordinaryMove(
+                humanDecision,
+                humanCandidates,
+                routineReason,
+                extraordinary);
+        if (extraordinaryAnnotation != null) {
             return annotationAssessment(
-                    new MoveAnnotation(
-                            MoveAnnotationKind.EXTRAORDINARY,
-                            humanBest.getEvaluation(),
-                            null,
-                            null,
-                            extraordinary.getReason(),
-                            extraordinary.getMaterialInvestment(),
-                            extraordinary.getSacrificeType(),
-                            extraordinary.getEarlyDepth(),
-                            extraordinary.getEarlyRank(),
-                            extraordinary.getFinalDepth(),
-                            extraordinary.getFinalRank(),
-                            extraordinary.givesCheck(),
-                            extraordinary.getEarlyRegret(),
-                            extraordinary.getEarlyStrength(),
-                            extraordinary.getFinalStrength(),
-                            extraordinary.getShortTermMaterialCompensated(),
-                            extraordinary.getMaterialCompensationPlies(),
-                            extraordinary.getForcedMateDistance(),
-                            humanBestMoveUci,
-                            humanSecondBestMoveUci),
+                    extraordinaryAnnotation,
                     diagnostics);
         }
 
-        if (humanSelection.certified()
-                && !routineMove
-                && humanPlayedIndex == 0
-                && humanCandidates.size() > 1) {
-            EngineLine second = humanCandidates.get(1);
-            double humanBestScore =
-                    EvaluationScoring.moverScore(
-                            humanBest.getEvaluation(),
-                            whiteMover);
-            double secondScore =
-                    EvaluationScoring.moverScore(
-                            second.getEvaluation(),
-                            whiteMover);
-            double winPercentGap =
-                    EvaluationScoring
-                            .winPercentFromMoverScore(humanBestScore)
-                    - EvaluationScoring
-                            .winPercentFromMoverScore(secondScore);
-
-            if (winPercentGap
-                    >= MoveAnnotationPolicy
-                            .ONLY_MOVE_FINAL_WIN_PERCENT_GAP
-                    && !onlyMoveDetector.isTrivial(
-                            analysisBeforeMove,
-                            playedMoveUci,
-                            whiteMover,
-                            humanSelection.depth())) {
-                return annotationAssessment(
-                        new MoveAnnotation(
-                                MoveAnnotationKind.ONLY_MOVE,
-                                humanBest.getEvaluation(),
-                                null,
-                                second.getEvaluation(),
-                                humanBestMoveUci,
-                                humanSecondBestMoveUci),
-                        diagnostics);
-            }
+        MoveAnnotation onlyMoveAnnotation = classifyOnlyMove(
+                context,
+                humanDecision,
+                humanCandidates,
+                routineReason);
+        if (onlyMoveAnnotation != null) {
+            return annotationAssessment(onlyMoveAnnotation, diagnostics);
         }
 
         return annotationAssessment(null, diagnostics);
+    }
+
+    private MoveAnnotation classifyExtraordinaryMove(
+            HumanAnnotationHorizon.DecisionPoint humanDecision,
+            List<EngineLine> humanCandidates,
+            RoutineMoveReason routineReason,
+            ExtraordinaryMoveDetector.ExtraordinaryEvidence extraordinary) {
+        if (!humanDecision.stable()
+                || extraordinary == null
+                || (routineReason.isRoutine()
+                        && extraordinary.getMaterialInvestment() == null)) {
+            return null;
+        }
+
+        EngineLine best = humanCandidates.get(0);
+        EngineLine second = humanCandidates.size() > 1
+                ? humanCandidates.get(1)
+                : null;
+        return MoveAnnotation.extraordinary(
+                best.getEvaluation(),
+                extraordinary,
+                EvaluationScoring.firstMove(best),
+                EvaluationScoring.firstMove(second));
+    }
+
+    private MoveAnnotation classifyOnlyMove(
+            MoveAssessmentContext context,
+            HumanAnnotationHorizon.DecisionPoint humanDecision,
+            List<EngineLine> humanCandidates,
+            RoutineMoveReason routineReason) {
+        if (!humanDecision.stable()
+                || routineReason.isRoutine()
+                || humanCandidates.size() < 2
+                || EvaluationScoring.findMoveIndex(
+                        humanCandidates,
+                        context.playedMoveUci()) != 0) {
+            return null;
+        }
+
+        EngineLine best = humanCandidates.get(0);
+        EngineLine second = humanCandidates.get(1);
+        double winPercentGap = EvaluationScoring.gap(
+                best,
+                second,
+                context.whiteMover());
+        if (winPercentGap
+                < MoveAnnotationPolicy.ONLY_MOVE_FINAL_WIN_PERCENT_GAP
+                || onlyMoveDetector.isTrivial(
+                        context.analysisBeforeMove(),
+                        context.playedMoveUci(),
+                        context.whiteMover(),
+                        humanDecision.depth())) {
+            return null;
+        }
+
+        return MoveAnnotation.onlyMove(
+                best.getEvaluation(),
+                second.getEvaluation(),
+                EvaluationScoring.firstMove(best),
+                EvaluationScoring.firstMove(second));
     }
 
     private MoveAnnotationAssessment emptyAssessment() {

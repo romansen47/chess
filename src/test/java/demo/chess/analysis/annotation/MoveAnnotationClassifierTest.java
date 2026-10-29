@@ -250,6 +250,10 @@ public class MoveAnnotationClassifierTest {
                 "e1h1", "f8e7",
                 "f1e1", "b7b5");
 
+        assertEquals(
+                RoutineMoveReason.SAFE_RETREAT_AFTER_NEW_ATTACK,
+                new RoutineMoveDetector().detect(root, "a4b3", true));
+
         MoveAnnotation annotation = classifier.classify(
                 root,
                 "a4b3",
@@ -277,6 +281,10 @@ public class MoveAnnotationClassifierTest {
                 "e1e4", "g7g5", "d1f1", "h3h5",
                 "b1d2", "c8f5", "f2f3", "d5f6",
                 "e4e1", "a8e8", "e1e8");
+
+        assertEquals(
+                RoutineMoveReason.EVEN_IMMEDIATE_RECAPTURE,
+                new RoutineMoveDetector().detect(root, "f8e8", false));
 
         MoveAnnotation annotation = classifier.classify(
                 root,

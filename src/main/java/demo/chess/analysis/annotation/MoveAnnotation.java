@@ -28,6 +28,89 @@ public final class MoveAnnotation {
     private final Integer materialCompensationPlies;
     private final Integer forcedMateDistance;
 
+    static MoveAnnotation mistake(
+            double bestEvaluation,
+            double winChanceLoss,
+            String bestMoveUci,
+            String secondBestMoveUci) {
+        return objectiveError(
+                MoveAnnotationKind.MISTAKE,
+                bestEvaluation,
+                winChanceLoss,
+                bestMoveUci,
+                secondBestMoveUci);
+    }
+
+    static MoveAnnotation blunder(
+            double bestEvaluation,
+            double winChanceLoss,
+            String bestMoveUci,
+            String secondBestMoveUci) {
+        return objectiveError(
+                MoveAnnotationKind.BLUNDER,
+                bestEvaluation,
+                winChanceLoss,
+                bestMoveUci,
+                secondBestMoveUci);
+    }
+
+    static MoveAnnotation onlyMove(
+            double bestEvaluation,
+            double secondBestEvaluation,
+            String bestMoveUci,
+            String secondBestMoveUci) {
+        return new MoveAnnotation(
+                MoveAnnotationKind.ONLY_MOVE,
+                bestEvaluation,
+                null,
+                secondBestEvaluation,
+                bestMoveUci,
+                secondBestMoveUci);
+    }
+
+    static MoveAnnotation extraordinary(
+            double bestEvaluation,
+            ExtraordinaryMoveDetector.ExtraordinaryEvidence evidence,
+            String bestMoveUci,
+            String secondBestMoveUci) {
+        return new MoveAnnotation(
+                MoveAnnotationKind.EXTRAORDINARY,
+                bestEvaluation,
+                null,
+                null,
+                evidence.getReason(),
+                evidence.getMaterialInvestment(),
+                evidence.getSacrificeType(),
+                evidence.getEarlyDepth(),
+                evidence.getEarlyRank(),
+                evidence.getFinalDepth(),
+                evidence.getFinalRank(),
+                evidence.givesCheck(),
+                evidence.getEarlyRegret(),
+                evidence.getEarlyStrength(),
+                evidence.getFinalStrength(),
+                evidence.getShortTermMaterialCompensated(),
+                evidence.getMaterialCompensationPlies(),
+                evidence.getForcedMateDistance(),
+                bestMoveUci,
+                secondBestMoveUci);
+    }
+
+    private static MoveAnnotation objectiveError(
+            MoveAnnotationKind kind,
+            double bestEvaluation,
+            double winChanceLoss,
+            String bestMoveUci,
+            String secondBestMoveUci) {
+        return new MoveAnnotation(
+                kind,
+                bestEvaluation,
+                winChanceLoss,
+                null,
+                bestMoveUci,
+                secondBestMoveUci);
+    }
+
     public MoveAnnotation(
             MoveAnnotationKind kind,
             double bestEvaluation,

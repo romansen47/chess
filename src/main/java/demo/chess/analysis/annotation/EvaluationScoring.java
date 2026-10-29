@@ -19,6 +19,32 @@ final class EvaluationScoring {
         return 50.0 + 50.0 * (2.0 / (1.0 + Math.exp(-0.00368208 * centipawns)) - 1.0);
     }
 
+    static double winningChance(EngineLine line, boolean whiteMover) {
+        if (line == null) {
+            return 0.0;
+        }
+        return winPercentFromMoverScore(
+                moverScore(line.getEvaluation(), whiteMover));
+    }
+
+    static double regret(
+            EngineLine best,
+            EngineLine played,
+            boolean whiteMover) {
+        return Math.max(
+                0.0,
+                winningChance(best, whiteMover)
+                        - winningChance(played, whiteMover));
+    }
+
+    static double gap(
+            EngineLine better,
+            EngineLine worse,
+            boolean whiteMover) {
+        return winningChance(better, whiteMover)
+                - winningChance(worse, whiteMover);
+    }
+
     /**
      * Retains the engine's MultiPV order while removing unusable lines.
      *

@@ -9,7 +9,7 @@ import demo.chess.definitions.engines.EngineLine;
 /** Selects the stable search snapshot used for positive human annotations. */
 final class HumanAnnotationHorizon {
 
-    Selection select(
+    DecisionPoint select(
             DeepAnalysisResult result,
             String playedMoveUci,
             boolean whiteMover) {
@@ -18,7 +18,7 @@ final class HumanAnnotationHorizon {
         int finalDepth = maximumDepth(finalLines);
         if (finalDepth
                 <= MoveAnnotationPolicy.HUMAN_ANNOTATION_HORIZON_DEPTH) {
-            return new Selection(finalLines, finalDepth, true);
+            return new DecisionPoint(finalLines, finalDepth, true);
         }
 
         List<Map.Entry<Integer, List<EngineLine>>> window =
@@ -31,7 +31,7 @@ final class HumanAnnotationHorizon {
         if (window.size()
                 < MoveAnnotationPolicy
                         .HUMAN_ANNOTATION_MIN_STABLE_SNAPSHOTS) {
-            return new Selection(finalLines, finalDepth, false);
+            return new DecisionPoint(finalLines, finalDepth, false);
         }
 
         Map.Entry<Integer, List<EngineLine>> checkpoint =
@@ -42,7 +42,10 @@ final class HumanAnnotationHorizon {
                 checkpointLines,
                 playedMoveUci);
         if (checkpointRank < 0) {
-            return new Selection(checkpointLines, checkpoint.getKey(), false);
+            return new DecisionPoint(
+                    checkpointLines,
+                    checkpoint.getKey(),
+                    false);
         }
 
         int stableSnapshots = 0;
@@ -62,7 +65,7 @@ final class HumanAnnotationHorizon {
         }
 
         double stableRatio = (double) stableSnapshots / window.size();
-        return new Selection(
+        return new DecisionPoint(
                 checkpointLines,
                 checkpoint.getKey(),
                 stableRatio
@@ -74,25 +77,19 @@ final class HumanAnnotationHorizon {
             List<EngineLine> lines,
             int playedIndex,
             boolean whiteMover) {
-        double best = winningChance(lines.get(0), whiteMover);
-        double played = winningChance(lines.get(playedIndex), whiteMover);
-        return Math.max(0.0, best - played);
-    }
-
-    private double winningChance(EngineLine line, boolean whiteMover) {
-        double score = EvaluationScoring.moverScore(
-                line.getEvaluation(),
+        return EvaluationScoring.regret(
+                lines.get(0),
+                lines.get(playedIndex),
                 whiteMover);
-        return EvaluationScoring.winPercentFromMoverScore(score);
     }
 
     private int maximumDepth(List<EngineLine> lines) {
         return lines.stream().mapToInt(EngineLine::getDepth).max().orElse(0);
     }
 
-    record Selection(
+    record DecisionPoint(
             List<EngineLine> lines,
             int depth,
-            boolean certified) {
+            boolean stable) {
     }
 }

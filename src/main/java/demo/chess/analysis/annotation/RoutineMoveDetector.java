@@ -21,21 +21,21 @@ import demo.chess.game.impl.Simulation;
  */
 final class RoutineMoveDetector {
 
-    boolean isRoutine(
+    RoutineMoveReason detect(
             Game rootPosition,
             String playedMoveUci,
             boolean whiteMover) {
         if (rootPosition == null
                 || playedMoveUci == null
                 || playedMoveUci.isBlank()) {
-            return false;
+            return RoutineMoveReason.NOT_ROUTINE;
         }
 
         try {
             List<Move> legalMoves =
                     rootPosition.getPlayer().getValidMoves(rootPosition);
             if (legalMoves.size() == 1) {
-                return true;
+                return RoutineMoveReason.ONLY_LEGAL_MOVE;
             }
 
             PreviousMoveContext previous = previousMove(rootPosition);
@@ -51,12 +51,12 @@ final class RoutineMoveDetector {
 
             if (candidate instanceof Promotion
                     || candidate instanceof Castling) {
-                return false;
+                return RoutineMoveReason.NOT_ROUTINE;
             }
 
             afterMove.apply(candidate);
             if (givesCheck(afterMove, whiteMover)) {
-                return false;
+                return RoutineMoveReason.NOT_ROUTINE;
             }
 
             if (captured != null
@@ -64,7 +64,7 @@ final class RoutineMoveDetector {
                             previous,
                             candidate,
                             captured)) {
-                return true;
+                return RoutineMoveReason.EVEN_IMMEDIATE_RECAPTURE;
             }
 
             if (captured == null
@@ -79,12 +79,12 @@ final class RoutineMoveDetector {
                             targetFile,
                             targetRank,
                             opposite(whiteMover))) {
-                return true;
+                return RoutineMoveReason.SAFE_RETREAT_AFTER_NEW_ATTACK;
             }
         } catch (Exception ignored) {
             // A heuristic must never prevent analysis from completing.
         }
-        return false;
+        return RoutineMoveReason.NOT_ROUTINE;
     }
 
     private boolean isEvenImmediateRecapture(

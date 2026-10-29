@@ -41,15 +41,10 @@ final class OnlyMoveDetector {
                 continue;
             }
 
-            double best = EvaluationScoring.moverScore(
-                    ranked.get(0).getEvaluation(),
+            double gap = EvaluationScoring.gap(
+                    ranked.get(0),
+                    ranked.get(1),
                     whiteMover);
-            double second = EvaluationScoring.moverScore(
-                    ranked.get(1).getEvaluation(),
-                    whiteMover);
-            double gap =
-                    EvaluationScoring.winPercentFromMoverScore(best)
-                    - EvaluationScoring.winPercentFromMoverScore(second);
             if (gap
                     >= MoveAnnotationPolicy
                             .ONLY_MOVE_TRIVIAL_WIN_PERCENT_GAP) {

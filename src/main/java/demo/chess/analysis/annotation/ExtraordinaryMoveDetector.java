@@ -67,10 +67,10 @@ final class ExtraordinaryMoveDetector {
         EngineLine finalBest = finalCandidates.get(0);
         EngineLine finalPlayed =
                 finalCandidates.get(finalPlayedIndex);
-        double finalRegret = Math.max(
-                0.0,
-                winningChance(finalBest, whiteMover)
-                        - winningChance(finalPlayed, whiteMover));
+        double finalRegret = EvaluationScoring.regret(
+                finalBest,
+                finalPlayed,
+                whiteMover);
 
         if (finalRegret
                 > MoveAnnotationPolicy
@@ -163,25 +163,11 @@ final class ExtraordinaryMoveDetector {
     private boolean materialContextIsMeaningful(
             EngineLine bestAvailableMove,
             boolean whiteMover) {
-        double moverScore = EvaluationScoring.moverScore(
-                bestAvailableMove.getEvaluation(),
-                whiteMover);
-        double bestWinPercent =
-                EvaluationScoring.winPercentFromMoverScore(
-                        moverScore);
-        return bestWinPercent
+        return EvaluationScoring.winningChance(
+                        bestAvailableMove,
+                        whiteMover)
                 >= MoveAnnotationPolicy
                         .EXTRAORDINARY_MATERIAL_MIN_BEST_WIN_PERCENT;
-    }
-
-    private double winningChance(
-            EngineLine line,
-            boolean whiteMover) {
-        double moverScore = EvaluationScoring.moverScore(
-                line.getEvaluation(),
-                whiteMover);
-        return EvaluationScoring.winPercentFromMoverScore(
-                moverScore);
     }
 
     private Integer forcedMateDistance(

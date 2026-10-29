@@ -66,11 +66,13 @@ final class DeepDiscoveryDetector {
             }
 
             EngineLine played = ranked.get(playedIndex);
-            double strength = winningChance(played, whiteMover);
-            double regret = Math.max(
-                    0.0,
-                    winningChance(ranked.get(0), whiteMover)
-                            - strength);
+            double strength = EvaluationScoring.winningChance(
+                    played,
+                    whiteMover);
+            double regret = EvaluationScoring.regret(
+                    ranked.get(0),
+                    played,
+                    whiteMover);
             samples.add(new SnapshotSample(
                     snapshot.getKey(),
                     playedIndex + 1,
@@ -80,7 +82,9 @@ final class DeepDiscoveryDetector {
 
         EngineLine finalPlayed = finalCandidates.get(0);
         double finalStrength =
-                winningChance(finalPlayed, whiteMover);
+                EvaluationScoring.winningChance(
+                        finalPlayed,
+                        whiteMover);
 
         SnapshotSample representative =
                 samples.isEmpty()
@@ -229,16 +233,6 @@ final class DeepDiscoveryDetector {
                 earlyStrength,
                 finalStrength,
                 strengthGain);
-    }
-
-    private double winningChance(
-            EngineLine line,
-            boolean whiteMover) {
-        double moverScore = EvaluationScoring.moverScore(
-                line.getEvaluation(),
-                whiteMover);
-        return EvaluationScoring.winPercentFromMoverScore(
-                moverScore);
     }
 
     private double median(List<Double> values) {
