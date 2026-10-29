@@ -275,7 +275,7 @@ public class MoveAnnotationClassifierTest {
                 "e1e5", "c7c6", "d2d4", "e7d6",
                 "e5e1", "d8h4", "g2g3", "h4h3",
                 "e1e4", "g7g5", "d1f1", "h3h5",
-                "b1d2", "d6f5", "f2f3", "d5f6",
+                "b1d2", "c8f5", "f2f3", "d5f6",
                 "e4e1", "a8e8", "e1e8");
 
         MoveAnnotation annotation = classifier.classify(
