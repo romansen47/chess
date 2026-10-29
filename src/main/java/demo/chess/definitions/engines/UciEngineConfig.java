@@ -175,7 +175,8 @@ public class UciEngineConfig implements EngineConfig {
                 continue;
             }
             UciOption option = entry.getValue();
-            if (option == null || !option.isConfigurable()) {
+            if (option == null || !option.isConfigurable()
+                    || (option.getType() == UciOptionType.STRING && option.getValue().isBlank())) {
                 continue;
             }
             String command = option.toSetOptionCommand(entry.getKey());
