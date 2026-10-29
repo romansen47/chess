@@ -121,6 +121,15 @@ public final class UciEngineProcessManager {
      * @param id the id
      * @param commandBlock the command block
      */
+    /** Records an internal lifecycle decision alongside the UCI traffic. */
+    public static void logLifecycle(String id, String event, String detail) {
+        ManagedEngine engine = ENGINES.get(id);
+        if (engine != null) {
+            engine.addLog("LIFECYCLE", event + " | " + detail
+                    + " | thread=" + Thread.currentThread().getName());
+        }
+    }
+
     public static void logCommand(String id, String commandBlock) {
         logBlock(id, "COMMAND", commandBlock);
     }
