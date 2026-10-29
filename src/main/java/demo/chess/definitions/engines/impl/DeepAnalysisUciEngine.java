@@ -59,6 +59,8 @@ public class DeepAnalysisUciEngine extends AbstractUciAnalysisEngine implements 
             UciPositionKey positionKey,
             EngineConfig config)
             throws IOException, InterruptedException, ExecutionException {
+        logLifecycle("ANALYSIS_START", "position=" + positionKey
+                + ", depth=" + config.getDepth() + ", moveTime=" + config.getMoveTimeSeconds());
         applyConfig(config);
         prepareForGame(chessGame);
 
@@ -78,6 +80,7 @@ public class DeepAnalysisUciEngine extends AbstractUciAnalysisEngine implements 
         }
 
         if (line == null) {
+            logLifecycle("ANALYSIS_FAILED", "EOF before bestmove, position=" + positionKey);
             throw new IOException("UCI engine terminated before bestmove for position " + positionKey);
         }
 
@@ -92,6 +95,8 @@ public class DeepAnalysisUciEngine extends AbstractUciAnalysisEngine implements 
                 buildDepthHistory(sideToMove, acceptedInfoLines, config);
         List<EngineLine> finalLines =
                 parseBestLinesAtHighestDepth(sideToMove, acceptedInfoLines, config);
+        logLifecycle("ANALYSIS_COMPLETE", "position=" + positionKey
+                + ", variants=" + finalLines.size());
         cacheLines(positionKey, finalLines);
         return new DeepAnalysisResult(finalLines, depthHistory);
     }
@@ -161,8 +166,9 @@ public class DeepAnalysisUciEngine extends AbstractUciAnalysisEngine implements 
 
     @Override
     public synchronized void stopEvaluation() {
+        logLifecycle("STOP_REQUEST", "live=" + isProcessLive());
         try {
-            if (getWriter() != null) {
+            if (isProcessLive() && getWriter() != null) {
                 getWriter().println("stop");
                 getWriter().flush();
             }
