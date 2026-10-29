@@ -247,7 +247,7 @@ public class MoveAnnotationClassifierTest {
                 "g1f3", "b8c6",
                 "f1b5", "a7a6",
                 "b5a4", "g8f6",
-                "e1g1", "f8e7",
+                "e1h1", "f8e7",
                 "f1e1", "b7b5");
 
         MoveAnnotation annotation = classifier.classify(
@@ -255,7 +255,7 @@ public class MoveAnnotationClassifierTest {
                 "a4b3",
                 result(
                         List.of(
-                                line(0.26, 20, "a4b3 e8g8"),
+                                line(0.26, 20, "a4b3 e8h8"),
                                 line(-3.28, 20, "d2d4 e5d4"),
                                 line(-3.50, 20, "c2c3 b5a4")),
                         Map.of()),
@@ -269,8 +269,8 @@ public class MoveAnnotationClassifierTest {
         Game root = positionAfter(
                 "e2e4", "e7e5", "g1f3", "b8c6",
                 "f1b5", "a7a6", "b5a4", "g8f6",
-                "e1g1", "f8e7", "f1e1", "b7b5",
-                "a4b3", "e8g8", "c2c3", "d7d5",
+                "e1h1", "f8e7", "f1e1", "b7b5",
+                "a4b3", "e8h8", "c2c3", "d7d5",
                 "e4d5", "f6d5", "f3e5", "c6e5",
                 "e1e5", "c7c6", "d2d4", "c8d6",
                 "e5e1", "d8h4", "g2g3", "h4h3",
