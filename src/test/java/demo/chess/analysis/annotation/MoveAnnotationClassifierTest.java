@@ -180,7 +180,7 @@ public class MoveAnnotationClassifierTest {
     }
 
     @Test
-    public void blackCandidateRankingUsesBlackPointOfView()
+    public void engineMultiPvOrderIsAuthoritativeForBlack()
             throws Exception {
         Game root = positionAfter("e2e4");
 
@@ -189,8 +189,8 @@ public class MoveAnnotationClassifierTest {
                 "e7e5",
                 result(
                         List.of(
-                                line(2.0, 20, "c7c5 g1f3"),
                                 line(-0.5, 20, "e7e5 g1f3"),
+                                line(2.0, 20, "c7c5 g1f3"),
                                 line(2.5, 20, "g8f6 e4e5")),
                         Map.of()),
                 -0.5);
@@ -199,6 +199,27 @@ public class MoveAnnotationClassifierTest {
         assertEquals(
                 MoveAnnotationKind.ONLY_MOVE,
                 annotation.getKind());
+    }
+
+    @Test
+    public void engineMultiPvOrderOverridesNonMonotonicLeelaScores() {
+        Game root = Simulation.createSimulation();
+
+        MoveAnnotation annotation = classifier.classify(
+                root,
+                "b2b4",
+                result(
+                        List.of(
+                                line(-6.05, 16, "b2b4 a7a6"),
+                                line(-4.28, 16, "e2e4 e7e5"),
+                                line(-5.33, 16, "c2c4 c7c5")),
+                        Map.of()),
+                -6.05);
+
+        assertNull(
+                "The engine's MultiPV #1 must not be marked as a mistake merely "
+                        + "because another PV has a numerically higher Leela score",
+                annotation);
     }
 
     @Test

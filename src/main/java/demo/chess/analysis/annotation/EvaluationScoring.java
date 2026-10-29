@@ -1,7 +1,6 @@
 package demo.chess.analysis.annotation;
 
 import java.util.ArrayList;
-import java.util.Comparator;
 import java.util.List;
 
 import demo.chess.definitions.engines.EngineLine;
@@ -20,16 +19,22 @@ final class EvaluationScoring {
         return 50.0 + 50.0 * (2.0 / (1.0 + Math.exp(-0.00368208 * centipawns)) - 1.0);
     }
 
-    static List<EngineLine> rankLines(List<EngineLine> lines, boolean whiteMover) {
-        List<EngineLine> ranked = new ArrayList<>();
+    /**
+     * Retains the engine's MultiPV order while removing unusable lines.
+     *
+     * <p>The UCI {@code multipv} index is the engine's authoritative ranking.
+     * Numeric scores from different PV searches are not guaranteed to remain
+     * strictly ordered, especially for WDL-based engines such as Leela. Sorting
+     * the lines again by their displayed score can therefore replace the
+     * engine's first choice with its second or third choice.</p>
+     */
+    static List<EngineLine> orderedLines(List<EngineLine> lines) {
+        List<EngineLine> ordered = new ArrayList<>();
         if (lines != null) {
-            ranked.addAll(lines);
+            ordered.addAll(lines);
         }
-        ranked.removeIf(line -> line == null || firstMove(line) == null);
-        ranked.sort(Comparator.comparingDouble(
-                (EngineLine line) -> moverScore(line.getEvaluation(), whiteMover))
-                .reversed());
-        return ranked;
+        ordered.removeIf(line -> line == null || firstMove(line) == null);
+        return List.copyOf(ordered);
     }
 
     static String firstMove(EngineLine line) {

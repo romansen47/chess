@@ -88,9 +88,8 @@ public final class MoveAnnotationClassifier {
         boolean whiteMover =
                 positionBeforeMove.getMoveList().size() % 2 == 0;
         List<EngineLine> candidates =
-                EvaluationScoring.rankLines(
-                        analysisBeforeMove.getFinalLines(),
-                        whiteMover);
+                EvaluationScoring.orderedLines(
+                        analysisBeforeMove.getFinalLines());
         if (candidates.isEmpty()) {
             return emptyAssessment();
         }

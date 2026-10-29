@@ -52,9 +52,8 @@ final class DeepDiscoveryDetector {
         List<SnapshotSample> samples = new ArrayList<>();
         for (Map.Entry<Integer, List<EngineLine>> snapshot : early) {
             List<EngineLine> ranked =
-                    EvaluationScoring.rankLines(
-                            snapshot.getValue(),
-                            whiteMover);
+                    EvaluationScoring.orderedLines(
+                            snapshot.getValue());
             int playedIndex =
                     EvaluationScoring.findMoveIndex(
                             ranked,

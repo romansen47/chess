@@ -30,9 +30,8 @@ final class OnlyMoveDetector {
         int obvious = 0;
         for (Map.Entry<Integer, List<EngineLine>> snapshot : early) {
             List<EngineLine> ranked =
-                    EvaluationScoring.rankLines(
-                            snapshot.getValue(),
-                            whiteMover);
+                    EvaluationScoring.orderedLines(
+                            snapshot.getValue());
             if (ranked.size() < 2
                     || !playedMoveUci.equalsIgnoreCase(
                             EvaluationScoring.firstMove(
