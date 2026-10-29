@@ -272,7 +272,7 @@ public class MoveAnnotationClassifierTest {
                 "e1h1", "f8e7", "f1e1", "b7b5",
                 "a4b3", "e8h8", "c2c3", "d7d5",
                 "e4d5", "f6d5", "f3e5", "c6e5",
-                "e1e5", "c7c6", "d2d4", "c8d6",
+                "e1e5", "c7c6", "d2d4", "e7d6",
                 "e5e1", "d8h4", "g2g3", "h4h3",
                 "e1e4", "g7g5", "d1f1", "h3h5",
                 "b1d2", "d6f5", "f2f3", "d5f6",
