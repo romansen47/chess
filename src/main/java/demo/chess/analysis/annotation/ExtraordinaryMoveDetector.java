@@ -128,9 +128,10 @@ final class ExtraordinaryMoveDetector {
 
         int finalDepth = discovery != null
                 ? discovery.finalDepth()
-                : Math.max(
-                        finalPlayed.getDepth(),
-                        new SearchTimeline(result).finalDepth());
+                : finalCandidates.stream()
+                        .mapToInt(EngineLine::getDepth)
+                        .max()
+                        .orElse(finalPlayed.getDepth());
 
         ExtraordinaryEvidence evidence =
                 new ExtraordinaryEvidence(

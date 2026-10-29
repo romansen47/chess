@@ -40,17 +40,28 @@ final class SearchTimeline {
             int minimumLines,
             double startRatio,
             double endRatio) {
-        int finalDepth = finalDepth();
-        if (finalDepth <= 0) {
+        return relativeWindow(
+                minimumLines,
+                startRatio,
+                endRatio,
+                finalDepth());
+    }
+
+    List<Map.Entry<Integer, List<EngineLine>>> relativeWindow(
+            int minimumLines,
+            double startRatio,
+            double endRatio,
+            int referenceDepth) {
+        if (referenceDepth <= 0) {
             return List.of();
         }
 
         int startDepth = Math.max(
                 1,
-                (int) Math.ceil(finalDepth * startRatio));
+                (int) Math.ceil(referenceDepth * startRatio));
         int endDepth = Math.max(
                 startDepth,
-                (int) Math.floor(finalDepth * endRatio));
+                (int) Math.floor(referenceDepth * endRatio));
 
         List<Map.Entry<Integer, List<EngineLine>>> snapshots =
                 usableSnapshots(minimumLines);

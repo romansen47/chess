@@ -240,6 +240,139 @@ public class MoveAnnotationClassifierTest {
         assertNull(annotation);
     }
 
+    @Test
+    public void newlyAttackedPieceRetreatIsRoutine() throws Exception {
+        Game root = positionAfter(
+                "e2e4", "e7e5",
+                "g1f3", "b8c6",
+                "f1b5", "a7a6",
+                "b5a4", "g8f6",
+                "e1g1", "f8e7",
+                "f1e1", "b7b5");
+
+        MoveAnnotation annotation = classifier.classify(
+                root,
+                "a4b3",
+                result(
+                        List.of(
+                                line(0.26, 20, "a4b3 e8g8"),
+                                line(-3.28, 20, "d2d4 e5d4"),
+                                line(-3.50, 20, "c2c3 b5a4")),
+                        Map.of()),
+                0.26);
+
+        assertNull(annotation);
+    }
+
+    @Test
+    public void evenImmediateRookRecaptureIsRoutine() throws Exception {
+        Game root = positionAfter(
+                "e2e4", "e7e5", "g1f3", "b8c6",
+                "f1b5", "a7a6", "b5a4", "g8f6",
+                "e1g1", "f8e7", "f1e1", "b7b5",
+                "a4b3", "e8g8", "c2c3", "d7d5",
+                "e4d5", "f6d5", "f3e5", "c6e5",
+                "e1e5", "c7c6", "d2d4", "c8d6",
+                "e5e1", "d8h4", "g2g3", "h4h3",
+                "e1e4", "g7g5", "d1f1", "h3h5",
+                "b1d2", "d6f5", "f2f3", "d5f6",
+                "e4e1", "a8e8", "e1e8");
+
+        MoveAnnotation annotation = classifier.classify(
+                root,
+                "f8e8",
+                result(
+                        List.of(
+                                line(-1.0, 20, "f8e8 a2a4"),
+                                line(2.0, 20, "g8h8 a2a4"),
+                                line(2.5, 20, "f6e8 a2a4")),
+                        Map.of()),
+                -1.0);
+
+        assertNull(annotation);
+    }
+
+    @Test
+    public void humanDepthCertificateSurvivesDeeperRankChange() {
+        Game root = Simulation.createSimulation();
+        DeepAnalysisResult result = result(
+                List.of(
+                        line(2.25, 45, "d2d4 d7d5"),
+                        line(2.20, 45, "e2e4 e7e5"),
+                        line(0.60, 45, "g1f3 g8f6")),
+                history(
+                        depth(5,
+                                line(0.60, 5, "d2d4"),
+                                line(-1.00, 5, "e2e4"),
+                                line(-1.20, 5, "g1f3")),
+                        depth(8,
+                                line(0.70, 8, "d2d4"),
+                                line(-0.80, 8, "e2e4"),
+                                line(-1.00, 8, "g1f3")),
+                        depth(16,
+                                line(2.10, 16, "e2e4"),
+                                line(0.80, 16, "d2d4"),
+                                line(0.60, 16, "g1f3")),
+                        depth(18,
+                                line(2.15, 18, "e2e4"),
+                                line(0.85, 18, "d2d4"),
+                                line(0.60, 18, "g1f3")),
+                        depth(20,
+                                line(2.20, 20, "e2e4"),
+                                line(0.90, 20, "d2d4"),
+                                line(0.60, 20, "g1f3"))));
+
+        MoveAnnotation annotation = classifier.classify(
+                root,
+                "e2e4",
+                result,
+                2.20);
+
+        assertNotNull(annotation);
+        assertEquals(MoveAnnotationKind.EXTRAORDINARY, annotation.getKind());
+        assertEquals(Integer.valueOf(20), annotation.getFinalDepth());
+    }
+
+    @Test
+    public void deeperObjectiveRefutationOverridesHumanCertificate() {
+        Game root = Simulation.createSimulation();
+        DeepAnalysisResult result = result(
+                List.of(
+                        line(5.0, 45, "d2d4 d7d5"),
+                        line(-5.0, 45, "e2e4 e7e5"),
+                        line(-5.5, 45, "g1f3 g8f6")),
+                history(
+                        depth(5,
+                                line(0.60, 5, "d2d4"),
+                                line(-1.00, 5, "e2e4"),
+                                line(-1.20, 5, "g1f3")),
+                        depth(8,
+                                line(0.70, 8, "d2d4"),
+                                line(-0.80, 8, "e2e4"),
+                                line(-1.00, 8, "g1f3")),
+                        depth(16,
+                                line(2.10, 16, "e2e4"),
+                                line(0.80, 16, "d2d4"),
+                                line(0.60, 16, "g1f3")),
+                        depth(18,
+                                line(2.15, 18, "e2e4"),
+                                line(0.85, 18, "d2d4"),
+                                line(0.60, 18, "g1f3")),
+                        depth(20,
+                                line(2.20, 20, "e2e4"),
+                                line(0.90, 20, "d2d4"),
+                                line(0.60, 20, "g1f3"))));
+
+        MoveAnnotation annotation = classifier.classify(
+                root,
+                "e2e4",
+                result,
+                -5.0);
+
+        assertNotNull(annotation);
+        assertEquals(MoveAnnotationKind.BLUNDER, annotation.getKind());
+    }
+
 
     @Test
     public void recoveredInvestmentFallsThroughToOnlyMove() throws Exception {
@@ -299,6 +432,18 @@ public class MoveAnnotationClassifierTest {
                                 line(0.70, 8, "d2d4"),
                                 line(-0.80, 8, "e2e4"),
                                 line(-1.00, 8, "g1f3")),
+                        depth(16,
+                                line(2.10, 16, "e2e4"),
+                                line(0.80, 16, "d2d4"),
+                                line(0.60, 16, "g1f3")),
+                        depth(18,
+                                line(2.15, 18, "e2e4"),
+                                line(0.80, 18, "d2d4"),
+                                line(0.60, 18, "g1f3")),
+                        depth(20,
+                                line(2.20, 20, "e2e4"),
+                                line(0.80, 20, "d2d4"),
+                                line(0.60, 20, "g1f3")),
                         depth(30,
                                 line(2.20, 30, "e2e4"),
                                 line(0.80, 30, "d2d4"),

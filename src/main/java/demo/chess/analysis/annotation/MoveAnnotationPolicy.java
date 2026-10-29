@@ -19,6 +19,17 @@ public final class MoveAnnotationPolicy {
     public static final int ONLY_MOVE_TRIVIAL_MIN_SNAPSHOTS = 2;
 
     /*
+     * Positive annotations describe human discoverability, not unlimited
+     * engine strength. Once a move is stable in this window, deeper searches
+     * may still veto it as objectively unsound but cannot redefine how hard it
+     * was to find within a human-oriented horizon.
+     */
+    public static final int HUMAN_ANNOTATION_STABILITY_START_DEPTH = 16;
+    public static final int HUMAN_ANNOTATION_HORIZON_DEPTH = 20;
+    public static final int HUMAN_ANNOTATION_MIN_STABLE_SNAPSHOTS = 3;
+    public static final double HUMAN_ANNOTATION_STABLE_SNAPSHOT_RATIO = 0.70;
+
+    /*
      * Extraordinary moves must still be objectively close to the engine's
      * best choice.
      */

@@ -31,7 +31,10 @@ final class DeepDiscoveryDetector {
         }
 
         SearchTimeline timeline = new SearchTimeline(result);
-        int finalDepth = timeline.finalDepth();
+        int finalDepth = finalCandidates.stream()
+                .mapToInt(EngineLine::getDepth)
+                .max()
+                .orElse(0);
         if (finalDepth <= 0) {
             return new Assessment(null, null);
         }

@@ -21,6 +21,10 @@ public final class MoveAnnotationClassifier {
             new OnlyMoveDetector();
     private final ExtraordinaryMoveDetector extraordinaryMoveDetector =
             new ExtraordinaryMoveDetector();
+    private final HumanAnnotationHorizon humanAnnotationHorizon =
+            new HumanAnnotationHorizon();
+    private final RoutineMoveDetector routineMoveDetector =
+            new RoutineMoveDetector();
 
     public MoveAnnotation classify(
             Game positionBeforeMove,
@@ -193,11 +197,37 @@ public final class MoveAnnotationClassifier {
                     null);
         }
 
+        HumanAnnotationHorizon.Selection humanSelection =
+                humanAnnotationHorizon.select(
+                        analysisBeforeMove,
+                        playedMoveUci,
+                        whiteMover);
+        List<EngineLine> humanCandidates = humanSelection.lines();
+        if (humanCandidates.isEmpty()) {
+            return annotationAssessment(null, null);
+        }
+
+        EngineLine humanBest = humanCandidates.get(0);
+        EngineLine humanSecond = humanCandidates.size() > 1
+                ? humanCandidates.get(1)
+                : null;
+        String humanBestMoveUci = EvaluationScoring.firstMove(humanBest);
+        String humanSecondBestMoveUci = humanSecond != null
+                ? EvaluationScoring.firstMove(humanSecond)
+                : null;
+        int humanPlayedIndex = EvaluationScoring.findMoveIndex(
+                humanCandidates,
+                playedMoveUci);
+        boolean routineMove = routineMoveDetector.isRoutine(
+                positionBeforeMove,
+                playedMoveUci,
+                whiteMover);
+
         ExtraordinaryMoveDetector.Assessment extraordinaryAssessment =
                 extraordinaryMoveDetector.assess(
                         positionBeforeMove,
                         analysisBeforeMove,
-                        candidates,
+                        humanCandidates,
                         playedMoveUci,
                         whiteMover);
         ExtraordinaryMoveDetector.ExtraordinaryEvidence extraordinary =
@@ -205,11 +235,14 @@ public final class MoveAnnotationClassifier {
         MoveAnnotationDiagnostics diagnostics =
                 extraordinaryAssessment.diagnostics();
 
-        if (extraordinary != null) {
+        if (humanSelection.certified()
+                && extraordinary != null
+                && (!routineMove
+                        || extraordinary.getMaterialInvestment() != null)) {
             return annotationAssessment(
                     new MoveAnnotation(
                             MoveAnnotationKind.EXTRAORDINARY,
-                            best.getEvaluation(),
+                            humanBest.getEvaluation(),
                             null,
                             null,
                             extraordinary.getReason(),
@@ -226,20 +259,27 @@ public final class MoveAnnotationClassifier {
                             extraordinary.getShortTermMaterialCompensated(),
                             extraordinary.getMaterialCompensationPlies(),
                             extraordinary.getForcedMateDistance(),
-                            bestMoveUci,
-                            secondBestMoveUci),
+                            humanBestMoveUci,
+                            humanSecondBestMoveUci),
                     diagnostics);
         }
 
-        if (playedIndex == 0 && candidates.size() > 1) {
-            EngineLine second = candidates.get(1);
+        if (humanSelection.certified()
+                && !routineMove
+                && humanPlayedIndex == 0
+                && humanCandidates.size() > 1) {
+            EngineLine second = humanCandidates.get(1);
+            double humanBestScore =
+                    EvaluationScoring.moverScore(
+                            humanBest.getEvaluation(),
+                            whiteMover);
             double secondScore =
                     EvaluationScoring.moverScore(
                             second.getEvaluation(),
                             whiteMover);
             double winPercentGap =
                     EvaluationScoring
-                            .winPercentFromMoverScore(bestScore)
+                            .winPercentFromMoverScore(humanBestScore)
                     - EvaluationScoring
                             .winPercentFromMoverScore(secondScore);
 
@@ -249,15 +289,16 @@ public final class MoveAnnotationClassifier {
                     && !onlyMoveDetector.isTrivial(
                             analysisBeforeMove,
                             playedMoveUci,
-                            whiteMover)) {
+                            whiteMover,
+                            humanSelection.depth())) {
                 return annotationAssessment(
                         new MoveAnnotation(
                                 MoveAnnotationKind.ONLY_MOVE,
-                                best.getEvaluation(),
+                                humanBest.getEvaluation(),
                                 null,
                                 second.getEvaluation(),
-                                bestMoveUci,
-                                secondBestMoveUci),
+                                humanBestMoveUci,
+                                humanSecondBestMoveUci),
                         diagnostics);
             }
         }

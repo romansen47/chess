@@ -11,7 +11,8 @@ final class OnlyMoveDetector {
     boolean isTrivial(
             DeepAnalysisResult result,
             String playedMoveUci,
-            boolean whiteMover) {
+            boolean whiteMover,
+            int decisionDepth) {
         SearchTimeline timeline = new SearchTimeline(result);
         List<Map.Entry<Integer, List<EngineLine>>> early =
                 timeline.relativeWindow(
@@ -19,7 +20,8 @@ final class OnlyMoveDetector {
                         MoveAnnotationPolicy
                                 .ONLY_MOVE_TRIVIAL_EARLY_START_RATIO,
                         MoveAnnotationPolicy
-                                .ONLY_MOVE_TRIVIAL_EARLY_END_RATIO);
+                                .ONLY_MOVE_TRIVIAL_EARLY_END_RATIO,
+                        decisionDepth);
 
         if (early.size()
                 < MoveAnnotationPolicy
