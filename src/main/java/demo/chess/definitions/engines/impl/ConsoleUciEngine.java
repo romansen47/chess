@@ -40,6 +40,7 @@ public abstract class ConsoleUciEngine implements ChessEngine {
 
     private final String enginePath;
     private final String managementId;
+    private volatile boolean closed;
     private boolean chess960ModeEnabled;
     private boolean chess960CapabilityAdvertised;
 
@@ -63,12 +64,15 @@ public abstract class ConsoleUciEngine implements ChessEngine {
     }
 
     protected synchronized void restartProcess() throws Exception {
+        UciEngineProcessManager.logLifecycle(managementId, "RESTART", "process restart requested");
         destroyCurrentProcess();
         startProcess();
     }
 
     protected synchronized void applyConfig(EngineConfig config) throws IOException, InterruptedException {
+        requireLiveProcess("applyConfig");
         if (config == null) return;
+        UciEngineProcessManager.logLifecycle(managementId, "CONFIGURE", "profile options");
         if (!enginePath.equals(config.getEngine())) {
             throw new IllegalArgumentException(
                     "Engine config belongs to '" + config.getEngine()
@@ -97,6 +101,7 @@ public abstract class ConsoleUciEngine implements ChessEngine {
      * for every game instead of forming a separate classical mode.</p>
      */
     protected synchronized void prepareForGame(Game game) throws IOException, InterruptedException {
+        requireLiveProcess("prepareForGame");
         if (!chess960CapabilityAdvertised) {
             throw new IOException(
                     "Engine does not advertise " + UciSystemOptions.CHESS960
@@ -119,6 +124,7 @@ public abstract class ConsoleUciEngine implements ChessEngine {
     }
 
     private void startProcess() throws Exception {
+        closed = false;
         chess960ModeEnabled = false;
         chess960CapabilityAdvertised = false;
         uciEngineProcess = new ProcessBuilder(enginePath).redirectErrorStream(true).start();
@@ -193,8 +199,29 @@ public abstract class ConsoleUciEngine implements ChessEngine {
         }
     }
 
+    protected final void logLifecycle(String event, String detail) {
+        UciEngineProcessManager.logLifecycle(managementId, event, detail);
+    }
+
+    protected final synchronized boolean isProcessLive() {
+        return !closed && uciEngineProcess != null && uciEngineProcess.isAlive();
+    }
+
+    private void requireLiveProcess(String operation) throws IOException {
+        if (!isProcessLive()) {
+            logLifecycle("REJECT", operation + " on closed or dead process");
+            throw new IOException("Cannot " + operation + ": UCI engine process is closed or dead");
+        }
+    }
+
     @Override
     public synchronized void close() {
+        if (closed) {
+            logLifecycle("CLOSE_SKIPPED", "already closed");
+            return;
+        }
+        closed = true;
+        logLifecycle("CLOSE", "caller=" + callerLocation());
         try {
             if (writer != null) {
                 writer.println("quit");
@@ -220,6 +247,17 @@ public abstract class ConsoleUciEngine implements ChessEngine {
             UciEngineProcessManager.processEnded(managementId, uciEngineProcess);
             UciEngineProcessManager.markClosed(managementId);
         }
+    }
+
+    private String callerLocation() {
+        StackTraceElement[] stack = Thread.currentThread().getStackTrace();
+        for (int i = 3; i < stack.length; i++) {
+            if (!stack[i].getClassName().equals(ConsoleUciEngine.class.getName())) {
+                return stack[i].getClassName() + "." + stack[i].getMethodName()
+                        + ":" + stack[i].getLineNumber();
+            }
+        }
+        return "unknown";
     }
 
     private void destroyCurrentProcess() {
