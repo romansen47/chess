@@ -11,10 +11,10 @@ import java.util.Optional;
 
 import org.junit.Test;
 
-class UciInfoContractTest {
+public class UciInfoContractTest {
 
     @Test
-    void parserConformsToSharedBrowserAndJavaTranscriptContract() throws IOException {
+    public void parserConformsToSharedBrowserAndJavaTranscriptContract() throws IOException {
         for (ContractCase testCase : loadContract()) {
             Optional<UciInfoLine> parsed =
                     UciInfoParser.parsePrincipalVariation(testCase.line());
