@@ -18,6 +18,7 @@ import org.apache.logging.log4j.Logger;
 import demo.chess.definitions.engines.ChessEngine;
 import demo.chess.definitions.engines.EngineConfig;
 import demo.chess.definitions.engines.UciSystemOptions;
+import demo.chess.definitions.engines.management.ManagedUciEngine;
 import demo.chess.definitions.engines.management.UciEngineProcessManager;
 import demo.chess.game.Game;
 
@@ -29,7 +30,8 @@ import demo.chess.game.Game;
  * positions, including position 518, so every usable native engine must
  * advertise the standard {@code UCI_Chess960} option.</p>
  */
-public abstract class ConsoleUciEngine implements ChessEngine {
+public abstract class ConsoleUciEngine
+        implements ChessEngine, ManagedUciEngine {
 
     protected static final Logger logger = LogManager.getLogger(ConsoleUciEngine.class);
     private static final long UCI_HANDSHAKE_TIMEOUT_SECONDS = 5L;
@@ -51,6 +53,7 @@ public abstract class ConsoleUciEngine implements ChessEngine {
         UciEngineProcessManager.setGracefulCloser(managementId, this::close);
     }
 
+    @Override
     public final String getManagementId() {
         return managementId;
     }
