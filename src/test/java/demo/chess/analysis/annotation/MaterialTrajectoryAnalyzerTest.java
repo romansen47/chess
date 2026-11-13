@@ -19,10 +19,12 @@ public class MaterialTrajectoryAnalyzerTest {
         assertNotNull(trajectory);
         assertEquals(List.of(0d, 0d, 0d, 1d, 0d, 0d, -3d, -3d, -3d, 0d), trajectory.balances());
         assertEquals(Integer.valueOf(6), trajectory.movedPieceCapturePly());
+        assertEquals(Integer.valueOf(9), trajectory.movedPieceCapturerCapturePly());
         assertEquals(3d, trajectory.maximumDeficit(), 0.001);
         assertEquals(0d, trajectory.persistentDeficit(), 0.001);
         assertEquals(3d, trajectory.recoveredMaterial(), 0.001);
         assertEquals(Integer.valueOf(9), trajectory.recoveryPly(6));
+        assertEquals(0d, trajectory.remainingActiveInvestment(3d), 0.001);
         assertEquals(3d, new MaterialInvestmentDetector().calculate(root, pv, true, 6), 0.001);
         assertNull(new MaterialSacrificeDetector().find(root, pv, "b1c3", true));
         assertEquals(4, root.getMoveList().size());
@@ -56,11 +58,13 @@ public class MaterialTrajectoryAnalyzerTest {
     }
 
     @Test
-    public void laterUnrelatedLossDoesNotReviveRecoveredInvestment() {
+    public void causalExchangeClosureIgnoresLaterUnrelatedMaterialChanges() {
         var trajectory = new MaterialTrajectoryAnalyzer.Trajectory(
-                List.of(0d, 0d, -3d, 0d, -5d), List.of("a", "b", "c", "d"), 2);
-        assertEquals(0d, trajectory.remainingInvestment(2, 3d), 0.001);
-        assertEquals(Integer.valueOf(3), trajectory.recoveryPly(2));
+                List.of(0d, 3d, -6d, -3d, -2d),
+                List.of("a", "b", "c", "d"),
+                2,
+                3);
+        assertEquals(3d, trajectory.remainingActiveInvestment(3d), 0.001);
     }
 
     private EngineLine line(String moves) { return new EngineLine(0, 20, null, moves); }

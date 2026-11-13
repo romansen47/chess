@@ -41,23 +41,15 @@ final class MaterialSacrificeDetector {
             investment = 0;
         }
         if (trajectory != null && trajectory.movedPieceCapturePly() != null) {
-            investment = trajectory.remainingInvestment(
-                    trajectory.movedPieceCapturePly(), investment);
+            investment = trajectory.remainingActiveInvestment(investment);
         }
         if (offer != null) {
-            double remaining = offer.getValue();
-            // Only the PV that actually accepts this offer can refute its
-            // material cost. A declined offer has no deficit in that PV.
-            if (trajectory != null && trajectory.moves().size() > 1
-                    && trajectory.moves().get(1).equalsIgnoreCase(offer.getAcceptanceMoveUci())) {
-                remaining = trajectory.remainingInvestment(2, remaining);
-            }
-            if (remaining < MoveAnnotationPolicy.EXTRAORDINARY_MATERIAL_INVESTMENT
-                    || compensationAnalyzer.find(rootPosition, playedMoveUci, offer, whiteMover) != null) {
+            if (compensationAnalyzer.find(
+                    rootPosition,
+                    playedMoveUci,
+                    offer,
+                    whiteMover) != null) {
                 offer = null;
-            } else {
-                offer = new MaterialSacrificeEvidence(
-                        offer.getType(), remaining, offer.getAcceptanceMoveUci(), trajectory);
             }
         }
 
@@ -71,7 +63,8 @@ final class MaterialSacrificeDetector {
                 && (!offerQualifies || investment >= offer.getValue())) {
             return new MaterialSacrificeEvidence(
                     MaterialSacrificeType.ACTIVE_INVESTMENT,
-                    investment, null, trajectory);
+                    investment,
+                    null);
         }
 
         return offerQualifies ? offer : null;

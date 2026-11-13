@@ -116,6 +116,64 @@ public class MoveAnnotationClassifierTest {
     }
 
     @Test
+    public void queenSacrificeIgnoresUnrelatedPawnWonAfterExchangeClosure()
+            throws Exception {
+        // LCZero-Stockfish: 21.Qxb4 Bxb4 22.axb4 closes the queen-for-two-minors
+        // exchange at a three-point deficit. The later Rxd4 pawn capture is a
+        // separate event and must not demote the sacrifice.
+        Game root = positionAfter(
+                "d2d4", "g8f6",
+                "c2c4", "e7e6",
+                "g1f3", "f8b4",
+                "b1d2", "e8h8",
+                "a2a3", "b4e7",
+                "e2e4", "d7d5",
+                "e4e5", "f6d7",
+                "f1d3", "c7c5",
+                "h2h4", "g7g6",
+                "e1h1", "b8c6",
+                "d2b3", "e7h4",
+                "c1h6", "f8e8",
+                "f1e1", "c5d4",
+                "d1c2", "d5c4",
+                "d3c4", "d7b6",
+                "a1d1", "c8d7",
+                "b3c5", "a8c8",
+                "b2b4", "b6c4",
+                "c2c4", "h4e7",
+                "c5e4", "c6b4");
+
+        MoveAnnotation annotation = classifier.classify(
+                root,
+                "c4b4",
+                result(
+                        List.of(
+                                line(0.60, 10,
+                                        "c4b4 e7b4 a3b4 d7b5 d1d4 d8c7 f3f6"),
+                                line(-0.17, 10,
+                                        "c4d4 b4d5"),
+                                line(-1.46, 10,
+                                        "c4b3 b4c2")),
+                        Map.of()),
+                0.59);
+
+        assertNotNull(annotation);
+        assertEquals(
+                MoveAnnotationKind.EXTRAORDINARY,
+                annotation.getKind());
+        assertEquals(
+                ExtraordinaryReason.MATERIAL_SACRIFICE,
+                annotation.getExtraordinaryReason());
+        assertEquals(
+                MaterialSacrificeType.ACTIVE_INVESTMENT,
+                annotation.getSacrificeType());
+        assertEquals(
+                3.0,
+                annotation.getMaterialInvestment(),
+                0.001);
+    }
+
+    @Test
     public void genuineStrengthDiscoveryCanBeExtraordinary() {
         Game root = Simulation.createSimulation();
 
