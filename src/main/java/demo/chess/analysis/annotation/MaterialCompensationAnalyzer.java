@@ -129,6 +129,8 @@ final class MaterialCompensationAnalyzer {
                             position,
                             whiteMover,
                             rootBalance,
+                            trackedFile,
+                            trackedRank,
                             MAX_RECOVERY_PLIES - depth);
             return closure != null
                     ? SearchResult.compensated(

@@ -15,10 +15,10 @@ import demo.chess.game.impl.Simulation;
  *
  * <p>The recovery move itself is selected by
  * {@link MaterialCompensationAnalyzer}. This class starts once the original
- * loss has been recovered and limits further analysis to captures. If an
- * opponent capture recreates a qualifying loss, any mover piece may directly
- * recapture the piece that caused it. Unrelated quiet play is outside this
- * material-exchange responsibility.</p>
+ * loss has been recovered and follows only captures of the piece that made
+ * that recovery. If such a capture recreates a qualifying loss, any mover
+ * piece may directly recapture the piece that caused it. Captures elsewhere
+ * and quiet play are outside this material-exchange responsibility.</p>
  */
 final class MaterialExchangeClosureAnalyzer {
 
@@ -28,6 +28,8 @@ final class MaterialExchangeClosureAnalyzer {
             Game position,
             boolean whiteMover,
             double rootBalance,
+            int trackedFile,
+            int trackedRank,
             int maxPlies) {
         if (position == null || maxPlies < 0) {
             return null;
@@ -38,6 +40,8 @@ final class MaterialExchangeClosureAnalyzer {
                     position,
                     whiteMover,
                     rootBalance,
+                    trackedFile,
+                    trackedRank,
                     0,
                     maxPlies,
                     new SearchBudget(MAX_SEARCH_NODES));
@@ -54,6 +58,8 @@ final class MaterialExchangeClosureAnalyzer {
             Game position,
             boolean whiteMover,
             double rootBalance,
+            int trackedFile,
+            int trackedRank,
             int depth,
             int maxPlies,
             SearchBudget budget)
@@ -63,9 +69,16 @@ final class MaterialExchangeClosureAnalyzer {
         }
 
         int requiredPlies = depth;
+        Piece trackedPiece = position.getChessBoard()
+                .getField(trackedFile, trackedRank)
+                .getPiece();
+        if (trackedPiece == null) {
+            return SearchResult.notStable();
+        }
+
         List<Move> replies = position.getPlayer().getValidMoves(position);
         for (Move reply : replies) {
-            if (capturedPiece(reply) == null) {
+            if (capturedPiece(reply) != trackedPiece) {
                 continue;
             }
 
@@ -144,6 +157,8 @@ final class MaterialExchangeClosureAnalyzer {
                     afterRecapture,
                     whiteMover,
                     rootBalance,
+                    move.getTarget().getFile(),
+                    move.getTarget().getRank(),
                     recaptureDepth,
                     maxPlies,
                     budget);
