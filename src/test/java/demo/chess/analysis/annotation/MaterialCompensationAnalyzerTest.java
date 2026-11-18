@@ -102,6 +102,58 @@ public class MaterialCompensationAnalyzerTest {
                 analyzer.find(root, "g4e6", sacrifice, false));
     }
 
+    @Test
+    public void qd5CounterattackCompensatesOfferedKnight()
+            throws Exception {
+        Game root = positionAfter(
+                "c2c4", "c7c6",
+                "g1f3", "g8f6",
+                "d2d4", "d7d5",
+                "d1c2", "g7g6",
+                "b1c3", "d5c4",
+                "e2e4", "b7b5",
+                "a2a4", "b5b4",
+                "c3d1", "f8g7",
+                "f1c4", "e8h8",
+                "d1e3", "e7e6",
+                "e4e5", "f6d5",
+                "h2h4", "b8d7",
+                "h4h5", "d7b6",
+                "c4d3", "b4b3",
+                "c2b1", "d5f4",
+                "e3g4", "b6d5",
+                "g2g3", "f4d3",
+                "b1d3", "d5b4",
+                "d3b3");
+
+        MaterialSacrificeEvidence sacrifice =
+                offerDetector.find(root, "d8d5", false);
+
+        assertNotNull(sacrifice);
+        assertEquals(
+                MaterialSacrificeType.DECLINED_MATERIAL_SAVE,
+                sacrifice.getType());
+        assertEquals(3.0, sacrifice.getValue(), 0.001);
+        assertEquals("b3b4", sacrifice.getAcceptanceMoveUci());
+
+        MaterialCompensationAnalyzer.Evidence compensation =
+                analyzer.find(root, "d8d5", sacrifice, false);
+
+        assertNotNull(compensation);
+
+        var playedLine = new demo.chess.definitions.engines.EngineLine(
+                0.45,
+                20,
+                null,
+                "d8d5 g4h6 g8h8 b3d5 e6d5");
+        assertNull(
+                new MaterialSacrificeDetector().find(
+                        root,
+                        playedLine,
+                        "d8d5",
+                        false));
+    }
+
     private Game positionAfter(String... moves) throws Exception {
         Game game = Simulation.createSimulation();
         for (String uci : moves) {

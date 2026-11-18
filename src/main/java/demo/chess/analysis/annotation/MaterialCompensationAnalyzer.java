@@ -18,14 +18,19 @@ import demo.chess.game.impl.Simulation;
  * Bounded proof search for short-term material compensation.
  *
  * <p>A proven compensation excludes a passive material offer from sacrifice
- * classification. To keep the diagnosis causal and conservative, only forcing moves
- * by the piece that played the extraordinary candidate move are considered
- * as compensation. The defender may choose any legal reply.</p>
+ * classification. To keep the diagnosis causal and conservative, recovery
+ * starts with forcing moves by the piece that played the candidate move. The
+ * defender may choose any legal reply. Once the original material balance is
+ * restored, {@link MaterialExchangeClosureAnalyzer} owns the immediate capture
+ * sequence that decides whether the recovery is stable.</p>
  */
 final class MaterialCompensationAnalyzer {
 
     private static final int MAX_RECOVERY_PLIES = 4;
     private static final int MAX_SEARCH_NODES = 512;
+
+    private final MaterialExchangeClosureAnalyzer exchangeClosureAnalyzer =
+            new MaterialExchangeClosureAnalyzer();
 
     Evidence find(
             Game rootPosition,
@@ -112,11 +117,23 @@ final class MaterialCompensationAnalyzer {
          * Reaching the mover's turn below the normal sacrifice threshold means
          * that reply could not restore a qualifying material loss.
          */
-        if (moverTurn
-                && remainingLoss
-                        < MoveAnnotationPolicy
-                                .EXTRAORDINARY_MATERIAL_INVESTMENT) {
-            return SearchResult.compensated(depth);
+        if (remainingLoss
+                < MoveAnnotationPolicy
+                        .EXTRAORDINARY_MATERIAL_INVESTMENT) {
+            if (moverTurn) {
+                return SearchResult.compensated(depth);
+            }
+
+            MaterialExchangeClosureAnalyzer.Evidence closure =
+                    exchangeClosureAnalyzer.find(
+                            position,
+                            whiteMover,
+                            rootBalance,
+                            MAX_RECOVERY_PLIES - depth);
+            return closure != null
+                    ? SearchResult.compensated(
+                            depth + closure.plies())
+                    : SearchResult.notCompensated();
         }
 
         List<Move> legalMoves =

@@ -83,6 +83,20 @@ public class MoveAnnotationGoldenRegressionTest {
             31. Nxd8 Rxe4 32. Nc6 Rxf4+ 33. Ke2 *
             """;
 
+    private static final String MAMEDYAROV_ARONIAN = """
+            [Event "ChessAnalysisTool diagnostic export"]
+            [White "Mamedyarov, Shakhriyar"]
+            [Black "Aronian, Levon"]
+            [Result "*"]
+
+            1. c4 c6 2. Nf3 Nf6 3. d4 d5 4. Qc2 g6
+            5. Nc3 dxc4 6. e4 b5 7. a4 b4 8. Nd1 Bg7
+            9. Bxc4 O-O 10. Ne3 e6 11. e5 Nd5 12. h4 Nd7
+            13. h5 N7b6 14. Bd3 b3 15. Qb1 Nf4 16. Ng4 Nbd5
+            17. g3 Nxd3+ 18. Qxd3 Nb4 19. Qxb3 Qd5
+            20. Qxd5 exd5 *
+            """;
+
     private static final String BYRNE_FISCHER = """
             [Event "ChessAnalysisTool diagnostic export"]
             [White "Byrne, David"]
@@ -406,6 +420,22 @@ public class MoveAnnotationGoldenRegressionTest {
                         line(-5.52, "♗d3")),
                 MoveAnnotationKind.MISTAKE,
                 16.62);
+    }
+
+    @Test
+    public void mamedyarovAronianQd5CounterattackIsNotASacrifice()
+            throws Exception {
+        MoveAnnotation qd5 = classify(
+                MAMEDYAROV_ARONIAN,
+                38,
+                0.45,
+                line(0.37, "♛d5"),
+                line(0.62, "c5"),
+                line(1.51, "a5"));
+
+        assertNull(
+                "Mamedyarov-Aronian 19...Qd5 must remain unannotated",
+                qd5);
     }
 
     private MoveAnnotation classify(
