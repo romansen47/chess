@@ -14,16 +14,16 @@ final class EvaluationScoring {
         return whiteMover ? whiteEvaluation : -whiteEvaluation;
     }
 
-    static double winPercentFromMoverScore(double score) {
+    static double normalizedPracticalScoreFromMoverScore(double score) {
         double centipawns = score * 100.0;
         return 50.0 + 50.0 * (2.0 / (1.0 + Math.exp(-0.00368208 * centipawns)) - 1.0);
     }
 
-    static double winningChance(EngineLine line, boolean whiteMover) {
+    static double normalizedPracticalScore(EngineLine line, boolean whiteMover) {
         if (line == null) {
             return 0.0;
         }
-        return winPercentFromMoverScore(
+        return normalizedPracticalScoreFromMoverScore(
                 moverScore(line.getEvaluation(), whiteMover));
     }
 
@@ -33,16 +33,16 @@ final class EvaluationScoring {
             boolean whiteMover) {
         return Math.max(
                 0.0,
-                winningChance(best, whiteMover)
-                        - winningChance(played, whiteMover));
+                normalizedPracticalScore(best, whiteMover)
+                        - normalizedPracticalScore(played, whiteMover));
     }
 
     static double gap(
             EngineLine better,
             EngineLine worse,
             boolean whiteMover) {
-        return winningChance(better, whiteMover)
-                - winningChance(worse, whiteMover);
+        return normalizedPracticalScore(better, whiteMover)
+                - normalizedPracticalScore(worse, whiteMover);
     }
 
     /**

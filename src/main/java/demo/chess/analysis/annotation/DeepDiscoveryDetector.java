@@ -66,7 +66,7 @@ final class DeepDiscoveryDetector {
             }
 
             EngineLine played = ranked.get(playedIndex);
-            double strength = EvaluationScoring.winningChance(
+            double strength = EvaluationScoring.normalizedPracticalScore(
                     played,
                     whiteMover);
             double regret = EvaluationScoring.regret(
@@ -82,7 +82,7 @@ final class DeepDiscoveryDetector {
 
         EngineLine finalPlayed = finalCandidates.get(0);
         double finalStrength =
-                EvaluationScoring.winningChance(
+                EvaluationScoring.normalizedPracticalScore(
                         finalPlayed,
                         whiteMover);
 

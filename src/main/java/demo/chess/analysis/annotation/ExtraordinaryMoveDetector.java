@@ -163,7 +163,7 @@ final class ExtraordinaryMoveDetector {
     private boolean materialContextIsMeaningful(
             EngineLine bestAvailableMove,
             boolean whiteMover) {
-        return EvaluationScoring.winningChance(
+        return EvaluationScoring.normalizedPracticalScore(
                         bestAvailableMove,
                         whiteMover)
                 >= MoveAnnotationPolicy

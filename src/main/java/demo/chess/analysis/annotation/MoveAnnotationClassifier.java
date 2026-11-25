@@ -107,7 +107,7 @@ public final class MoveAnnotationClassifier {
         EngineLine best = context.objectiveBest();
         int playedIndex = context.objectivePlayedIndex();
 
-        double bestWinPercent = EvaluationScoring.winningChance(
+        double bestWinPercent = EvaluationScoring.normalizedPracticalScore(
                 best,
                 context.whiteMover());
 
