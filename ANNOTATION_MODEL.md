@@ -11,7 +11,7 @@ The order is intentional. A later positive rule may never hide an objective
 mistake found by the deepest available analysis.
 
 1. Build one `MoveAssessmentContext` from the position, played move and
-   `DeepAnalysisResult`. MultiPV lines retain the engine's original order.
+   `PositionAnalysisResult`. MultiPV lines retain the engine's original order.
 2. Measure objective move quality with the deepest final lines and the
    resulting-position evaluation.
 3. Return `??` at 25 percentage points of winning-chance loss or `?` at 10.

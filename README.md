@@ -145,7 +145,7 @@ must close the adapter, which sends `quit` and then escalates through timed proc
 termination only when the engine does not exit. The process manager's raw force
 termination path is reserved for diagnostics and recovery.
 
-Finite deep-analysis searches intentionally use a search lock that is separate from
+Finite position-analysis searches intentionally use a search lock that is separate from
 the engine-instance monitor. This allows `stopEvaluation()` / `close()` to interrupt
 a search that is blocked waiting for UCI output instead of waiting for that search to
 finish naturally.
