@@ -126,7 +126,7 @@ public final class MoveAnnotationClassifier {
                     forcedReplyScore);
         }
         double resultingWinPercent =
-                EvaluationScoring.winPercentFromMoverScore(
+                EvaluationScoring.normalizedPracticalScoreFromMoverScore(
                         resultingScore);
         double resultingWinChanceLoss =
                 Math.max(
