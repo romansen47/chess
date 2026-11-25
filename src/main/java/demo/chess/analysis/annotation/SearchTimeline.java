@@ -5,7 +5,7 @@ import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
 
-import demo.chess.definitions.engines.DeepAnalysisResult;
+import demo.chess.definitions.engines.PositionAnalysisResult;
 import demo.chess.definitions.engines.EngineLine;
 
 /**
@@ -17,9 +17,9 @@ import demo.chess.definitions.engines.EngineLine;
  */
 final class SearchTimeline {
 
-    private final DeepAnalysisResult result;
+    private final PositionAnalysisResult result;
 
-    SearchTimeline(DeepAnalysisResult result) {
+    SearchTimeline(PositionAnalysisResult result) {
         this.result = result;
     }
 

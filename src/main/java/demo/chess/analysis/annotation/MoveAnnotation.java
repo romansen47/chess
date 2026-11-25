@@ -1,7 +1,7 @@
 package demo.chess.analysis.annotation;
 
 /**
- * Domain result of classifying one played move from finite DeepAnalysis data.
+ * Domain result of classifying one played move from finite position-analysis data.
  */
 public final class MoveAnnotation {
 

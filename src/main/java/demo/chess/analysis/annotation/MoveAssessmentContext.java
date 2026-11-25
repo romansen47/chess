@@ -2,7 +2,7 @@ package demo.chess.analysis.annotation;
 
 import java.util.List;
 
-import demo.chess.definitions.engines.DeepAnalysisResult;
+import demo.chess.definitions.engines.PositionAnalysisResult;
 import demo.chess.definitions.engines.EngineLine;
 import demo.chess.game.Game;
 
@@ -15,14 +15,14 @@ import demo.chess.game.Game;
 record MoveAssessmentContext(
         Game positionBeforeMove,
         String playedMoveUci,
-        DeepAnalysisResult analysisBeforeMove,
+        PositionAnalysisResult analysisBeforeMove,
         boolean whiteMover,
         List<EngineLine> objectiveCandidates) {
 
     static MoveAssessmentContext from(
             Game positionBeforeMove,
             String playedMoveUci,
-            DeepAnalysisResult analysisBeforeMove) {
+            PositionAnalysisResult analysisBeforeMove) {
         if (positionBeforeMove == null
                 || playedMoveUci == null
                 || playedMoveUci.isBlank()

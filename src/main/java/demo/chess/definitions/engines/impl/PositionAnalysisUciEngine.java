@@ -9,8 +9,8 @@ import java.util.TreeMap;
 import java.util.concurrent.ExecutionException;
 
 import demo.chess.definitions.Color;
-import demo.chess.definitions.engines.DeepAnalysisEngine;
-import demo.chess.definitions.engines.DeepAnalysisResult;
+import demo.chess.definitions.engines.PositionAnalysisEngine;
+import demo.chess.definitions.engines.PositionAnalysisResult;
 import demo.chess.definitions.engines.EngineConfig;
 import demo.chess.definitions.engines.EngineLine;
 import demo.chess.definitions.engines.UciPositionKey;
@@ -18,7 +18,7 @@ import demo.chess.definitions.engines.uci.UciInfoLine;
 import demo.chess.definitions.engines.uci.UciInfoParser;
 import demo.chess.game.Game;
 
-public class DeepAnalysisUciEngine extends AbstractUciAnalysisEngine implements DeepAnalysisEngine {
+public class PositionAnalysisUciEngine extends AbstractUciAnalysisEngine implements PositionAnalysisEngine {
 
     /*
      * Finite searches deliberately do not synchronize on the engine instance.
@@ -28,7 +28,7 @@ public class DeepAnalysisUciEngine extends AbstractUciAnalysisEngine implements 
      */
     private final Object finiteSearchLock = new Object();
 
-    public DeepAnalysisUciEngine(String path) throws Exception {
+    public PositionAnalysisUciEngine(String path) throws Exception {
         super(path);
     }
 
@@ -44,7 +44,7 @@ public class DeepAnalysisUciEngine extends AbstractUciAnalysisEngine implements 
     }
 
     @Override
-    public DeepAnalysisResult analyze(Game chessGame, EngineConfig config)
+    public PositionAnalysisResult analyze(Game chessGame, EngineConfig config)
             throws IOException, InterruptedException, ExecutionException {
         synchronized (finiteSearchLock) {
             return analyzeLocked(
@@ -54,7 +54,7 @@ public class DeepAnalysisUciEngine extends AbstractUciAnalysisEngine implements 
         }
     }
 
-    private DeepAnalysisResult analyzeLocked(
+    private PositionAnalysisResult analyzeLocked(
             Game chessGame,
             UciPositionKey positionKey,
             EngineConfig config)
@@ -65,9 +65,9 @@ public class DeepAnalysisUciEngine extends AbstractUciAnalysisEngine implements 
         prepareForGame(chessGame);
 
         List<UciInfoLine> infoLines = new ArrayList<>();
-        String command = buildDeepAnalysisCommand(chessGame, config);
+        String command = buildPositionAnalysisCommand(chessGame, config);
         logger.info(
-                "{} is starting finite deep analysis for position {}",
+                "{} is starting finite position analysis for position {}",
                 this,
                 positionKey);
         getWriter().println(command);
@@ -98,7 +98,7 @@ public class DeepAnalysisUciEngine extends AbstractUciAnalysisEngine implements 
         logLifecycle("ANALYSIS_COMPLETE", "position=" + positionKey
                 + ", variants=" + finalLines.size());
         cacheLines(positionKey, finalLines);
-        return new DeepAnalysisResult(finalLines, depthHistory);
+        return new PositionAnalysisResult(finalLines, depthHistory);
     }
 
     /*
@@ -148,7 +148,7 @@ public class DeepAnalysisUciEngine extends AbstractUciAnalysisEngine implements 
         return Map.copyOf(result);
     }
 
-    private String buildDeepAnalysisCommand(
+    private String buildPositionAnalysisCommand(
             Game game,
             EngineConfig config) {
         StringBuilder command = new StringBuilder();
@@ -173,7 +173,7 @@ public class DeepAnalysisUciEngine extends AbstractUciAnalysisEngine implements 
                 getWriter().flush();
             }
         } catch (Exception e) {
-            logger.debug("Could not stop deep analysis engine", e);
+            logger.debug("Could not stop position analysis engine", e);
         } finally {
             super.close();
         }

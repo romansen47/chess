@@ -19,7 +19,7 @@ import demo.chess.game.Game;
  *
  * <p>The class owns evaluation caching and conversion of parsed UCI PV
  * snapshots into CAT {@link EngineLine}s. Search orchestration stays in the
- * concrete live/deep-analysis adapters.</p>
+ * concrete live/finite-position-analysis adapters.</p>
  */
 public abstract class AbstractUciAnalysisEngine extends ConsoleUciEngine implements EvaluationEngine {
 

@@ -8,7 +8,7 @@ import org.junit.Test;
 
 import demo.chess.definitions.engines.uci.UciInfoLine;
 
-public class DeepAnalysisUciEngineDepthLimitTest {
+public class PositionAnalysisUciEngineDepthLimitTest {
 
     @Test
     public void fixedDepthRejectsHelperThreadIterationsBeyondRequestedDepth() {
@@ -24,7 +24,7 @@ public class DeepAnalysisUciEngineDepthLimitTest {
                         cp(7, 1, 10),
                         cp(8, 1, 12),
                         cp(8, 2, 8)),
-                DeepAnalysisUciEngine.capInfoLinesAtRequestedDepth(
+                PositionAnalysisUciEngine.capInfoLinesAtRequestedDepth(
                         infoLines,
                         8));
     }
@@ -37,7 +37,7 @@ public class DeepAnalysisUciEngineDepthLimitTest {
 
         assertEquals(
                 infoLines,
-                DeepAnalysisUciEngine.capInfoLinesAtRequestedDepth(
+                PositionAnalysisUciEngine.capInfoLinesAtRequestedDepth(
                         infoLines,
                         0));
     }

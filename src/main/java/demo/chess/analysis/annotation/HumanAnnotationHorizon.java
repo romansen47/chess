@@ -3,14 +3,14 @@ package demo.chess.analysis.annotation;
 import java.util.List;
 import java.util.Map;
 
-import demo.chess.definitions.engines.DeepAnalysisResult;
+import demo.chess.definitions.engines.PositionAnalysisResult;
 import demo.chess.definitions.engines.EngineLine;
 
 /** Selects the stable search snapshot used for positive human annotations. */
 final class HumanAnnotationHorizon {
 
     DecisionPoint select(
-            DeepAnalysisResult result,
+            PositionAnalysisResult result,
             String playedMoveUci,
             boolean whiteMover) {
         List<EngineLine> finalLines = EvaluationScoring.orderedLines(

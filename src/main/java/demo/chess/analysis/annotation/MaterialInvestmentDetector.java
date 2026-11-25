@@ -97,7 +97,7 @@ final class MaterialInvestmentDetector {
 
             return 0.0;
         } catch (Exception ignored) {
-            // Annotation heuristics must never make DeepAnalysis fail merely
+            // Annotation heuristics must never make position analysis fail merely
             // because an engine PV cannot be replayed completely.
             return 0.0;
         }

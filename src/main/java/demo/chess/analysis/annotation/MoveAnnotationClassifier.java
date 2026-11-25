@@ -2,16 +2,16 @@ package demo.chess.analysis.annotation;
 
 import java.util.List;
 
-import demo.chess.definitions.engines.DeepAnalysisResult;
+import demo.chess.definitions.engines.PositionAnalysisResult;
 import demo.chess.definitions.engines.EngineLine;
 import demo.chess.game.Game;
 
 /**
- * Classifies one played move from the finite DeepAnalysis result of the
+ * Classifies one played move from the finite position-analysis result of the
  * position before that move.
  *
  * <p>No engine is invoked here. This class is deterministic domain logic and
- * can therefore be tested with synthetic DeepAnalysisResult fixtures.</p>
+ * can therefore be tested with synthetic PositionAnalysisResult fixtures.</p>
  */
 public final class MoveAnnotationClassifier {
 
@@ -29,7 +29,7 @@ public final class MoveAnnotationClassifier {
     public MoveAnnotation classify(
             Game positionBeforeMove,
             String playedMoveUci,
-            DeepAnalysisResult analysisBeforeMove,
+            PositionAnalysisResult analysisBeforeMove,
             double resultingEvaluation) {
         return assess(
                 positionBeforeMove,
@@ -41,7 +41,7 @@ public final class MoveAnnotationClassifier {
     public MoveAnnotationAssessment assess(
             Game positionBeforeMove,
             String playedMoveUci,
-            DeepAnalysisResult analysisBeforeMove,
+            PositionAnalysisResult analysisBeforeMove,
             double resultingEvaluation) {
         return assess(
                 positionBeforeMove,
@@ -60,7 +60,7 @@ public final class MoveAnnotationClassifier {
     public MoveAnnotation classify(
             Game positionBeforeMove,
             String playedMoveUci,
-            DeepAnalysisResult analysisBeforeMove,
+            PositionAnalysisResult analysisBeforeMove,
             double resultingEvaluation,
             Double forcedReplyEvaluation) {
         return assess(
@@ -78,7 +78,7 @@ public final class MoveAnnotationClassifier {
     public MoveAnnotationAssessment assess(
             Game positionBeforeMove,
             String playedMoveUci,
-            DeepAnalysisResult analysisBeforeMove,
+            PositionAnalysisResult analysisBeforeMove,
             double resultingEvaluation,
             Double forcedReplyEvaluation) {
         MoveAssessmentContext context = MoveAssessmentContext.from(

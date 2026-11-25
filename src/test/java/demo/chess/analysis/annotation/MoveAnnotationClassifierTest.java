@@ -10,7 +10,7 @@ import java.util.Map;
 
 import org.junit.Test;
 
-import demo.chess.definitions.engines.DeepAnalysisResult;
+import demo.chess.definitions.engines.PositionAnalysisResult;
 import demo.chess.definitions.engines.EngineLine;
 import demo.chess.definitions.moves.Move;
 import demo.chess.game.Game;
@@ -177,7 +177,7 @@ public class MoveAnnotationClassifierTest {
     public void genuineStrengthDiscoveryCanBeExtraordinary() {
         Game root = Simulation.createSimulation();
 
-        DeepAnalysisResult result = result(
+        PositionAnalysisResult result = result(
                 List.of(
                         line(2.20, 20, "e2e4 e7e5"),
                         line(0.80, 20, "d2d4 d7d5"),
@@ -212,7 +212,7 @@ public class MoveAnnotationClassifierTest {
     public void obviousEarlyBestMoveIsNotDeepDiscovery() {
         Game root = Simulation.createSimulation();
 
-        DeepAnalysisResult result = result(
+        PositionAnalysisResult result = result(
                 List.of(
                         line(2.20, 20, "e2e4 e7e5"),
                         line(0.80, 20, "d2d4 d7d5"),
@@ -361,7 +361,7 @@ public class MoveAnnotationClassifierTest {
     @Test
     public void humanDepthCertificateSurvivesDeeperRankChange() {
         Game root = Simulation.createSimulation();
-        DeepAnalysisResult result = result(
+        PositionAnalysisResult result = result(
                 List.of(
                         line(2.25, 45, "d2d4 d7d5"),
                         line(2.20, 45, "e2e4 e7e5"),
@@ -402,7 +402,7 @@ public class MoveAnnotationClassifierTest {
     @Test
     public void deeperObjectiveRefutationOverridesHumanCertificate() {
         Game root = Simulation.createSimulation();
-        DeepAnalysisResult result = result(
+        PositionAnalysisResult result = result(
                 List.of(
                         line(5.0, 45, "d2d4 d7d5"),
                         line(-5.0, 45, "e2e4 e7e5"),
@@ -484,7 +484,7 @@ public class MoveAnnotationClassifierTest {
     public void deepDiscoveryWindowDoesNotMoveWithFinalSearchDepth() {
         Game root = Simulation.createSimulation();
 
-        DeepAnalysisResult result = result(
+        PositionAnalysisResult result = result(
                 List.of(
                         line(2.20, 30, "e2e4 e7e5"),
                         line(0.80, 30, "d2d4 d7d5"),
@@ -536,7 +536,7 @@ public class MoveAnnotationClassifierTest {
     public void rejectedDeepDiscoveryKeepsDiagnosticReason() {
         Game root = Simulation.createSimulation();
 
-        DeepAnalysisResult result = result(
+        PositionAnalysisResult result = result(
                 List.of(
                         line(0.70, 30, "e2e4 e7e5"),
                         line(0.60, 30, "d2d4 d7d5"),
@@ -600,10 +600,10 @@ public class MoveAnnotationClassifierTest {
                 moves);
     }
 
-    private DeepAnalysisResult result(
+    private PositionAnalysisResult result(
             List<EngineLine> finalLines,
             Map<Integer, List<EngineLine>> history) {
-        return new DeepAnalysisResult(finalLines, history);
+        return new PositionAnalysisResult(finalLines, history);
     }
 
     @SafeVarargs

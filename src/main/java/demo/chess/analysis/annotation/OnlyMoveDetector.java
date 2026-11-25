@@ -3,13 +3,13 @@ package demo.chess.analysis.annotation;
 import java.util.List;
 import java.util.Map;
 
-import demo.chess.definitions.engines.DeepAnalysisResult;
+import demo.chess.definitions.engines.PositionAnalysisResult;
 import demo.chess.definitions.engines.EngineLine;
 
 final class OnlyMoveDetector {
 
     boolean isTrivial(
-            DeepAnalysisResult result,
+            PositionAnalysisResult result,
             String playedMoveUci,
             boolean whiteMover,
             int decisionDepth) {

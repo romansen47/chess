@@ -7,19 +7,19 @@ import java.util.Map;
 import java.util.TreeMap;
 
 /**
- * Immutable result of one finite DeepAnalysis search.
+ * Immutable result of one finite position-analysis search.
  *
  * <p>The final lines are the variants selected at the highest usable depth.
  * depthHistory contains usable snapshots from intermediate search depths.
  * Both parts belong to the same engine search and therefore cannot get out of
  * sync as they could with a separate "last history" side channel.</p>
  */
-public final class DeepAnalysisResult {
+public final class PositionAnalysisResult {
 
     private final List<EngineLine> finalLines;
     private final Map<Integer, List<EngineLine>> depthHistory;
 
-    public DeepAnalysisResult(
+    public PositionAnalysisResult(
             List<EngineLine> finalLines,
             Map<Integer, List<EngineLine>> depthHistory) {
         this.finalLines = finalLines == null
@@ -43,8 +43,8 @@ public final class DeepAnalysisResult {
         this.depthHistory = Collections.unmodifiableMap(ordered);
     }
 
-    public static DeepAnalysisResult empty() {
-        return new DeepAnalysisResult(List.of(), Map.of());
+    public static PositionAnalysisResult empty() {
+        return new PositionAnalysisResult(List.of(), Map.of());
     }
 
     public List<EngineLine> getFinalLines() {

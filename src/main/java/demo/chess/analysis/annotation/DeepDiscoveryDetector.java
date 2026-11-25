@@ -4,7 +4,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
-import demo.chess.definitions.engines.DeepAnalysisResult;
+import demo.chess.definitions.engines.PositionAnalysisResult;
 import demo.chess.definitions.engines.EngineLine;
 
 /**
@@ -18,7 +18,7 @@ import demo.chess.definitions.engines.EngineLine;
 final class DeepDiscoveryDetector {
 
     Assessment assess(
-            DeepAnalysisResult result,
+            PositionAnalysisResult result,
             List<EngineLine> finalCandidates,
             String playedMoveUci,
             boolean whiteMover) {

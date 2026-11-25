@@ -3,7 +3,7 @@ package demo.chess.analysis.annotation;
 import java.util.List;
 import java.util.Objects;
 
-import demo.chess.definitions.engines.DeepAnalysisResult;
+import demo.chess.definitions.engines.PositionAnalysisResult;
 import demo.chess.definitions.engines.EngineLine;
 import demo.chess.definitions.moves.Move;
 import demo.chess.definitions.players.Player;
@@ -31,7 +31,7 @@ final class ExtraordinaryMoveDetector {
 
     ExtraordinaryEvidence find(
             Game rootPosition,
-            DeepAnalysisResult result,
+            PositionAnalysisResult result,
             List<EngineLine> finalCandidates,
             String playedMoveUci,
             boolean whiteMover) {
@@ -45,7 +45,7 @@ final class ExtraordinaryMoveDetector {
 
     Assessment assess(
             Game rootPosition,
-            DeepAnalysisResult result,
+            PositionAnalysisResult result,
             List<EngineLine> finalCandidates,
             String playedMoveUci,
             boolean whiteMover) {

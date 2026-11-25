@@ -3,7 +3,7 @@ package demo.chess.definitions.engines;
 public enum EngineConfigType {
     PLAYER,
     EVALUATION,
-    DEEP_ANALYSIS;
+    GAME_ANALYSIS;
 
     /**
      * Performs the from value operation.
@@ -13,6 +13,9 @@ public enum EngineConfigType {
     public static EngineConfigType fromValue(String value) {
         if (value == null || value.isBlank()) {
             throw new IllegalArgumentException("Engine config type must not be blank");
+        }
+        if ("DEEP_ANALYSIS".equalsIgnoreCase(value.trim())) {
+            return GAME_ANALYSIS;
         }
         for (EngineConfigType type : values()) {
             if (type.name().equalsIgnoreCase(value.trim())) {

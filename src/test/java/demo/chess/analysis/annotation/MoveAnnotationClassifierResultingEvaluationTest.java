@@ -9,7 +9,7 @@ import java.util.Map;
 
 import org.junit.Test;
 
-import demo.chess.definitions.engines.DeepAnalysisResult;
+import demo.chess.definitions.engines.PositionAnalysisResult;
 import demo.chess.definitions.engines.EngineLine;
 import demo.chess.game.Game;
 import demo.chess.game.LegalMoveResolver;
@@ -24,7 +24,7 @@ public class MoveAnnotationClassifierResultingEvaluationTest {
     public void rootBestMoveCannotBecomeMistakeFromPostMoveSearchDrop() {
         Game root = Simulation.createSimulation();
 
-        DeepAnalysisResult analysisBeforeMove = new DeepAnalysisResult(
+        PositionAnalysisResult analysisBeforeMove = new PositionAnalysisResult(
                 List.of(
                         line(0.5, "e2e4 e7e5"),
                         line(0.4, "d2d4 d7d5"),
@@ -44,7 +44,7 @@ public class MoveAnnotationClassifierResultingEvaluationTest {
     public void postMoveSearchCannotIncreaseLossBeyondPlayedMultiPvLine() {
         Game root = Simulation.createSimulation();
 
-        DeepAnalysisResult analysisBeforeMove = new DeepAnalysisResult(
+        PositionAnalysisResult analysisBeforeMove = new PositionAnalysisResult(
                 List.of(
                         line(0.5, "e2e4 e7e5"),
                         line(0.4, "d2d4 d7d5"),
@@ -64,7 +64,7 @@ public class MoveAnnotationClassifierResultingEvaluationTest {
     public void postMoveSearchCanReduceLossFromPlayedMultiPvLine() {
         Game root = Simulation.createSimulation();
 
-        DeepAnalysisResult analysisBeforeMove = new DeepAnalysisResult(
+        PositionAnalysisResult analysisBeforeMove = new PositionAnalysisResult(
                 List.of(
                         line(3.0, "e2e4 e7e5"),
                         line(0.0, "d2d4 d7d5"),
@@ -85,7 +85,7 @@ public class MoveAnnotationClassifierResultingEvaluationTest {
         Game root = Simulation.createSimulation();
         root.apply(LegalMoveResolver.resolveUci(root, "e2e4"));
 
-        DeepAnalysisResult analysisBeforeMove = new DeepAnalysisResult(
+        PositionAnalysisResult analysisBeforeMove = new PositionAnalysisResult(
                 List.of(
                         line(-2.88, "g8f6"),
                         line(-0.20, "b8c6"),
@@ -117,7 +117,7 @@ public class MoveAnnotationClassifierResultingEvaluationTest {
     public void resultingPositionRemainsFallbackOutsideMultiPv() {
         Game root = Simulation.createSimulation();
 
-        DeepAnalysisResult analysisBeforeMove = new DeepAnalysisResult(
+        PositionAnalysisResult analysisBeforeMove = new PositionAnalysisResult(
                 List.of(
                         line(0.5, "e2e4 e7e5"),
                         line(0.3, "g1f3 g8f6"),

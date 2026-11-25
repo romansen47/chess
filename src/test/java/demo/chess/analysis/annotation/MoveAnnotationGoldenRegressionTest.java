@@ -10,7 +10,7 @@ import java.util.Map;
 
 import org.junit.Test;
 
-import demo.chess.definitions.engines.DeepAnalysisResult;
+import demo.chess.definitions.engines.PositionAnalysisResult;
 import demo.chess.definitions.engines.EngineLine;
 import demo.chess.definitions.moves.Move;
 import demo.chess.game.Game;
@@ -451,7 +451,7 @@ public class MoveAnnotationGoldenRegressionTest {
         return classifier.classify(
                 prepared.position(),
                 prepared.playedMoveUci(),
-                new DeepAnalysisResult(finalLines, Map.of()),
+                new PositionAnalysisResult(finalLines, Map.of()),
                 resultingEvaluation);
     }
 
@@ -480,7 +480,7 @@ public class MoveAnnotationGoldenRegressionTest {
         return classifier.classify(
                 prepared.position(),
                 prepared.playedMoveUci(),
-                new DeepAnalysisResult(finalLines, history),
+                new PositionAnalysisResult(finalLines, history),
                 resultingEvaluation);
     }
 
@@ -570,7 +570,7 @@ public class MoveAnnotationGoldenRegressionTest {
         return classifier.classify(
                 prepared.position(),
                 playedMove,
-                new DeepAnalysisResult(finalLines, history),
+                new PositionAnalysisResult(finalLines, history),
                 resultingEvaluation);
     }
 

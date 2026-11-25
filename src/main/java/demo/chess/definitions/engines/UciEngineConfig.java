@@ -8,7 +8,7 @@ import java.util.Objects;
 /**
  * Fully resolved runtime configuration for a UCI engine process.
  *
- * There is intentionally no Player/Evaluation/DeepAnalysis discriminator here.
+ * There is intentionally no player/evaluation/game-analysis discriminator here.
  * The same configured profile can be consumed by any of those use cases.
  * System-managed protocol options remain in the option schema as capabilities,
  * but are not serialized as ordinary profile commands.

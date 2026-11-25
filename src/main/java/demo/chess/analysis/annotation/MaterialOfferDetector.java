@@ -112,7 +112,7 @@ final class MaterialOfferDetector {
 
             return best;
         } catch (Exception ignored) {
-            // Annotation heuristics must never make DeepAnalysis fail.
+            // Annotation heuristics must never make position analysis fail.
             return null;
         }
     }
